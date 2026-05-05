@@ -182,8 +182,66 @@ class AppRecord:
     country: tuple[str, ...]
     """ISO country codes the app is available in. ``("*",)`` means worldwide."""
 
-    config: tuple[AppConfig, ...]
-    """One or more launch configs. Most apps have exactly one."""
+    config: tuple[AppConfig, ...] = ()
+    """Legacy launch configs from the pre-2025 catalog format. The current
+    SmartCast catalog (``scfs.vizio.com``) returns metadata only, so this
+    will be empty for entries fetched from the modern endpoint — launch
+    payloads now come from :class:`AppAvailability` per-chipset/firmware.
+    Retained for backward compatibility with archived catalogs."""
+
+    id: str = ""
+    """Catalog identifier, joins with :attr:`AppAvailability.app_id`.
+    Empty when the catalog payload doesn't expose an id (older format)."""
+
+    description: str = ""
+    """Marketing copy from ``mobileAppInfo.description``. Empty when the
+    catalog entry doesn't expose it."""
+
+    icon_url: str = ""
+    """Icon URL from ``mobileAppInfo.app_icon_image_url``. Empty when the
+    catalog entry doesn't expose it."""
+
+
+@dataclass(frozen=True, slots=True)
+class ChipsetPayload:
+    """
+    One launch-payload variant within an :class:`AppAvailability` entry.
+
+    A given app/chipset combination may have multiple variants (different
+    firmware ranges shipping different launch configs). Pick the one whose
+    ``firmware_minimum`` ≤ device firmware ≤ ``firmware_maximum``.
+    """
+
+    config: AppConfig
+    """The launch payload — what gets PUT to ``/app/launch``."""
+
+    firmware_minimum: str = ""
+    """Lower firmware bound (inclusive), Vizio version string. Empty
+    means unbounded below."""
+
+    firmware_maximum: str = ""
+    """Upper firmware bound (inclusive), Vizio version string. Empty
+    means unbounded above."""
+
+
+@dataclass(frozen=True, slots=True)
+class AppAvailability:
+    """
+    Per-chipset/firmware launch metadata for one app.
+
+    Joins with :class:`AppRecord` via :attr:`app_id` ↔ :attr:`AppRecord.id`.
+    The chipset key ``"*"`` means "applies to all chipsets" — used as a
+    fallback when no chipset-specific entry matches the device.
+    """
+
+    app_id: str
+    """Catalog id (matches :attr:`AppRecord.id`)."""
+
+    chipsets: Mapping[str, tuple[ChipsetPayload, ...]]
+    """Chipset key → tuple of payload variants. Keys are availability
+    chipset names (e.g., ``"MT5583"``, ``"NT72690"``) or ``"*"``.
+    The mapping is read-only by convention but not enforced (slots mode
+    rejects ``MappingProxyType`` here)."""
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,2481 +1,4765 @@
 [
   {
+    "id": "2484",
+    "name": "2nd Try",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-13T00:00:00.000Z",
+      "featured_sort": 39,
+      "description": "Your new home for all things Try Guys!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000630/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "162",
     "name": "A&E Crime Central",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "162"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "162",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-12-20T00:00:00.000Z",
+      "featured_sort": 184,
+      "description": "Thousands of true crime shows, ad-free.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000175/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "AMC+",
+    "id": "2214",
+    "name": "ABC10+",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2218"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "218",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-05-16T00:00:00.000Z",
+      "featured_sort": 78,
+      "description": "The latest news and weather from ABC10",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000239/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2476",
+    "name": "AccuWeather",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-04-21T00:00:00.000Z",
+      "featured_sort": 294,
+      "description": "AccuWeather: Real-time forecasts & alerts on VIZIO TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000640/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "97",
     "name": "Acorn TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "97"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "74",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-11-4T00:00:00.000Z",
+      "featured_sort": 61,
+      "description": "World-class TV from Britain and beyond",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000053/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2334",
+    "name": "Action News Jax",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-01-31T00:00:00.000Z",
+      "featured_sort": 67,
+      "description": "Jacksonville-area news, weather, sports, traffic, and more.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000381/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2298",
+    "name": "Action Plus",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 199,
+      "description": "Boom! Your favorite action movies, all free!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000338/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2563",
+    "name": "Adam Rose",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-20T00:00:00.000Z",
+      "featured_sort": 218,
+      "description": "Adam Rose: Viral Sketches & Comedy",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000722/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "106",
     "name": "Adventure 2 Learning",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "106"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "83",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-11-18T00:00:00.000Z",
+      "featured_sort": 43,
+      "description": "Free, 100% Kids Safe Educational Videos",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000074/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Adventure Sports Network",
-    "country": [
-      "usa",
-      "can"
-    ],
-    "id": [
-      "244"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "44",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
+    "id": "144",
     "name": "AfrolandTV",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "144"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "144",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-12-17T00:00:00.000Z",
+      "featured_sort": 93,
+      "description": "Watch Free African Movies, Nollywood, & TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000170/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2562",
+    "name": "Alexa Rivera",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-20T00:00:00.000Z",
+      "featured_sort": 146,
+      "description": "Fun challenges, pranks & adventures with Lexi!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000723/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2320",
+    "name": "Ali-A",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-24T00:00:00.000Z",
+      "featured_sort": 117,
+      "description": "Fortnite updates, events, skins and more.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000432/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2451",
+    "name": "Amasian TV",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-04T00:00:00.000Z",
+      "featured_sort": 286,
+      "description": "Enjoy the Best of Pan-Asian Entertainment",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000577/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "156",
     "name": "Amazon Music",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "156"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "156",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-03-10T00:00:00.000Z",
+      "featured_sort": 310,
+      "description": "Play Millions of Songs, Ad-Free",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000184/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2218",
+    "name": "AMC+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-01-19T00:00:00.000Z",
+      "featured_sort": 317,
+      "description": "Above. And Beyond.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000237/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2479",
+    "name": "Angel Studios",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-03T00:00:00.000Z",
+      "featured_sort": 328,
+      "description": "Fan-powered movies & shows that amplify light.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000598/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2244",
+    "name": "Animal Planet GO",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-27T00:00:00.000Z",
+      "featured_sort": 248,
+      "description": "Watch with pay TV Provider.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000278/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "172",
     "name": "Annoying Orange",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "172"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "172",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-05-17T00:00:00.000Z",
+      "featured_sort": 85,
+      "description": "He's annoying.  But he means well!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000188/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2572",
+    "name": "Answers.tv",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-18T00:00:00.000Z",
+      "featured_sort": 290,
+      "description": "Answers.tv: Defend Christian faith, learn.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000714/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "91",
     "name": "Apple TV+",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "91"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 3,
-        "APP_ID": "4",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-09-18T00:00:00.000Z",
+      "featured_sort": 347,
+      "description": "All Apple Originals.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000049/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2571",
+    "name": "ARROW",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-23T00:00:00.000Z",
+      "featured_sort": 189,
+      "description": "Cult movies from across the globe!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000711/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2488",
+    "name": "Artcast",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-09T00:00:00.000Z",
+      "featured_sort": 9,
+      "description": "Art for your TV. A world of inspiration.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000633/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2273",
     "name": "AsianCrush",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "50"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "27",
-        "MESSAGE": "https://html5.asiancrush.com/?ua=viziosmartcast"
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-08-11T00:00:00.000Z",
+      "featured_sort": 3,
+      "description": "Stream Asian Cinema.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000314/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "BET+",
+    "id": "2271",
+    "name": "At Home with Family Handyman",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "126"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "121",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-08-21T00:00:00.000Z",
+      "featured_sort": 236,
+      "description": "Inspiration to make your house a home.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000306/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "BRB Travel & Food",
+    "id": "2467",
+    "name": "Aussie Antics",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "207"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "207",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-03-28T00:00:00.000Z",
+      "featured_sort": 63,
+      "description": "Fortnite gaming with Aussie Antics.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000597/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Baby Einstein",
+    "id": "2468",
+    "name": "Austin John Plays",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "175"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "175",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-04-21T00:00:00.000Z",
+      "featured_sort": 128,
+      "description": "News, tips, gameplay and more for Nintendo Switch.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000603/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2565",
+    "name": "B1G+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-18T00:00:00.000Z",
+      "featured_sort": 32,
+      "description": "B1G+: Watch College Sports",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000716/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "152",
     "name": "Beani.TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "152"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "152",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-02-22T00:00:00.000Z",
+      "featured_sort": 60,
+      "description": "Safe, fun programming for children",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000168/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Best of Roblox",
+    "id": "2346",
+    "name": "Bentkey",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "208"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "208",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-11T00:00:00.000Z",
+      "featured_sort": 51,
+      "description": "Unlock a world of adventure that kids will love and parents can trust.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000397/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2314",
+    "name": "Best of Among Us",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 135,
+      "description": "Videos and other tips from top gamers.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000352/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2312",
+    "name": "Best of Gaming Animation",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-12T00:00:00.000Z",
+      "featured_sort": 136,
+      "description": "Incredible game animation from top creators.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000355/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2237",
+    "name": "Best of Minecraft",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-14T00:00:00.000Z",
+      "featured_sort": 132,
+      "description": "Your go-to hub for all things Minecraft.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000260/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "126",
+    "name": "BET+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-08-17T00:00:00.000Z",
+      "featured_sort": 321,
+      "description": "Stream Black Culture",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000141/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2551",
+    "name": "BFI Player",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-20T00:00:00.000Z",
+      "featured_sort": 257,
+      "description": "See something different",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000700/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2470",
+    "name": "Bijou Theater",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-04-21T00:00:00.000Z",
+      "featured_sort": 287,
+      "description": "Celebrate the unconventional and the unforgettable.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000610/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2395",
+    "name": "Bill Perry BMX",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-25T00:00:00.000Z",
+      "featured_sort": 278,
+      "description": "Cruising the streets with pro BMX riders.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000472/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2342",
+    "name": "BINGE Korea",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-08T00:00:00.000Z",
+      "featured_sort": 284,
+      "description": "Watch K-Pop, K-Dramas for FREE on BINGE Korea",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000401/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2300",
+    "name": "Black Voices Plus",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 180,
+      "description": "Blockbusters with the world's top Black stars",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000327/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "71",
     "name": "Blackdove",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "71"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "66",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2019-11-23T00:00:00.000Z",
+      "featured_sort": 7,
+      "description": "Beautiful motion art for Smart TVs",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000042/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2583",
+    "name": "Blacknut",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-10T00:00:00.000Z",
+      "featured_sort": 123,
+      "description": "Play over 1000 games on all your screens",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000742/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2318",
+    "name": "Bloo",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-12T00:00:00.000Z",
+      "featured_sort": 138,
+      "description": "Gaming videos, animation, and a side of fun!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000359/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2294",
+    "name": "Bloomberg",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-03-12T00:00:00.000Z",
+      "featured_sort": 302,
+      "description": "The worlds leading provider of 24-hour global business news.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000379/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "120",
     "name": "Bob Ross",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "120"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "106",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-06-17T00:00:00.000Z",
+      "featured_sort": 89,
+      "description": "The Joy of Painting with Bob Ross",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000095/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Bon Appétit",
+    "id": "2335",
+    "name": "Boston 25 News",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "158"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "158",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-01-31T00:00:00.000Z",
+      "featured_sort": 71,
+      "description": "News, weather, traffic, & sports in the Boston area and New Hampshire.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000384/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Boondock Nation",
+    "id": "2394",
+    "name": "Brandon William",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "136"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "136",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-07-25T00:00:00.000Z",
+      "featured_sort": 276,
+      "description": "Explore Fitness with Brandon: Get Moving!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000476/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2420",
+    "name": "Bravo",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-11-01T00:00:00.000Z",
+      "featured_sort": 233,
+      "description": "Watch Episodes of Reality Shows & More",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000526/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "207",
+    "name": "BRB Travel & Food",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-11-10T00:00:00.000Z",
+      "featured_sort": 87,
+      "description": "Refreshing takes on travel, food, and play",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000233/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2311",
+    "name": "Bricks O\u2019Brian",
+    "country": [
+      "USA",
+      "CAN",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-11-10T00:00:00.000Z",
+      "featured_sort": 113,
+      "description": "Family-friendly gaming: Minecraft, Pokemon +",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000354/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2262",
+    "name": "BritBox",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-12-13T00:00:00.000Z",
+      "featured_sort": 258,
+      "description": "Watch dramas, mysteries & more",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000310/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "114",
     "name": "Brooke Burke Body",
     "country": [
-      "usa",
-      "can",
-      "mex"
+      "USA",
+      "CAN",
+      "MEX"
     ],
-    "id": [
-      "114"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "118",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-03-10T00:00:00.000Z",
+      "featured_sort": 41,
+      "description": "Sweat Smart with Brooke Burke",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000098/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Brown Sugar",
+    "id": "2398",
+    "name": "Bryton",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "84"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "69",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 46,
+      "description": "Watch Bryton in his latest adventures!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000491/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "CBS News",
+    "id": "2399",
+    "name": "Bumpy by SSundee",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "56"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "42",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 83,
+      "description": "Bumpy creates the funniest gaming animations.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000489/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "CBS Sports",
+    "id": "2388",
+    "name": "BYUtv",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "109"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "112",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-18T00:00:00.000Z",
+      "featured_sort": 149,
+      "description": "Free TV and movies families can enjoy",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000463/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "113",
     "name": "Canela.TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "113"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "119",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-03-10T00:00:00.000Z",
+      "featured_sort": 99,
+      "description": "\u00a1Series y pel\u00edculas 100% gratis y en espa\u00f1ol!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000097/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Chicken Soup For The Soul",
+    "id": "2296",
+    "name": "CarbonTV",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "168"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "168",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 225,
+      "description": "CarbonTV is the premier video destination.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000341/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2359",
+    "name": "Cartoons Plus",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-06-18T00:00:00.000Z",
+      "featured_sort": 57,
+      "description": "Your favorite animated movies & series",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000424/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "56",
+    "name": "CBS News",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2018-11-14T00:00:00.000Z",
+      "featured_sort": 102,
+      "description": "Live Streaming News",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000027/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "109",
+    "name": "CBS Sports",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-01-11T00:00:00.000Z",
+      "featured_sort": 106,
+      "description": "CBS Sports Stream & Watch Live",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000093/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2581",
+    "name": "Cesar Pantoja",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-10-10T00:00:00.000Z",
+      "featured_sort": 173,
+      "description": "Bromas, drama y puro desmadre.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000739/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2548",
+    "name": "Cesar Vidal TV",
+    "country": [
+      "USA",
+      "CAN",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-14T00:00:00.000Z",
+      "featured_sort": 171,
+      "description": "What nobody else tells you.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000696/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2369",
+    "name": "CGM TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-03T00:00:00.000Z",
+      "featured_sort": 226,
+      "description": "CReed Global Media TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000428/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2547",
+    "name": "Channel 85",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-14T00:00:00.000Z",
+      "featured_sort": 223,
+      "description": "Watch the funniest young comedians in the U.S.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000695/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2195",
+    "name": "Chaupal",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-12T00:00:00.000Z",
+      "featured_sort": 252,
+      "description": "World's biggest Multi-Regional OTT platform.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000362/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2370",
+    "name": "Chess TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-24T00:00:00.000Z",
+      "featured_sort": 116,
+      "description": "Home of the world's top chess community",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000435/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2415",
+    "name": "Chicago Sports Network",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-06-10T00:00:00.000Z",
+      "featured_sort": 26,
+      "description": "Built by Chicago sports fans.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000518/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2443",
+    "name": "Chillfree",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-11T00:00:00.000Z",
+      "featured_sort": 118,
+      "description": "A Collection of Classic Films and TV Shows",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000564/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2330",
     "name": "Christmas Plus",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2228"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "228",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-12-21T00:00:00.000Z",
+      "featured_sort": 6,
+      "description": "Watch your favorite Christmas movies and more!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000377/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Cinehouse",
+    "id": null,
+    "name": "Cineverse",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "80"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "29",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": null,
+      "featured_sort": 143,
+      "description": "Your ticket to a world of entertainment delights.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000263/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2301",
+    "name": "Classic Movies Plus",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 203,
+      "description": "The greatest films of all-time in one place",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000328/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2426",
+    "name": "CNBC Real-Time",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-01-06T00:00:00.000Z",
+      "featured_sort": 300,
+      "description": "Stay informed on all breaking financial news",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000574/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2604",
+    "name": "CNN",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-25T00:00:00.000Z",
+      "featured_sort": 303,
+      "description": "Your destination for unrivaled, fact-based reporting.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000785/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "124",
     "name": "CoCoMelon",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "124"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "123",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-07-16T00:00:00.000Z",
+      "featured_sort": 155,
+      "description": "CoComelon where Baby JJ & family live",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000131/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Comedy Dynamics",
+    "id": "2299",
+    "name": "Comedy Plus",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "276"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "76",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 198,
+      "description": "Watch for Free the Funniest New Movies!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000326/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "ConTV",
+    "id": "2543",
+    "name": "Cosmic Kids Yoga",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "41"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "18",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-05-01T00:00:00.000Z",
+      "featured_sort": 158,
+      "description": "Yoga for Kids",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000691/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Court TV",
+    "id": "2463",
+    "name": "Creator Nation",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "87"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "78",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-03-28T00:00:00.000Z",
+      "featured_sort": 219,
+      "description": "Trending videos from top creators.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000602/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Crackle",
+    "id": "2303",
+    "name": "Crime Plus",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "8"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "5",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 202,
+      "description": "Chilling thrillers, mysteries and heists",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000330/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Crime & Conspiracy",
+    "id": "2464",
+    "name": "Criminally Listed",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "133"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "133",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-03-28T00:00:00.000Z",
+      "featured_sort": 212,
+      "description": "True crime stories and baffling mysteries.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000599/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "CuriosityStream",
+    "id": "2481",
+    "name": "Crunchyroll",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "37"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "12",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-06-25T00:00:00.000Z",
+      "featured_sort": 326,
+      "description": "World\u2019s largest dedicated anime collection.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000694/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "DAZN",
+    "id": "2594",
+    "name": "CTN",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "57"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "34",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2026-04-27T00:00:00.000Z",
+      "featured_sort": 186,
+      "description": "Christian Television Network",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000766/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "37",
+    "name": "Curiosity Stream",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2017-11-27T00:00:00.000Z",
+      "featured_sort": 13,
+      "description": "All the best factual documentaries and originals.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000010/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2368",
+    "name": "Daily Wire+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-05-06T00:00:00.000Z",
+      "featured_sort": 192,
+      "description": "Streaming home of The Daily Wire",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000430/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "209",
     "name": "Dan TDM",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "209"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "209",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-10T00:00:00.000Z",
+      "featured_sort": 140,
+      "description": "Gaming videos from the best British gamer!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000235/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2384",
+    "name": "Danny Kim Grubs",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-24T00:00:00.000Z",
+      "featured_sort": 240,
+      "description": "Surprising Chef Creations",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000458/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "82",
     "name": "Dark Matter TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "82"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "81",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-05-20T00:00:00.000Z",
+      "featured_sort": 37,
+      "description": "Film & TV From The Dark Side",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000056/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2317",
+    "name": "Daylin\u2019s Funhouse",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-11-10T00:00:00.000Z",
+      "featured_sort": 112,
+      "description": "Family gaming, toys, and fun.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000360/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2285",
+    "name": "DayStar",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-15T00:00:00.000Z",
+      "featured_sort": 273,
+      "description": "Watch Daystar Television Live",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000313/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "57",
+    "name": "DAZN",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2018-11-13T00:00:00.000Z",
+      "featured_sort": 19,
+      "description": "Stream live sports",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000028/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2485",
+    "name": "Dekkoo",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-13T00:00:00.000Z",
+      "featured_sort": 190,
+      "description": "Watch great gay movies. Not ads.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000616/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2557",
+    "name": "Dental Digest",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-06T00:00:00.000Z",
+      "featured_sort": 1,
+      "description": "Ready to level up your smile?",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000717/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2568",
+    "name": "DirecTV",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-09-22T00:00:00.000Z",
+      "featured_sort": 329,
+      "description": "Live sports, news, shows, movies & more!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000736/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2222",
     "name": "Discovery Go",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2222"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "222",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-01-09T00:00:00.000Z",
+      "featured_sort": 232,
+      "description": "Watch Discovery with Pay TV Provider",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000231/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "130",
+    "name": "discovery+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-12-17T00:00:00.000Z",
+      "featured_sort": 333,
+      "description": "Streaming home of everything you love. ",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000631/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "76",
     "name": "Disney+",
     "country": [
-      "usa",
-      "can",
-      "mex"
+      "USA",
+      "CAN",
+      "MEX"
     ],
-    "id": [
-      "76"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "75",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-02-19T00:00:00.000Z",
+      "featured_sort": 346,
+      "description": "The stories you love. All in one place.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000043/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2178",
     "name": "Distro TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2178"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "178",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-07-14T00:00:00.000Z",
+      "featured_sort": 168,
+      "description": "Watch Free Live TV & Movies.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000209/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2306",
+    "name": "Documentary Max",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-06-18T00:00:00.000Z",
+      "featured_sort": 211,
+      "description": "Watch free award-winning documentaries!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000333/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2137",
     "name": "Docurama",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      null
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "137",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-03T00:00:00.000Z",
+      "featured_sort": 230,
+      "description": "Featuring great documentaries & shows",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000137/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2570",
+    "name": "DOGTV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-18T00:00:00.000Z",
+      "featured_sort": 250,
+      "description": "DOGTV is scientifically developed for dogs.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000712/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2341",
     "name": "Dove Channel",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "42"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "16",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-03-13T00:00:00.000Z",
+      "featured_sort": 187,
+      "description": "Wholesome, inspiring movies & TV shows",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000425/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2442",
+    "name": "Drew Dirksen",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-01-22T00:00:00.000Z",
+      "featured_sort": 207,
+      "description": "Building wild creations & epic adventures!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000590/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2493",
+    "name": "Dropout",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-04-11T00:00:00.000Z",
+      "featured_sort": 40,
+      "description": "The home of Dimension 20 & exclusive shows!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000636/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2268",
+    "name": "Dude Perfect",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-15T00:00:00.000Z",
+      "featured_sort": 227,
+      "description": "Stream all your favorite Dude content!.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000334/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "290",
     "name": "ElectricNow",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "290"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "90",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-08-17T00:00:00.000Z",
+      "featured_sort": 193,
+      "description": "Family friendly TV, films, and podcasts",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000120/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2600",
+    "name": "Escape",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-04T00:00:00.000Z",
+      "featured_sort": 220,
+      "description": "New Worlds. New Stories.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000778/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2292",
+    "name": "ESPN+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-06T00:00:00.000Z",
+      "featured_sort": 342,
+      "description": "Watch Games, Highlights and News",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000340/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "165",
     "name": "Estrella TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "165"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "165",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-06-02T00:00:00.000Z",
+      "featured_sort": 174,
+      "description": "EstrellaTV, unique and fun content in Spanish",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000199/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "FOX NOW",
+    "id": "2376",
+    "name": "EYstreem",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "110"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "109",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-11T00:00:00.000Z",
+      "featured_sort": 130,
+      "description": "EYstreem's amazing Minecraft adventures await!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000451/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "FOX Sports",
+    "id": "2265",
+    "name": "FailArmy",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2111"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "111",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-08-21T00:00:00.000Z",
+      "featured_sort": 228,
+      "description": "Laugh it off with hilarious fails.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000311/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "FamilyTime",
+    "id": "2560",
+    "name": "Family Feud",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2186"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "186",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-08-06T00:00:00.000Z",
+      "featured_sort": 204,
+      "description": "Watch the top Family Feud moments of all time!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000720/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2302",
+    "name": "Family Flix Plus",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 200,
+      "description": "Family-approved movies and tv series!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000329/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2425",
+    "name": "Family Playland",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-10-09T00:00:00.000Z",
+      "featured_sort": 172,
+      "description": "Wholesome family streaming with values & fun!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000537/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "6",
+    "name": "Fandango at Home",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 339,
+      "description": "Buy or Rent the Latest Movies & TV Shows",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000029/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2154",
     "name": "Fandor",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2154"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "154",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-09-08T00:00:00.000Z",
+      "featured_sort": 92,
+      "description": "The Home for Cinephiles",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000163/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2582",
+    "name": "FanDuel Sports",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-13T00:00:00.000Z",
+      "featured_sort": 33,
+      "description": "FanDuel Sports Network, your home for your home teams",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000734/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2364",
+    "name": "Fanmio",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-06-18T00:00:00.000Z",
+      "featured_sort": 275,
+      "description": "Experience what\u2019s next with Fanmio. Delivering only the best entertainment.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000419/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "104",
     "name": "Fawesome.tv",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "104"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "87",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-11-18T00:00:00.000Z",
+      "featured_sort": 251,
+      "description": "Watch hundreds of FREE movies & TV shows",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000072/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2584",
+    "name": "FIFA+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-12-03T00:00:00.000Z",
+      "featured_sort": 34,
+      "description": "Live football, replays, and documentaries",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000746/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "47",
     "name": "FilmRise",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "47"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "24",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2018-12-13T00:00:00.000Z",
+      "featured_sort": 271,
+      "description": "Home of your favorite movies and series.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000021/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "FitFusion",
+    "id": "2196",
+    "name": "FilmRise Action",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "54"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "39",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-03-14T00:00:00.000Z",
+      "featured_sort": 263,
+      "description": "FREE Action movies and TV for instant streaming.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000256/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Fite TV",
+    "id": "2280",
+    "name": "FilmRise Anime",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "83"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "82",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-09-23T00:00:00.000Z",
+      "featured_sort": 259,
+      "description": "FREE Anime TV and Films",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000347/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2197",
+    "name": "FilmRise Black tv",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-14T00:00:00.000Z",
+      "featured_sort": 264,
+      "description": "FREE Black-led movies and TV.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000257/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2198",
+    "name": "FilmRise British TV",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-14T00:00:00.000Z",
+      "featured_sort": 260,
+      "description": "FREE British movies & TV for instant streaming.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000253/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2276",
+    "name": "FilmRise Classic TV",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-25T00:00:00.000Z",
+      "featured_sort": 268,
+      "description": "FREE Classic TV and Films",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000343/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2279",
+    "name": "FilmRise Comedy",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-25T00:00:00.000Z",
+      "featured_sort": 265,
+      "description": "FREE Comedy Movies and TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000348/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2281",
+    "name": "FilmRise Documentary",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-17T00:00:00.000Z",
+      "featured_sort": 262,
+      "description": "FREE Reality & Documentary TV and Movies",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000350/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2287",
+    "name": "FilmRise Espa\u00f1ol",
+    "country": [
+      "USA",
+      "CAN",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-25T00:00:00.000Z",
+      "featured_sort": 176,
+      "description": "FREE Movies & TV en espa\u00f1ol",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000369/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2272",
+    "name": "FilmRise Horror",
+    "country": [
+      "USA",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-25T00:00:00.000Z",
+      "featured_sort": 270,
+      "description": "FREE Horror Movies and TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000344/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2278",
+    "name": "FilmRise Mysteries",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-25T00:00:00.000Z",
+      "featured_sort": 267,
+      "description": "FREE Mystery Movies and TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000346/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2277",
+    "name": "FilmRise Sci-Fi",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-25T00:00:00.000Z",
+      "featured_sort": 269,
+      "description": "FREE Sci-Fi Movies and TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000345/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2199",
+    "name": "FilmRise True Crime",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-27T00:00:00.000Z",
+      "featured_sort": 266,
+      "description": "FREE True Crime TV for instant streaming.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000254/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2200",
+    "name": "FilmRise Western",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-14T00:00:00.000Z",
+      "featured_sort": 261,
+      "description": "FREE Epic Western Movies from Wild West!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000255/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2233",
+    "name": "Filmzie",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-04-04T00:00:00.000Z",
+      "featured_sort": 272,
+      "description": "Movie Streaming App",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000270/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2371",
+    "name": "Fire Kitchen",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-30T00:00:00.000Z",
+      "featured_sort": 241,
+      "description": "Primitive Gourmet: Fireside Cooking ASMR",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000453/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2386",
+    "name": "Firelight",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-19T00:00:00.000Z",
+      "featured_sort": 120,
+      "description": "Firelight's expert Minecraft adventures.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000461/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2232",
+    "name": "Fishing TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-14T00:00:00.000Z",
+      "featured_sort": 167,
+      "description": "Watch the world's best fishing TV shows and movies.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000251/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2427",
+    "name": "FitMC",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-11-18T00:00:00.000Z",
+      "featured_sort": 133,
+      "description": "Minecraft's Anarchy, History, and Lore.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000536/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "49",
     "name": "Flixfling",
     "country": [
       "*"
     ],
-    "id": [
-      "49"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "36",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2018-11-14T00:00:00.000Z",
+      "featured_sort": 36,
+      "description": "Stream your favorite movies and music",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000022/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2472",
+    "name": "FlixLatino",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-02-14T00:00:00.000Z",
+      "featured_sort": 101,
+      "description": "Discover movies and shows in Spanish",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000592/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2556",
+    "name": "FloSports",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-06-04T00:00:00.000Z",
+      "featured_sort": 323,
+      "description": "Thousands of Live Events. Stream Every Moment.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000705/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2323",
+    "name": "FNAF Gaming",
+    "country": [
+      "USA",
+      "CAN",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-11-10T00:00:00.000Z",
+      "featured_sort": 111,
+      "description": "Your home base for everything FNAF.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000368/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2434",
+    "name": "FNX",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-12-30T00:00:00.000Z",
+      "featured_sort": 100,
+      "description": "Native American & World Indigenous content",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000543/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2223",
     "name": "Food Network Go",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2223"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "223",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-01-09T00:00:00.000Z",
+      "featured_sort": 239,
+      "description": "Watch Food Network with Pay TV Provider",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000228/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2591",
+    "name": "Forge Labs Minecraft",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-20T00:00:00.000Z",
+      "featured_sort": 142,
+      "description": "Forge Labs Hardcore Minecraft Adventures!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000752/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2313",
+    "name": "Fortnite Tips and Tricks",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 134,
+      "description": "Fortnite updates, deathruns and challenges.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000353/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2266",
+    "name": "FOX LOCAL",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-19T00:00:00.000Z",
+      "featured_sort": 82,
+      "description": "Watch free newscasts & weather forecasts",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000303/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "111",
     "name": "Fox Nation",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "111"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "110",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-02-01T00:00:00.000Z",
+      "featured_sort": 104,
+      "description": "Daily Live Shows & Specials",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000090/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Free Games by PlayWorks",
+    "id": "2293",
+    "name": "Fox News",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "101"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "104",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-031T00:00:00.000Z",
+      "featured_sort": 296,
+      "description": "Breaking News Updates",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000322/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2574",
+    "name": "FOX One",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-19T00:00:00.000Z",
+      "featured_sort": 338,
+      "description": "Watch FOX News, NFL, MLB & more with FOX ONE.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000733/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2352",
+    "name": "FOX Sports",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-11-09T00:00:00.000Z",
+      "featured_sort": 282,
+      "description": "Live Sports: Football, Baseball & more",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000214/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "101",
+    "name": "Free Games by Play.Works",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2020-11-4T00:00:00.000Z",
+      "featured_sort": 122,
+      "description": "Fun free games for the whole family!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000082/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2419",
+    "name": "Free Live Sports",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-02-15T00:00:00.000Z",
+      "featured_sort": 27,
+      "description": "Never pay to watch Live Sports again!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000525/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2331",
     "name": "Free Movies+",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2229"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "229",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-01-19T00:00:00.000Z",
+      "featured_sort": 194,
+      "description": "Watch new blockbuster movies for free!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000376/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Funimation",
+    "id": "2140",
+    "name": "FreeTV",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "59"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "59",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-18T00:00:00.000Z",
+      "featured_sort": 195,
+      "description": "Free movies and series from the U.S. and around the world",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000426/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "GoTraveler",
+    "id": "2250",
+    "name": "Frndly TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "117"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "125",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-04-04T00:00:00.000Z",
+      "featured_sort": 320,
+      "description": "Frndly TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000292/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Gravitas Movies",
+    "id": "138",
+    "name": "fuboTV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "119"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "108",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-09-16T00:00:00.000Z",
+      "featured_sort": 332,
+      "description": "Watch Live Sports & TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000150/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "HBO Max",
+    "id": "2492",
+    "name": "Full Moon Features",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "128"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "128",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-04-11T00:00:00.000Z",
+      "featured_sort": 96,
+      "description": "An entire secret history of strange cinema.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000637/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "HGTV",
+    "id": "2316",
+    "name": "Funhouse Family",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2224"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "224",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-11-10T00:00:00.000Z",
+      "featured_sort": 144,
+      "description": "Family game nights, skits, and fun.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000357/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Hallmark Movies Now",
+    "id": "2267",
+    "name": "Gaby and Alex",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2203"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "203",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-08-11T00:00:00.000Z",
+      "featured_sort": 154,
+      "description": "Play games, sing, and learn about the world.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000301/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2202",
+    "name": "GALXY",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-03-31T00:00:00.000Z",
+      "featured_sort": 216,
+      "description": "We pay fans to watch and promote movies and tv.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000588/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2573",
+    "name": "GetMovies",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-04-08T00:00:00.000Z",
+      "featured_sort": 175,
+      "description": "Perfect destination for the best romantic movies",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000775/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2469",
+    "name": "Golf Nation",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-02-14T00:00:00.000Z",
+      "featured_sort": 22,
+      "description": "The first shoppable network dedicated to golf",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000596/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2315",
+    "name": "Gorgeous Movies",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-12T00:00:00.000Z",
+      "featured_sort": 148,
+      "description": "Funny original family movies and parodies.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000356/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2378",
+    "name": "Gotham",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-29T00:00:00.000Z",
+      "featured_sort": 30,
+      "description": "The Best of NY Sports All in One Place",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000444/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2350",
+    "name": "Hacksmith Industries",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-03T00:00:00.000Z",
+      "featured_sort": 210,
+      "description": "Movie and game concepts made real.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000404/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2203",
+    "name": "Hallmark+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-12-21T00:00:00.000Z",
+      "featured_sort": 283,
+      "description": "Hallmark Series & Movies",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000308/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "103",
     "name": "HappyKids.tv",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "103"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "85",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-11-18T00:00:00.000Z",
+      "featured_sort": 59,
+      "description": "Free, Kids Safe Fun and Learning Videos",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000014/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Haystack TV",
+    "id": "35",
+    "name": "Haystack News",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "35"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "60",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-11-12T00:00:00.000Z",
+      "featured_sort": 301,
+      "description": "Free Local & World News",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000204/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "128",
+    "name": "HBO Max",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-09-01T00:00:00.000Z",
+      "featured_sort": 311,
+      "description": "The One to Watch",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000299/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "188",
     "name": "Here TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "188"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "188",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-11T00:00:00.000Z",
+      "featured_sort": 188,
+      "description": "LGBT movies, documentaries, and shows.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000212/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Hipstr",
+    "id": "2224",
+    "name": "HGTV Go",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "153"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "153",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-01-09T00:00:00.000Z",
+      "featured_sort": 234,
+      "description": "Catch up with your favorite HGTV shows with the new HGTV Go",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000230/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2409",
+    "name": "HIDIVE",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-06T00:00:00.000Z",
+      "featured_sort": 121,
+      "description": "Where Anime Fans Belong",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000493/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "160",
     "name": "History Vault",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "160"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "160",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-12-20T00:00:00.000Z",
+      "featured_sort": 183,
+      "description": "Thousands of HISTORY Channel series and documentaries",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000176/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Hometalk TV",
+    "id": "2304",
+    "name": "Horror Plus",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "100"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "95",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 197,
+      "description": "Free Hit Horror Movies and Series 24/7",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000331/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "19",
     "name": "Hulu",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "19"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "3",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 348,
+      "description": "Stream Thousands of Shows and Movies",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/500000015/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Into The Outdoors",
+    "id": "2124",
+    "name": "iFood.TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "139"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "139",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-08-17T00:00:00.000Z",
+      "featured_sort": 86,
+      "description": "Stream over 40,000 delicious food videos",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000135/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "11",
+    "name": "iHeartRadio",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 325,
+      "description": "iHeartRadio: Free Music, Radio & Podcasts",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/500000032/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2473",
+    "name": "In the Black Network",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-04-21T00:00:00.000Z",
+      "featured_sort": 17,
+      "description": "Streaming Black, Latino & global stories",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000594/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2380",
+    "name": "In Touch",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-10T00:00:00.000Z",
+      "featured_sort": 289,
+      "description": "The teaching ministry of Dr. Charles Stanley",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000454/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2225",
     "name": "Investigation Discovery (ID) Go",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2225"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "225",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-01-09T00:00:00.000Z",
+      "featured_sort": 231,
+      "description": "Watch ID with Pay TV Provider",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000229/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Journy",
+    "id": "2291",
+    "name": "iQIYI",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2219"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "219",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-08-07T00:00:00.000Z",
+      "featured_sort": 178,
+      "description": "Home of Asian entertainment dramas and more",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000395/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "KORTV",
+    "id": "2465",
+    "name": "JianHao Tan",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "157"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "157",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-03-28T00:00:00.000Z",
+      "featured_sort": 50,
+      "description": "Fun and laughs at Titan Academy!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000600/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2456",
+    "name": "Jordan Matter",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-01-29T00:00:00.000Z",
+      "featured_sort": 52,
+      "description": "Wild challenges with Salish & Jordan Matter!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000582/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2578",
+    "name": "Juan De Dios Pantoja",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-06T00:00:00.000Z",
+      "featured_sort": 53,
+      "description": "Retos, drama y risas con Jukilop",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000738/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2559",
+    "name": "JustKass",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-19T00:00:00.000Z",
+      "featured_sort": 145,
+      "description": "Beauty, laughs, and family fun!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000719/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2327",
+    "name": "Kanto Karaoke",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-09T00:00:00.000Z",
+      "featured_sort": 306,
+      "description": "Get your own karaoke at home.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000370/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2213",
+    "name": "KARE 11+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-05-16T00:00:00.000Z",
+      "featured_sort": 79,
+      "description": "The latest news and weather from KARE 11",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000240/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2579",
+    "name": "Karla Bustillos",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-10-10T00:00:00.000Z",
+      "featured_sort": 253,
+      "description": "Risas y retos con Karla y el Team Karmas",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000737/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2429",
+    "name": "Katina Eats Kilos",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-11-18T00:00:00.000Z",
+      "featured_sort": 242,
+      "description": "Epic food challenges featuring massive meals!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000535/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2455",
+    "name": "Khaby Lame",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-01-29T00:00:00.000Z",
+      "featured_sort": 214,
+      "description": "Khaby\u2019s Comedy: Universal Relatable Hilarious!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000581/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "92",
     "name": "Kidoodle.tv",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "92"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "92",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-11T00:00:00.000Z",
+      "featured_sort": 159,
+      "description": "The Safe Streaming Platform for Kids.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000061/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2482",
+    "name": "Kidstream",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-13T00:00:00.000Z",
+      "featured_sort": 152,
+      "description": "Educational & Ad-Free TV for Kids of All Ages",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000628/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2310",
+    "name": "KIRO 7 News Seattle",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-12T00:00:00.000Z",
+      "featured_sort": 72,
+      "description": "News and coverage of major local stories for Western Washington.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000351/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2406",
+    "name": "KnightTime+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-06T00:00:00.000Z",
+      "featured_sort": 23,
+      "description": "Vegas Golden Knights",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000497/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2261",
+    "name": "KOCOWA+",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-05-30T00:00:00.000Z",
+      "featured_sort": 285,
+      "description": "The Best In Korean Entertainment",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000309/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "157",
+    "name": "KORTV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-02-22T00:00:00.000Z",
+      "featured_sort": 62,
+      "description": "Korean Entertainment 24/7",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000154/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2215",
+    "name": "KUSA+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-05-16T00:00:00.000Z",
+      "featured_sort": 80,
+      "description": "The latest news and weather from 9NEWS",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000238/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2319",
+    "name": "Kwebbelkop",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-12T00:00:00.000Z",
+      "featured_sort": 139,
+      "description": "Gaming videos, animation, and a side of fun!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000358/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "123",
     "name": "LEGO TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "123"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "122",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-07-13T00:00:00.000Z",
+      "featured_sort": 45,
+      "description": "Stream exciting and fun LEGO videos!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000129/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "La Bocina Latina",
+    "id": "2367",
+    "name": "Let Me Explain Studios",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "194"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "194",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-04-24T00:00:00.000Z",
+      "featured_sort": 114,
+      "description": "Rebecca Parham's creative brain drippings.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000433/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Lava",
-    "country": [
-      "usa",
-      "can"
-    ],
-    "id": [
-      "167"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "167",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
+    "id": "161",
     "name": "Lifetime Movie Club",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "161"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "161",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-12-20T00:00:00.000Z",
+      "featured_sort": 185,
+      "description": "All the drama, all the time, ad-free!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000177/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2269",
+    "name": "Like Nastya",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-05-13T00:00:00.000Z",
+      "featured_sort": 157,
+      "description": "Play with kids worldwide superstar, Nastya.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000302/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2249",
+    "name": "LIV Golf+",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-01-31T00:00:00.000Z",
+      "featured_sort": 21,
+      "description": "Introducing LIV Golf+",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000286/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2458",
+    "name": "LiveOne",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-12-10T00:00:00.000Z",
+      "featured_sort": 312,
+      "description": "Lean back and enjoy your favorite music!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000584/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "85",
     "name": "Local Now",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "85"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "79",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-06-22T00:00:00.000Z",
+      "featured_sort": 66,
+      "description": "Local News Weather Traffic & Sports",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000057/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Love Destination",
-    "country": [
-      "*"
-    ],
-    "id": [
-      "64"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "57",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
+    "id": "2239",
     "name": "Made It Myself TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2239"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "239",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-02-08T00:00:00.000Z",
+      "featured_sort": 235,
+      "description": "DIY, crafting, sewing, jewelry making, and much more.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000267/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "74",
     "name": "MagellanTV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "74"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "67",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2019-11-22T00:00:00.000Z",
+      "featured_sort": 14,
+      "description": "World's Best documentaries - Ad Free",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000039/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2348",
+    "name": "Man + River",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-03T00:00:00.000Z",
+      "featured_sort": 208,
+      "description": "Hidden underwater treasures revealed.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000402/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2580",
+    "name": "Mau McMahon",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-20T00:00:00.000Z",
+      "featured_sort": 221,
+      "description": "Team Karmas: bromas, retos y pura locura en familia",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000740/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2383",
+    "name": "Maverick Free Black Cinema",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-01T00:00:00.000Z",
+      "featured_sort": 18,
+      "description": "Free Black Cinema films for you to enjoy",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000471/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2391",
+    "name": "MeEnyu",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 125,
+      "description": "Join MeEnyu for epic Blox Fruits adventures.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000474/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2552",
+    "name": "MHz Choice",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-20T00:00:00.000Z",
+      "featured_sort": 179,
+      "description": "Your passport to the best international TV!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000701/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2274",
     "name": "Midnight Pulp",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "122"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "28",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-08-11T00:00:00.000Z",
+      "featured_sort": 16,
+      "description": "Stream All Things Strange.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000315/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2392",
+    "name": "Milo and Chip",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 131,
+      "description": "Fun Minecraft adventures!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000475/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2328",
+    "name": "Mometu",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-12-07T00:00:00.000Z",
+      "featured_sort": 169,
+      "description": "Discover compelling hand curated content on Mometu!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000390/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2414",
+    "name": "Monumental+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-16T00:00:00.000Z",
+      "featured_sort": 24,
+      "description": "Washington Capitals, Wizards, and Mystics",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000519/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "135",
     "name": "Motorvision TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "135"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "135",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-10-06T00:00:00.000Z",
+      "featured_sort": 90,
+      "description": "24/7 TV, LIVE-Motorsport & Entertainment",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000153/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "86",
     "name": "Movies Anywhere",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "86"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "38",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-06-25T00:00:00.000Z",
+      "featured_sort": 44,
+      "description": "Your movies, together when you need them",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000023/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2585",
+    "name": "MS NOW",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-10-27T00:00:00.000Z",
+      "featured_sort": 304,
+      "description": "Breaking News, Analysis & Live Video",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000741/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2566",
+    "name": "MUBI",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-02T00:00:00.000Z",
+      "featured_sort": 340,
+      "description": "Discover great films and series, with MUBI.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000710/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2441",
+    "name": "Muselk",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-12-30T00:00:00.000Z",
+      "featured_sort": 119,
+      "description": "Muselk's wild Fortnite adventures.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000551/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2308",
+    "name": "Music Choice",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-10-31T00:00:00.000Z",
+      "featured_sort": 309,
+      "description": "Ad-free music channels & playlists",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000335/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "192",
     "name": "MyOutdoorTV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "192"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "192",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-11T00:00:00.000Z",
+      "featured_sort": 163,
+      "description": "Hunt, Fish & Shoot",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000218/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2569",
+    "name": "Nature Relaxation",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-18T00:00:00.000Z",
+      "featured_sort": 165,
+      "description": "Replace worries with wonders",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000713/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "43",
     "name": "NBC",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "43"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "10",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-11-15T00:00:00.000Z",
+      "featured_sort": 109,
+      "description": "Stream movies, TV shows, and live sports",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000018/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2403",
+    "name": "NBC News",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 299,
+      "description": "Live & breaking news from NBC News, MSNBC, & TODAY",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000505/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2377",
+    "name": "NBC Sports",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-05-22T00:00:00.000Z",
+      "featured_sort": 31,
+      "description": "Watch Live & On-Demand Sports with NBC Sports",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000443/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2588",
+    "name": "NESN 360",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-26T00:00:00.000Z",
+      "featured_sort": 29,
+      "description": "Download the NESN 360 app to start watching!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000743/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "34",
     "name": "Netflix",
     "country": [
       "*"
     ],
-    "id": [
-      "34"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 3,
-        "APP_ID": "1",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 351,
+      "description": "Award-winning series, movies and more",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/500000018/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Newsy",
+    "id": "2517",
+    "name": "NEWS CENTER Maine+",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "38"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "15",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2026-01-16T00:00:00.000Z",
+      "featured_sort": 77,
+      "description": "Local News and Weather from NCM",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000681/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Ninja Kidz TV",
+    "id": "2344",
+    "name": "Newsmax+",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "115"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "93",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-09-15T00:00:00.000Z",
+      "featured_sort": 291,
+      "description": "Real News for Real People",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000400/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2396",
+    "name": "NewsON",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-07T00:00:00.000Z",
+      "featured_sort": 297,
+      "description": "Watch local TV newscasts live & on demand",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000481/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2297",
+    "name": "NFL",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 324,
+      "description": "Stream NFL Network, NFL RedZone & more.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000367/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2393",
+    "name": "Nick Symmonds",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-25T00:00:00.000Z",
+      "featured_sort": 277,
+      "description": "Take a challenge with Nick Symmonds",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000477/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2385",
+    "name": "Nile Red",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-05T00:00:00.000Z",
+      "featured_sort": 244,
+      "description": "Chemistry redefined: compounding cool and genius.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000460/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "115",
+    "name": "Ninja Kidz TV+",
+    "country": [
+      "USA",
+      "CAN",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-12-06T00:00:00.000Z",
+      "featured_sort": 47,
+      "description": "Ninja Kidz - Ad-free!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000571/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "179",
     "name": "Nosey",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "179"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "179",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-06-02T00:00:00.000Z",
+      "featured_sort": 162,
+      "description": "All your favorite daytime reality TV shows!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000687/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Novocomedy",
+    "id": "2558",
+    "name": "Not Enough Nelsons",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "166"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "166",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-08-19T00:00:00.000Z",
+      "featured_sort": 147,
+      "description": "16 Siblings, Endless Family Adventures!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000718/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Outdoor America",
+    "id": "2204",
+    "name": "OAN Live",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "170"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "170",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-10-26T00:00:00.000Z",
+      "featured_sort": 298,
+      "description": "One America News live 24/7 reliable news.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000431/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2400",
+    "name": "officialnoobie",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 124,
+      "description": "Blox Fruits and more Roblox adventures.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000492/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2546",
+    "name": "Outdoor Action TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-20T00:00:00.000Z",
+      "featured_sort": 164,
+      "description": "Stream fishing, hunting, adventure, and more!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000721/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2353",
     "name": "Outside TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "163"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "163",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-10T00:00:00.000Z",
+      "featured_sort": 166,
+      "description": "Stream Adventure Sports & Outdoor Lifestyle",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000414/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "PBS",
+    "id": "2247",
+    "name": "OWN",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "129"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "129",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-03-27T00:00:00.000Z",
+      "featured_sort": 249,
+      "description": "Watch with pay TV Provider.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000279/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "PBS Kids",
-    "country": [
-      "usa"
-    ],
-    "id": [
-      "112"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "117",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
+    "id": "70",
     "name": "Pandora",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "70"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "58",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2019-11-07T00:00:00.000Z",
+      "featured_sort": 98,
+      "description": "Discover new music, personalized for you",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000041/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "9",
     "name": "Paramount+",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "9"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "37",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2018-10-14T00:00:00.000Z",
+      "featured_sort": 330,
+      "description": "Full episodes, originals, news & live TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/500000049/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2387",
+    "name": "Parks Channel",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-25T00:00:00.000Z",
+      "featured_sort": 209,
+      "description": "A destination for treasured places and spaces",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000459/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "77",
     "name": "Party Tyme Karaoke",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "77"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "70",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-03-05T00:00:00.000Z",
+      "featured_sort": 35,
+      "description": "Best-sounding karaoke in the world!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000045/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "176",
     "name": "Passionflix",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "176"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "176",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-03-30T00:00:00.000Z",
+      "featured_sort": 161,
+      "description": "Get your passion on",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000194/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2366",
+    "name": "Payton",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-24T00:00:00.000Z",
+      "featured_sort": 48,
+      "description": "Payton Delu is a teenager and a Ninja Kid!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000434/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "129",
+    "name": "PBS",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-08-17T00:00:00.000Z",
+      "featured_sort": 103,
+      "description": "Watch Live TV and Videos on Demand",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000125/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "112",
+    "name": "PBS Kids",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-02-25T00:00:00.000Z",
+      "featured_sort": 153,
+      "description": "Safe Educational Videos and TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000099/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "88",
     "name": "Peacock",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "88"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "88",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-07-29T00:00:00.000Z",
+      "featured_sort": 341,
+      "description": "Stream hit movies and TV shows for FREE.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000062/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Phoenix TV",
+    "id": "2360",
+    "name": "Peliculas Gratis +",
     "country": [
-      "usa",
-      "can",
-      "mex"
+      "USA"
     ],
-    "id": [
-      "116"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "114",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-09-04T00:00:00.000Z",
+      "featured_sort": 177,
+      "description": "Tu cine en casa, gratis y sin l\u00edmites",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000420/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "PlayWorks Kids",
+    "id": "2347",
+    "name": "Philo",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "171"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "171",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-01-05T00:00:00.000Z",
+      "featured_sort": 319,
+      "description": "Shows, Movies, and Live TV.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000399/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "171",
+    "name": "Play.Works Kids",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-05-17T00:00:00.000Z",
+      "featured_sort": 58,
+      "description": "Ninja Kidz TV, BigBStatz, and more!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000189/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2438",
+    "name": "PlayKids Learning",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-11-10T00:00:00.000Z",
+      "featured_sort": 160,
+      "description": "Safe. Fun. Curated learning.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000544/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "40",
     "name": "Plex",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "40"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "9",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-11-05T00:00:00.000Z",
+      "featured_sort": 322,
+      "description": "Stream your movies, TV, music, and more",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000013/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "12",
     "name": "Pluto TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "12"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 0,
-        "APP_ID": "E6F74C01",
-        "MESSAGE": "{\"CAST_NAMESPACE\":\"urn:x-cast:tv.pluto\",\"CAST_MESSAGE\":{\"command\":\"initializePlayback\",\"channel\":\"\",\"episode\":\"\",\"time\":0}}"
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 337,
+      "description": "Pluto TV is free TV. Watch live TV free!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000128/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2545",
+    "name": "Pocono Television Network",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-01T00:00:00.000Z",
+      "featured_sort": 2,
+      "description": "If it\u2019s happening in the Poconos, it\u2019s on PTN",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000693/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "164",
     "name": "Popstar TV",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "164"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "164",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-10T00:00:00.000Z",
+      "featured_sort": 38,
+      "description": "Exclusive celeb news, videos & interviews!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000221/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2211",
+    "name": "Power Nation TV",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-04-04T00:00:00.000Z",
+      "featured_sort": 91,
+      "description": "Car & Truck Builds",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000225/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "33",
     "name": "Prime Video",
     "country": [
       "*"
     ],
-    "id": [
-      "33"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "4",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 350,
+      "description": "Movies, TV shows & Amazon Originals",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000086/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "ROW8",
+    "id": "2474",
+    "name": "Pure Flix",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "94"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "102",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-02-14T00:00:00.000Z",
+      "featured_sort": 55,
+      "description": "Quality Faith and Family Entertainment",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000595/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "RedBox",
+    "id": "2236",
+    "name": "QVC+/HSN+",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "55"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "41",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-05-31T00:00:00.000Z",
+      "featured_sort": 316,
+      "description": "QVC+ and HSN+ - Where shopping comes alive!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000271/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2549",
+    "name": "RacinDirt TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-14T00:00:00.000Z",
+      "featured_sort": 280,
+      "description": "Premium live and on-demand dirt racing.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000697/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2596",
+    "name": "Remy Network",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-23T00:00:00.000Z",
+      "featured_sort": 182,
+      "description": "Streaming by Grammy-nominated artist Remy Ma.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000783/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2275",
     "name": "RetroCrush",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "102"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "105",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-08-11T00:00:00.000Z",
+      "featured_sort": 65,
+      "description": "Stream Classic Anime.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000316/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Run The Fut Market",
+    "id": "2564",
+    "name": "Revry",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "210"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "210",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2026-03-16T00:00:00.000Z",
+      "featured_sort": 288,
+      "description": "Free LGBTQ+ TV, movies, news and music",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000708/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Run:Time en Español",
+    "id": "2544",
+    "name": "Ride TV",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "118"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "127",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-05-01T00:00:00.000Z",
+      "featured_sort": 279,
+      "description": "Everything you love about horses in one place.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000692/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "STARZ",
+    "id": "208",
+    "name": "Roblox Tips & Tricks",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "151"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "151",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-10T00:00:00.000Z",
+      "featured_sort": 126,
+      "description": "Superstar gamers share Roblox mod tips.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000234/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Sanctuary Yoga",
+    "id": "2598",
+    "name": "Roping.com",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "89"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "89",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-11-14T00:00:00.000Z",
+      "featured_sort": 20,
+      "description": "Ultimate roping instruction and entertainment",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000770/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "94",
+    "name": "ROW8",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2020-10-08T00:00:00.000Z",
+      "featured_sort": 150,
+      "description": "Hollywood films before NETFLIX.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000068/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2595",
+    "name": "Royalty Gaming",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-20T00:00:00.000Z",
+      "featured_sort": 141,
+      "description": "Game Time with the Royalty Fam",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000762/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "118",
+    "name": "Run:Time en Espa\u00f1ol",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2021-06-02T00:00:00.000Z",
+      "featured_sort": 88,
+      "description": "Movies and series anytime, always free",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000122/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2365",
+    "name": "Salem News Channel",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-10-21T00:00:00.000Z",
+      "featured_sort": 295,
+      "description": "Conservative opinion & straight-forward news",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000427/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2253",
+    "name": "SalemNOW",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-12T00:00:00.000Z",
+      "featured_sort": 170,
+      "description": "SalemNOW: Watch Movies and Conservative Media",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000319/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2241",
+    "name": "Science Channel GO",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-27T00:00:00.000Z",
+      "featured_sort": 245,
+      "description": "Watch with pay TV Provider.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000282/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2155",
     "name": "Screambox",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2155"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "155",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-09-08T00:00:00.000Z",
+      "featured_sort": 95,
+      "description": "Pure Horror",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000164/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2345",
+    "name": "Screen Gallery",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-02-20T00:00:00.000Z",
+      "featured_sort": 11,
+      "description": "The premier TV destination for procured on-trend Art",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000398/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2361",
+    "name": "Screensavers Plus!",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-06-18T00:00:00.000Z",
+      "featured_sort": 10,
+      "description": "Turn Your T.V. Into Beautiful Scenes",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000421/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "148",
     "name": "Sensical",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "148"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "148",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-02-03T00:00:00.000Z",
+      "featured_sort": 156,
+      "description": "The new free streaming app for kids.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000172/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "73",
     "name": "Sesame Street",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "73"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "68",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2019-11-22T00:00:00.000Z",
+      "featured_sort": 42,
+      "description": "Come play and learn on Sesame Street!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000037/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2343",
+    "name": "Shop LC",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-03-12T00:00:00.000Z",
+      "featured_sort": 237,
+      "description": "Home of Exceptional Quality, Exquisite Designs, Outstanding Value",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000396/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2142",
     "name": "Shudder",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2142"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "142",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-12-07T00:00:00.000Z",
+      "featured_sort": 94,
+      "description": "Horror. Thriller. Supernatural.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000159/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2550",
+    "name": "Side+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-15T00:00:00.000Z",
+      "featured_sort": 222,
+      "description": "The Sidemen Membership Club",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000755/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2212",
     "name": "Sirius XM",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2212"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "212",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-01-19T00:00:00.000Z",
+      "featured_sort": 313,
+      "description": "Everything you want to hear.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000252/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "150",
     "name": "Sling TV",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "150"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "150",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-01-20T00:00:00.000Z",
+      "featured_sort": 336,
+      "description": "A better way to watch live TV",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000181/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Smart Cinema",
+    "id": "2116",
+    "name": "So Real",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2101"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "101",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-06-06T00:00:00.000Z",
+      "featured_sort": 229,
+      "description": "Popular reality shows from the UK & Australia",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000100/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Space Channel",
+    "id": "2471",
+    "name": "Spectrum TV",
     "country": [
-      "usa",
-      "can"
+      "USA"
     ],
-    "id": [
-      "121"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "126",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-04-28T00:00:00.000Z",
+      "featured_sort": 327,
+      "description": "Live TV & On Demand for Vizio Smart TVs",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000593/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2436",
+    "name": "Spirits Network",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-17T00:00:00.000Z",
+      "featured_sort": 247,
+      "description": "Watch, Buy & Taste the world of spirits",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000567/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "132",
     "name": "Ssundee",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "132"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "132",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-10-25T00:00:00.000Z",
+      "featured_sort": 84,
+      "description": "SSundee plays Among Us and Minecraft",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000139/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "151",
+    "name": "STARZ",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2022-07-29T00:00:00.000Z",
+      "featured_sort": 335,
+      "description": "Obsessable Original Series. Hit Movies.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000211/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2382",
+    "name": "Stingray Karaoke",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-23T00:00:00.000Z",
+      "featured_sort": 308,
+      "description": "Bring the fun of karaoke home!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000450/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2459",
+    "name": "Stream TV",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-08-11T00:00:00.000Z",
+      "featured_sort": 137,
+      "description": "Free Movies, Great Fun for Every Mood",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000727/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2356",
+    "name": "Strictly Dumpling",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-04-03T00:00:00.000Z",
+      "featured_sort": 243,
+      "description": "Celebrate worldwide food finds with Mike Chen",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000418/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2143",
     "name": "SundanceNOW",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2143"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "143",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-12-07T00:00:00.000Z",
+      "featured_sort": 97,
+      "description": "Where Drama Comes Home",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000158/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "TLC GO",
+    "id": "2421",
+    "name": "Telemundo",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "2226"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "226",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-10-23T00:00:00.000Z",
+      "featured_sort": 254,
+      "description": "Watch Novelas & TV in Spanish",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000541/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2401",
+    "name": "Tennis Channel",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-07-18T00:00:00.000Z",
+      "featured_sort": 28,
+      "description": "Stream the most live and on demand tennis anywhere",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000495/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "93",
     "name": "The Archive",
     "country": [
-      "usa",
-      "can",
-      "mex"
+      "USA",
+      "CAN",
+      "MEX"
     ],
-    "id": [
-      "93"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "71",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-10-07T00:00:00.000Z",
+      "featured_sort": 110,
+      "description": "For lovers of story, craft & silver screen.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000730/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "108",
     "name": "The CW",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "108"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "115",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-01-11T00:00:00.000Z",
+      "featured_sort": 331,
+      "description": "Watch The CW, plus movies, sports, & full series",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000528/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "The Daily Wire",
-    "country": [
-      "usa",
-      "can"
-    ],
-    "id": [
-      "169"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "169",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
+    "id": "149",
     "name": "The First",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "149"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "149",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-06-20T00:00:00.000Z",
+      "featured_sort": 105,
+      "description": "Network for free speech and big ideas",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000190/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "TikTok",
+    "id": "2430",
+    "name": "The Fun Squad",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "184"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "184",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-11-18T00:00:00.000Z",
+      "featured_sort": 49,
+      "description": "Join The Fun Squad for non-stop family fun",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000534/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2264",
+    "name": "The Pet Collective",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-08-11T00:00:00.000Z",
+      "featured_sort": 224,
+      "description": "The happy place for animal lovers.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000305/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2590",
+    "name": "The Royalty Family",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-20T00:00:00.000Z",
+      "featured_sort": 205,
+      "description": "Epic family fun, every day!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000750/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2561",
+    "name": "The Underbelly",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-06-17T00:00:00.000Z",
+      "featured_sort": 281,
+      "description": "Inclusive yoga & meditation for all bodies.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000707/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2190",
+    "name": "The Weather Channel",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-05-31T00:00:00.000Z",
+      "featured_sort": 318,
+      "description": "Live stream America's most trusted news network, The Weather Channel",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000300/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2226",
+    "name": "TLC GO",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-01-09T00:00:00.000Z",
+      "featured_sort": 238,
+      "description": "Watch TLC with Pay TV Provider",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000232/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "46",
     "name": "Toon Goggles",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "46"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "21",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2018-07-25T00:00:00.000Z",
+      "featured_sort": 4,
+      "description": "Free, 100% kid-safe and parent friendly",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/1000002/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2240",
+    "name": "Travel Channel GO",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-03-27T00:00:00.000Z",
+      "featured_sort": 246,
+      "description": "Watch with pay TV Provider.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000281/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2445",
+    "name": "Treyten",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-01-09T00:00:00.000Z",
+      "featured_sort": 129,
+      "description": "Gaming content creator on YouTube.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000570/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "83",
+    "name": "Triller TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2020-06-22T00:00:00.000Z",
+      "featured_sort": 15,
+      "description": "Watch live sports and entertainment!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000052/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "90",
     "name": "Tubi",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "90"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "61",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-08-24T00:00:00.000Z",
+      "featured_sort": 345,
+      "description": "Stream Movies & TV. Always Free.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000036/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "URBN TV",
+    "id": "2325",
+    "name": "TuneIn Radio",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2230"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "230",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-11-30T00:00:00.000Z",
+      "featured_sort": 314,
+      "description": "Live sports, music, news, talk & more.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000371/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "US Weekly TV",
+    "id": "256",
+    "name": "TV Games",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "146"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "146",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-03-27T00:00:00.000Z",
+      "featured_sort": 5,
+      "description": "The world's leading TV games service",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000035/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2263",
+    "name": "TV One",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-08-21T00:00:00.000Z",
+      "featured_sort": 181,
+      "description": "TV One Any Time, Anywhere",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000337/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2405",
+    "name": "Twin Paranormal",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-22T00:00:00.000Z",
+      "featured_sort": 206,
+      "description": "Scariest paranormal investigations of the supernatural.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000501/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2553",
+    "name": "UP Faith & Family",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-05-28T00:00:00.000Z",
+      "featured_sort": 56,
+      "description": "Watch family and faith-friendly TV & movies.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000702/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2599",
+    "name": "Uzoth",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2026-02-04T00:00:00.000Z",
+      "featured_sort": 127,
+      "description": "Uzoth\u2019s wild Roblox adventures.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000779/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2555",
+    "name": "Vasari Art",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-06-03T00:00:00.000Z",
+      "featured_sort": 8,
+      "description": "The worlds best art in the comfort of your home.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000704/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2437",
+    "name": "Verse Karaoke",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-12-30T00:00:00.000Z",
+      "featured_sort": 307,
+      "description": "Your device, your stage, karaoke reimagined",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000545/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "181",
     "name": "Very Local",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "181"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "181",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-11-09T00:00:00.000Z",
+      "featured_sort": 305,
+      "description": "Free 24/7 Local News, Weather & More",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000206/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Vevo",
+    "id": "2554",
+    "name": "Vesta Stream",
     "country": [
-      "usa",
-      "can",
-      "mex"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "105"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "107",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2025-05-30T00:00:00.000Z",
+      "featured_sort": 151,
+      "description": "Embark on a cinematic journey",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000703/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Vudu",
+    "id": "2305",
+    "name": "VHS Plus",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "6"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "31",
-        "MESSAGE": "https://my.vudu.com/castReceiver/index.html?launch-source=app-icon"
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 196,
+      "description": "Watch 80s and 90s Blockbusters for Free!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000332/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2412",
+    "name": "Victory+",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-09-23T00:00:00.000Z",
+      "featured_sort": 25,
+      "description": "Victory+: Live & On-Demand Sports",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000515/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2120",
+    "name": "ViX",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-20T00:00:00.000Z",
+      "featured_sort": 256,
+      "description": "TV, Soccer & News in Spanish",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000324/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": null,
+    "name": "VIZIO Bundles",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": null,
+      "featured_sort": null,
+      "description": "Save more when you bundle and stream!.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000542/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "23015",
+    "name": "VIZIOgram",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-02-10T00:00:00.000Z",
+      "featured_sort": 349,
+      "description": "Share life's moments by sending photos and videos to friends and family, directly on their VIZIO Smart TV.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000224/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2597",
+    "name": "WatcherTV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-11-06T00:00:00.000Z",
+      "featured_sort": 217,
+      "description": "Cozy new home for all Watcher original series",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000769/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "48",
     "name": "WatchFree+",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "48"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "3014",
-        "MESSAGE": "http://127.0.0.1:12345/scfs/sctv/main.html#/watchfreeplus"
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2021-07-16T00:00:00.000Z",
+      "featured_sort": 352,
+      "description": "Like Cable TV. But Streaming and Free.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000134/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2145",
     "name": "WatchFree+ On Demand",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2145"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "145",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-07-14T00:00:00.000Z",
+      "featured_sort": 343,
+      "description": "5,000+ FREE Movies & TV Shows On Demand.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000156/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2288",
+    "name": "WeatherNation",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-01-24T00:00:00.000Z",
+      "featured_sort": 293,
+      "description": "Weather. It\u2019s what we do.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000323/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2307",
+    "name": "Westerns Plus",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-09-28T00:00:00.000Z",
+      "featured_sort": 201,
+      "description": "Watch free the best Western movies ever",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000339/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2336",
+    "name": "WFTV Now Channel 9 Orlando",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-01-31T00:00:00.000Z",
+      "featured_sort": 69,
+      "description": "WFTV Eyewitness News is your source for news, weather, traffic.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000386/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2337",
+    "name": "WHIO Channel 7 Dayton News",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-01-31T00:00:00.000Z",
+      "featured_sort": 68,
+      "description": "Local newscast and breaking news coverage for Dayton-Miami Valley.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000385/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2206",
+    "name": "WildEarth.tv",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2023-07-31T00:00:00.000Z",
+      "featured_sort": 213,
+      "description": "LIVE wildlife",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000259/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2295",
+    "name": "WION",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-02-08T00:00:00.000Z",
+      "featured_sort": 75,
+      "description": "India's first 'global' news service.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000394/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2217",
+    "name": "WNEP+",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-05-16T00:00:00.000Z",
+      "featured_sort": 76,
+      "description": "The latest news and weather from WNEP",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000242/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2286",
     "name": "World Poker Tour",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "2185"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "185",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2022-09-08T00:00:00.000Z",
+      "featured_sort": 107,
+      "description": "The go-to poker entertainment app!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000216/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2483",
+    "name": "WOW Presents Plus",
+    "country": [
+      "USA",
+      "CAN",
+      "MEX"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-13T00:00:00.000Z",
+      "featured_sort": 191,
+      "description": "LGBTQ+, Drag, Documentary, & Pop Culture",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000629/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2338",
+    "name": "WPXI Channel 11 News Pittsburgh",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-02-28T00:00:00.000Z",
+      "featured_sort": 74,
+      "description": "Stay on top of current events that matter to Pittsburghers",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000380/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2339",
+    "name": "WSB Now Channel 2 Atlanta",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-01-31T00:00:00.000Z",
+      "featured_sort": 70,
+      "description": "Streaming news and coverage of local news stories in Atlanta.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000383/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2340",
+    "name": "WSOC Channel 9 News Charlotte",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-03-01T00:00:00.000Z",
+      "featured_sort": 73,
+      "description": "Charlotte breaking news updates plus weather, traffic, sports.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000387/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "78",
     "name": "Wu Tang Collection",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "78"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "72",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2020-03-19T00:00:00.000Z",
+      "featured_sort": 12,
+      "description": "The largest martial arts film collection.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000048/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "XUMO",
+    "id": "2216",
+    "name": "WUSA+",
     "country": [
-      "usa"
+      "USA"
     ],
-    "id": [
-      "27"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 0,
-        "APP_ID": "36E1EA1F",
-        "MESSAGE": "{\"CAST_NAMESPACE\":\"urn:x-cast:com.google.cast.media\",\"CAST_MESSAGE\":{\"type\":\"LOAD\",\"media\":{},\"autoplay\":true,\"currentTime\":0,\"customData\":{}}}"
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-05-16T00:00:00.000Z",
+      "featured_sort": 81,
+      "description": "The latest news and weather from WUSA 9",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000241/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "2586",
+    "name": "WxAi Weather",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-12-10T00:00:00.000Z",
+      "featured_sort": 292,
+      "description": "Live weather. Real chasers. Forecasts that matter.",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000745/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2379",
+    "name": "XITE",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2024-08-07T00:00:00.000Z",
+      "featured_sort": 315,
+      "description": "XITE is your ultimate music video experience!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000448/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2466",
+    "name": "xNestorio",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-03-28T00:00:00.000Z",
+      "featured_sort": 64,
+      "description": "Minecraft adventures await with xNestorio!",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000601/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "27",
+    "name": "XUMO Play",
+    "country": [
+      "USA"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2017-08-01T00:00:00.000Z",
+      "featured_sort": 274,
+      "description": "Stream TV & Movies",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000227/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "2491",
+    "name": "Yippee TV",
+    "country": [
+      "USA",
+      "CAN"
+    ],
+    "mobileAppInfo": {
+      "createDate": "2025-07-02T00:00:00.000Z",
+      "featured_sort": 54,
+      "description": "The #1 Christian Streaming App For Families",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000635/app-row-square?from=csapp"
+    }
+  },
+  {
+    "id": "44",
     "name": "YouTube",
     "country": [
       "*"
     ],
-    "id": [
-      "44"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 5,
-        "APP_ID": "1",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2018-08-26T00:00:00.000Z",
+      "featured_sort": 344,
+      "description": "Discover and enjoy videos & music",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/500000006/app-row-square?from=csapp"
+    }
   },
   {
+    "id": "45",
     "name": "YouTube TV",
     "country": [
-      "usa",
-      "mex"
+      "USA",
+      "MEX"
     ],
-    "id": [
-      "45"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 5,
-        "APP_ID": "3",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2018-08-26T00:00:00.000Z",
+      "featured_sort": 334,
+      "description": "Cable-free live TV from 70+ networks. ",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000019/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "Zoomi",
+    "id": "2354",
+    "name": "ZEE5",
     "country": [
-      "usa",
-      "can"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "141"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "141",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2024-02-14T00:00:00.000Z",
+      "featured_sort": 255,
+      "description": "Watch Movies, Web Series, & TV Shows on ZEE5",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000410/app-row-square?from=csapp"
+    }
   },
   {
-    "name": "discovery+",
+    "id": "2593",
+    "name": "Zone.ify",
     "country": [
-      "usa"
+      "USA",
+      "CAN"
     ],
-    "id": [
-      "130"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "130",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
-    "name": "fuboTV",
-    "country": [
-      "usa"
-    ],
-    "id": [
-      "138"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "138",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
-    "name": "iFood.TV",
-    "country": [
-      "usa"
-    ],
-    "id": [
-      "2124"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "124",
-        "MESSAGE": null
-      }
-    ]
-  },
-  {
-    "name": "iHeartRadio",
-    "country": [
-      "usa"
-    ],
-    "id": [
-      "11"
-    ],
-    "config": [
-      {
-        "NAME_SPACE": 2,
-        "APP_ID": "6",
-        "MESSAGE": null
-      }
-    ]
+    "mobileAppInfo": {
+      "createDate": "2026-02-06T00:00:00.000Z",
+      "featured_sort": 215,
+      "description": "Free Movies, TV Series, Channels, Shorts and Games",
+      "app_icon_image_url": "https://image-api-prod.smartcasttv.com/api/brandimage/900000763/app-row-square?from=csapp"
+    }
   }
 ]

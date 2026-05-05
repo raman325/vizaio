@@ -80,7 +80,7 @@ class TestParseCatalogTolerance:
         assert catalog[0].config[0].app_id == "5"
         assert catalog[0].config[0].name_space == 3
 
-    def test_config_missing_app_id_or_namespace_skipped(self) -> None:
+    def test_config_missing_app_id_or_namespace_dropped(self) -> None:
         catalog = _parse_catalog(
             [
                 {
@@ -92,12 +92,43 @@ class TestParseCatalogTolerance:
                 }
             ]
         )
-        # Both configs invalid → entry has no usable configs → skipped entirely.
-        assert catalog == ()
+        # Both inner configs are malformed and get dropped, but the entry
+        # itself is preserved as metadata-only — the modern
+        # ``scfs.vizio.com`` catalog ships entries without any ``config``
+        # field at all (launch payloads come from availability data).
+        assert len(catalog) == 1
+        assert catalog[0].name == "Foo"
+        assert catalog[0].config == ()
 
-    def test_entry_with_no_valid_config_skipped(self) -> None:
-        # config is a dict but doesn't carry the required fields.
-        assert _parse_catalog([{"name": "Foo", "config": {}}]) == ()
+    def test_entry_with_no_valid_config_preserved_as_metadata(self) -> None:
+        # config is a dict but doesn't carry the required fields → empty
+        # config, but the entry remains as a metadata record.
+        catalog = _parse_catalog([{"name": "Foo", "config": {}}])
+        assert len(catalog) == 1
+        assert catalog[0].config == ()
+
+    def test_modern_metadata_only_shape(self) -> None:
+        # Live ``scfs.vizio.com`` shape: no ``config`` key, but ``id`` and
+        # ``mobileAppInfo`` are populated. Should produce a record with
+        # those fields filled in and an empty config tuple.
+        catalog = _parse_catalog(
+            [
+                {
+                    "id": "44",
+                    "name": "YouTube",
+                    "country": ["*"],
+                    "mobileAppInfo": {
+                        "description": "Discover and enjoy videos & music",
+                        "app_icon_image_url": "https://example/icon.png",
+                    },
+                }
+            ]
+        )
+        assert catalog[0].name == "YouTube"
+        assert catalog[0].id == "44"
+        assert catalog[0].config == ()
+        assert "videos" in catalog[0].description
+        assert catalog[0].icon_url.startswith("https://")
 
     def test_message_string_preserved(self) -> None:
         catalog = _parse_catalog(

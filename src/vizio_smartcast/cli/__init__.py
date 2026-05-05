@@ -800,8 +800,87 @@ def app_current(ctx: typer.Context, output_format: FormatOption = None) -> None:
 def app_launch(
     ctx: typer.Context,
     name: Annotated[str, typer.Argument(help="App name (case-insensitive).")],
+    chipset: Annotated[
+        str | None,
+        typer.Option(
+            "--chipset",
+            help="Override the auto-detected chipset for availability lookup.",
+        ),
+    ] = None,
+    firmware: Annotated[
+        str | None,
+        typer.Option(
+            "--firmware",
+            help="Override the auto-detected firmware version.",
+        ),
+    ] = None,
 ) -> None:
-    _exec(ctx, lambda v: v.launch_app(name))
+    _exec(
+        ctx,
+        lambda v: v.launch_app(name, chipset=chipset, firmware=firmware),
+    )
+
+
+@apps_app.command("list")
+def app_list(
+    ctx: typer.Context,
+    country: Annotated[
+        str | None,
+        typer.Option(
+            "--country",
+            help="Filter to apps available in this ISO country code.",
+        ),
+    ] = None,
+    chipset: Annotated[
+        str | None,
+        typer.Option(
+            "--chipset",
+            help="Override the auto-detected chipset (e.g., MT5586L).",
+        ),
+    ] = None,
+    firmware: Annotated[
+        str | None,
+        typer.Option(
+            "--firmware",
+            help="Override the auto-detected firmware version.",
+        ),
+    ] = None,
+    no_filter: Annotated[
+        bool,
+        typer.Option(
+            "--all",
+            help="Skip availability filtering — return the full catalog.",
+        ),
+    ] = False,
+    output_format: FormatOption = None,
+) -> None:
+    """List apps available on this device's chipset + firmware."""
+    if no_filter:
+        apps = _exec(ctx, lambda v: v.list_apps())
+    else:
+        apps = _exec(
+            ctx,
+            lambda v: v.list_available_apps(
+                country=country, chipset=chipset, firmware=firmware
+            ),
+        )
+    rows = [
+        {
+            "name": r.name,
+            "id": r.id,
+            "country": ",".join(r.country),
+            "description": r.description,
+        }
+        for r in sorted(apps, key=lambda r: r.name.lower())
+    ]
+    _print(render_rows(rows, fmt=_fmt(ctx, output_format)))
+
+
+@apps_app.command("chipset")
+def app_chipset(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's availability chipset key (debug helper)."""
+    chipset = _exec(ctx, lambda v: v.get_chipset())
+    _print(render_value(chipset or "(unknown)", fmt=_fmt(ctx, output_format)))
 
 
 @apps_app.command("launch-config")
