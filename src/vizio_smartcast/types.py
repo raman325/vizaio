@@ -240,8 +240,10 @@ class AppAvailability:
     chipsets: Mapping[str, tuple[ChipsetPayload, ...]]
     """Chipset key → tuple of payload variants. Keys are availability
     chipset names (e.g., ``"MT5583"``, ``"NT72690"``) or ``"*"``.
-    The mapping is read-only by convention but not enforced (slots mode
-    rejects ``MappingProxyType`` here)."""
+    The library wraps the mapping in :class:`types.MappingProxyType`
+    inside :func:`apps._parse_availability` so it's read-only at
+    runtime; the type is :class:`Mapping` rather than ``dict`` to
+    document that contract at the API boundary."""
 
 
 @dataclass(frozen=True, slots=True)

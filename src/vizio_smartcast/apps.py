@@ -383,11 +383,18 @@ def firmware_in_range(current: str, *, minimum: str = "", maximum: str = "") -> 
     """
     Return ``True`` iff ``current`` falls within ``[minimum, maximum]``.
 
-    Empty bounds are unbounded. If any version fails to parse, returns
-    ``True`` — *permissive* policy: an unrecognized firmware string is
-    treated as "we don't know, assume compatible." Filtering errs on
-    showing more apps rather than hiding ones that might work.
+    Empty bounds are unbounded. *Permissive* policy applies in three
+    "unknown" cases — we'd rather show an app that might not work than
+    hide one that would:
+
+    - ``current`` is empty (older firmware that doesn't expose
+      ``SYSTEM_INFO.VERSION``, or caller passes ``""`` to skip the
+      firmware check) — bounds are not enforced.
+    - any version (current/min/max) fails to parse as a tuple of ints
+      — bounds are not enforced.
     """
+    if not current:
+        return True
     cur = _firmware_tuple(current)
     if cur is None:
         return True

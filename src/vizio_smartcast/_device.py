@@ -1114,32 +1114,40 @@ class Vizio:
 
     async def _get_chipset(self) -> str | None:
         """Lazily read + cache the device's availability chipset key."""
-        if self._cached_chipset is not None:
-            return self._cached_chipset or None
-        try:
-            response = await self._request(Endpoint.DEVICE_INFO)
-        except VizioError:
-            self._cached_chipset = ""
-            return None
-        binary = parse_vizios_binary(response)
-        availability = await self._get_app_availability()
-        keys = {k for entry in availability for k in entry.chipsets}
-        chipset = extract_chipset(binary, available_keys=keys) or ""
-        self._cached_chipset = chipset
-        return chipset or None
+        if self._cached_chipset is None:
+            await self._load_deviceinfo_fields()
+        return self._cached_chipset or None
 
     async def _get_firmware(self) -> str:
         """Lazily read + cache the device's firmware version string."""
-        if self._cached_firmware is not None:
-            return self._cached_firmware
+        if self._cached_firmware is None:
+            await self._load_deviceinfo_fields()
+        return self._cached_firmware or ""
+
+    async def _load_deviceinfo_fields(self) -> None:
+        """
+        Populate cached chipset + firmware from a single deviceinfo fetch.
+
+        Both fields come from the same response payload, so doing them in
+        one round-trip keeps ``list_available_apps`` and the
+        availability-aware ``launch_app`` from issuing two back-to-back
+        ``state/device/deviceinfo`` GETs on first use. Empty string is
+        the "fetched but field absent / device unreachable" sentinel —
+        once set, neither field will trigger another fetch.
+        """
         try:
             response = await self._request(Endpoint.DEVICE_INFO)
         except VizioError:
-            self._cached_firmware = ""
-            return ""
-        version = parse_firmware_version(response)
-        self._cached_firmware = version
-        return version
+            if self._cached_chipset is None:
+                self._cached_chipset = ""
+            if self._cached_firmware is None:
+                self._cached_firmware = ""
+            return
+        binary = parse_vizios_binary(response)
+        availability = await self._get_app_availability()
+        keys = {k for entry in availability for k in entry.chipsets}
+        self._cached_chipset = extract_chipset(binary, available_keys=keys) or ""
+        self._cached_firmware = parse_firmware_version(response)
 
 
 def _validate_setting_value(value: int | str, info: SettingInfo) -> int | str:
