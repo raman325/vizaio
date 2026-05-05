@@ -517,6 +517,8 @@ def pair_cancel(
     try:
         asyncio.run(_go())
     except VizioError as e:
+        # cancel_pair() suppresses pairing errors internally, so any
+        # VizioError here comes from the connection/session setup.
         _err.print(f"Pairing cancel failed: {e}")
         raise typer.Exit(code=1) from e
 

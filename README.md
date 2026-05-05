@@ -111,10 +111,9 @@ and Crave speakers all use `PUT /pairing/start`, `/pairing/pair`,
 WebSocket in this library is for event subscription **after** you already have
 a token.
 
-The `pair` subcommands return an **auth token** — an opaque string sent on
-every
-authenticated REST call as a literal `AUTH:` header (not `Authorization`,
-not `Bearer`). Tokens are:
+The `pair complete` and `pair interactive` subcommands return an
+**auth token** — an opaque string sent on every authenticated REST call as a
+literal `AUTH:` header (not `Authorization`, not `Bearer`). Tokens are:
 
 - **Durable.** No documented TTL or refresh. Save the token; reuse it
   forever. Re-pair only if you reset the TV or change the `device_id` you

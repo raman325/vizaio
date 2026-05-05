@@ -6,9 +6,9 @@
 #   prek run --all-files        # run all hooks against the repo
 #   prek autoupdate             # bump pinned versions
 ci:
-  # CI runs all hooks except no-commit-to-branch — that hook is a local
-  # guard against accidental direct commits to main, but in CI the
-  # checkout is already on main (push events) so it always fails.
+  # pre-commit.ci service: skip no-commit-to-branch (fails on push-to-main
+  # checkouts). For GitHub Actions, the SKIP env var in integration.yaml
+  # handles the same exclusion.
   skip: [no-commit-to-branch]
 
 minimum_pre_commit_version: 3.2.0
