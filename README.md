@@ -8,7 +8,7 @@ work happens here.
 > **Status: 0.1.0-alpha.** API is settling but not yet stable across patch
 > releases. Not yet on PyPI; install from source until 0.1.0 ships.
 
-- `vizio` CLI with named device aliases, a default device, and TTY-aware output
+- `vizio-smartcast` CLI with named device aliases, a default device, and TTY-aware output
   (rich tables on a terminal, TSV when piped, `--format json/plain` on demand).
 - Pairing as a single command — `vizio-smartcast pair <ip> --save-as <alias>` — with
   auto-cancel if the PIN entry fails.
@@ -61,7 +61,7 @@ cd vizio-smartcast
 uv sync --all-extras
 ```
 
-The `vizio` console script is installed as a project entry point in either
+The `vizio-smartcast` console script is installed as a project entry point in either
 case.
 
 ---
@@ -97,7 +97,7 @@ vizio-smartcast app launch Netflix
 Use the alias explicitly when you have more than one device:
 
 ```bash
-vizio --device kitchen-bar volume mute
+vizio-smartcast --device kitchen-bar volume mute
 ```
 
 ---
@@ -174,7 +174,7 @@ If you'd rather pair from Python (e.g., a Home Assistant config flow), see
 
 ## CLI reference
 
-The `vizio` command is a thin wrapper over the library. Output adapts to
+The `vizio-smartcast` command is a thin wrapper over the library. Output adapts to
 context: pretty tables when stdout is a TTY, TSV when piped, switchable to
 JSON or plain.
 
@@ -295,13 +295,13 @@ vizio-smartcast remote send GUIDE
 vizio-smartcast remote send NUM_5
 ```
 
-### `vizio settings`
+### `vizio-smartcast settings`
 
 ```bash
-vizio settings types                     # top-level categories
-vizio settings list audio                # all settings under 'audio'
-vizio settings get audio volume          # single value
-vizio settings set audio volume 30       # write (uses one-shot retry on race)
+vizio-smartcast settings types                     # top-level categories
+vizio-smartcast settings list audio                # all settings under 'audio'
+vizio-smartcast settings get audio volume          # single value
+vizio-smartcast settings set audio volume 30       # write (uses one-shot retry on race)
 ```
 
 ### `vizio-smartcast app` (TV-only)
@@ -323,21 +323,21 @@ vizio-smartcast info version
 vizio-smartcast info all                           # one row, all fields
 ```
 
-### `vizio battery` (Crave only)
+### `vizio-smartcast battery` (Crave only)
 
 ```bash
-vizio battery level                      # integer
-vizio battery charging                   # 'not_charging' | 'charging' | 'fully_charged'
+vizio-smartcast battery level                      # integer
+vizio-smartcast battery charging                   # 'not_charging' | 'charging' | 'fully_charged'
 ```
 
 ### Real-world combinations
 
 ```bash
 # All HDMI inputs, names only
-vizio --device livingroom input list --format tsv | awk -F'\t' '/HDMI/ {print $1}'
+vizio-smartcast --device livingroom input list --format tsv | awk -F'\t' '/HDMI/ {print $1}'
 
 # Audio settings as JSON for jq
-vizio settings list audio --format json | jq '.[] | select(.name=="volume") | .value'
+vizio-smartcast settings list audio --format json | jq '.[] | select(.name=="volume") | .value'
 
 # Set a default and then control without the flag
 vizio-smartcast pair 192.168.1.50 --save-as den
@@ -396,13 +396,13 @@ also speak DIAL.
 | `max_volume` | 100 | 31 | 24 |
 | `vizio-smartcast input list` / `set` | yes | no | no |
 | `vizio-smartcast app ...` | yes | no | no |
-| `vizio battery ...` | no | no | yes |
+| `vizio-smartcast battery ...` | no | no | yes |
 | WebSocket events | yes (probe-and-fall-back) | rejected by device | rejected by device |
 | Remote keymap | full (channels, nav, numerics, …) | power, volume, mute, play/pause, input-next | same as soundbar |
 
 A few non-obvious consequences:
 
-- **Soundbar volume scales differently.** `vizio settings set audio volume 1`
+- **Soundbar volume scales differently.** `vizio-smartcast settings set audio volume 1`
   on a soundbar is roughly **3% perceived volume** (1/31), not 1% (1/100).
   This is hardware behavior, not a bug; if you treat all SmartCast volume
   as a 0–100 scale you will surprise users with quiet soundbars. The
