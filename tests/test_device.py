@@ -1334,6 +1334,58 @@ class TestPairSession:
             assert session.challenge.token == 54321
 
 
+class TestBeginPair:
+    """Stateless begin_pair: one-shot, no session lifecycle."""
+
+    async def test_returns_challenge(self, mock_client: AsyncMock) -> None:
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [_resp(make_pair_begin_response(1, 54321))]
+        challenge = await v.begin_pair(device_id="test", device_name="TestApp")
+        assert challenge.challenge_type == 1
+        assert challenge.token == 54321
+
+    async def test_propagates_error(self, mock_client: AsyncMock) -> None:
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [VizioInvalidParameterError("bad")]
+        with pytest.raises(VizioInvalidParameterError):
+            await v.begin_pair(device_id="test", device_name="TestApp")
+
+
+class TestFinishPair:
+    """Stateless finish_pair: one-shot, no session lifecycle."""
+
+    async def test_returns_auth_token(self, mock_client: AsyncMock) -> None:
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [_resp(make_pair_finish_response("TOK-123"))]
+        token = await v.finish_pair(
+            device_id="test", challenge_type=1, token=54321, pin="1234"
+        )
+        assert token == "TOK-123"
+
+    async def test_propagates_error(self, mock_client: AsyncMock) -> None:
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [VizioAuthError("PAIRING_DENIED")]
+        with pytest.raises(VizioAuthError):
+            await v.finish_pair(
+                device_id="test", challenge_type=1, token=54321, pin="0000"
+            )
+
+
+class TestCancelPair:
+    """Stateless cancel_pair: best-effort, swallows VizioError."""
+
+    async def test_succeeds(self, mock_client: AsyncMock) -> None:
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [_resp(make_success_response())]
+        await v.cancel_pair(device_id="test", device_name="TestApp")
+
+    async def test_swallows_error(self, mock_client: AsyncMock) -> None:
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [VizioAuthError("device refused")]
+        # Should not raise — cancel is best-effort.
+        await v.cancel_pair(device_id="test", device_name="TestApp")
+
+
 # ===========================================================================
 # Auth behavior
 # ===========================================================================

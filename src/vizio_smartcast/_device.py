@@ -761,6 +761,55 @@ class Vizio:
     # Pairing
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # Pairing — stateless one-shot methods
+    # ------------------------------------------------------------------
+
+    async def begin_pair(self, *, device_id: str, device_name: str) -> PairChallenge:
+        """
+        Initiate a pairing handshake.
+
+        Returns the challenge data needed to complete the handshake via
+        :meth:`finish_pair`.
+        """
+        body = _payloads.begin_pair(device_id=device_id, device_name=device_name)
+        response = await self._client.request_spec(
+            resolve(Endpoint.BEGIN_PAIR, self._profile), body=body
+        )
+        return parse_pair_challenge(response)
+
+    async def finish_pair(
+        self, *, device_id: str, challenge_type: int, token: int, pin: str
+    ) -> str:
+        """
+        Complete a pairing handshake with the user-provided PIN.
+
+        Returns the auth token on success.
+        """
+        body = _payloads.finish_pair(
+            device_id=device_id,
+            challenge_type=challenge_type,
+            token=token,
+            pin=pin,
+        )
+        response = await self._client.request_spec(
+            resolve(Endpoint.FINISH_PAIR, self._profile), body=body
+        )
+        return parse_auth_token(response)
+
+    async def cancel_pair(self, *, device_id: str, device_name: str) -> None:
+        """
+        Abort an in-progress pairing handshake.
+
+        Best-effort — errors are suppressed so a failed cancel never
+        masks the caller's original exception.
+        """
+        body = _payloads.cancel_pair(device_id=device_id, device_name=device_name)
+        with contextlib.suppress(VizioError):
+            await self._client.request_spec(
+                resolve(Endpoint.CANCEL_PAIR, self._profile), body=body
+            )
+
     def pair_session(self, *, device_id: str, device_name: str) -> PairSession:
         """
         Open a pairing session.
@@ -958,30 +1007,19 @@ class PairSession:
         return self._challenge
 
     async def __aenter__(self) -> Self:
-        body = _payloads.begin_pair(
+        self._challenge = await self._vizio.begin_pair(
             device_id=self._device_id, device_name=self._device_name
         )
-        response = await self._vizio._client.request_spec(
-            resolve(Endpoint.BEGIN_PAIR, self._vizio._profile), body=body
-        )
-        self._challenge = parse_pair_challenge(response)
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
         if self._completed:
             return
-        # Best-effort cancel — don't mask the user's original exception
-        # if cancel itself fails.
-        try:
-            body = _payloads.cancel_pair(
-                device_id=self._device_id, device_name=self._device_name
-            )
-            await self._vizio._client.request_spec(
-                resolve(Endpoint.CANCEL_PAIR, self._vizio._profile),
-                body=body,
-            )
-        except VizioError:
-            pass
+        # cancel_pair is best-effort — it swallows VizioError internally
+        # so a failed cancel never masks the caller's original exception.
+        await self._vizio.cancel_pair(
+            device_id=self._device_id, device_name=self._device_name
+        )
 
     async def complete(self, *, pin: str) -> str:
         """
@@ -989,17 +1027,15 @@ class PairSession:
 
         Not idempotent: a second call raises ``RuntimeError`` (caller bug).
         """
+        if self._completed:
+            raise RuntimeError("PairSession.complete() already called")
         if self._challenge is None:
             raise RuntimeError("PairSession not entered yet")
-        body = _payloads.finish_pair(
+        token = await self._vizio.finish_pair(
             device_id=self._device_id,
             challenge_type=self._challenge.challenge_type,
             token=self._challenge.token,
             pin=pin,
         )
-        response = await self._vizio._client.request_spec(
-            resolve(Endpoint.FINISH_PAIR, self._vizio._profile), body=body
-        )
-        token = parse_auth_token(response)
         self._completed = True
         return token
