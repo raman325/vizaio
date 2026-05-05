@@ -4,8 +4,8 @@ CLI output formatting: rich tables (TTY), TSV (pipe), JSON, plain.
 Auto-detection: stdout TTY → table, otherwise → tsv.
 Override with ``--format {table,tsv,json,plain}`` in any command.
 
-Rationale: piping ``vizio input list`` into ``awk`` / ``cut`` / ``grep``
-needs a stable, parseable shape. Watching ``vizio input list`` in a
+Rationale: piping ``vizio-smartcast input list`` into ``awk`` / ``cut`` / ``grep``
+needs a stable, parseable shape. Watching ``vizio-smartcast input list`` in a
 terminal wants pretty colors and headers.
 """
 
@@ -60,7 +60,7 @@ def render_rows(
 
 
 def render_value(value: Any, *, fmt: OutputFormat | None = None) -> str:
-    """Render a single scalar (e.g., ``vizio info model``)."""
+    """Render a single scalar (e.g., ``vizio-smartcast info model``)."""
     fmt = fmt or auto_format()
     if fmt is OutputFormat.JSON:
         return json.dumps(value)

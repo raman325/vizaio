@@ -50,7 +50,7 @@ def resolve_device(
     if alias is None:
         raise CLIResolutionError(
             "No device specified. Pass --host IP, --device NAME, "
-            "or set a default with `vizio device set-default NAME`."
+            "or set a default with `vizio-smartcast device set-default NAME`."
         )
 
     try:
