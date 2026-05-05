@@ -30,7 +30,6 @@ work happens here.
 - [Device-type quirks](#device-type-quirks)
 - [Library API](#library-api)
 - [Exception hierarchy](#exception-hierarchy)
-- [Home Assistant migration](#home-assistant-migration)
 - [License](#license)
 
 ---
@@ -767,22 +766,6 @@ The CLI surfaces these as exit codes:
 - `0` — success
 - `1` — any `VizioError` subclass (the message is printed to stderr)
 - `2` — CLI resolution error (no device specified, unknown alias, etc.)
-
----
-
-## Home Assistant migration
-
-A reference `DataUpdateCoordinator`, error-mapping notes, and an
-endpoint-by-endpoint migration cheatsheet for the existing
-[Home Assistant `vizio` integration](https://www.home-assistant.io/integrations/vizio/)
-are included under [`assets/`](assets/):
-
-- [`assets/ha_coordinator_example.py`](assets/ha_coordinator_example.py)
-- [`assets/ha_errors_mapping.md`](assets/ha_errors_mapping.md)
-- [`assets/ha_migration_cheatsheet.md`](assets/ha_migration_cheatsheet.md)
-
-For the per-method mapping from `pyvizio`, see
-[`assets/ha_migration_cheatsheet.md`](assets/ha_migration_cheatsheet.md).
 
 ---
 
