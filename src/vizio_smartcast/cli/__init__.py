@@ -478,8 +478,10 @@ def pair_complete(
         )
         state.config.save()
         _print(render_message(f"Paired and saved as {save_as!r}", fmt=fmt))
-    else:
+    elif fmt is OutputFormat.JSON:
         _print(render_value({"auth_token": token}, fmt=fmt))
+    else:
+        _print(render_rows([{"auth_token": token}], fmt=fmt))
 
 
 @pair_app.command("cancel")
@@ -575,8 +577,10 @@ def pair_interactive(
         )
         state.config.save()
         _print(render_message(f"Paired and saved as {save_as!r}", fmt=fmt))
-    else:
+    elif fmt is OutputFormat.JSON:
         _print(render_value({"auth_token": token}, fmt=fmt))
+    else:
+        _print(render_rows([{"auth_token": token}], fmt=fmt))
 
 
 # ---------------------------------------------------------------------------
