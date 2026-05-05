@@ -11,25 +11,33 @@ that integrators should be aware of.
 
 ### Added
 
-- `AppAvailability` and `ChipsetPayload` dataclasses, plus
-  `Vizio.list_available_apps()`, `Vizio.list_apps()`,
-  `Vizio.get_chipset()`, and `Vizio.get_firmware_version()`. The
-  modern SmartCast catalog at `scfs.vizio.com` is metadata-only —
-  per-chipset/firmware launch payloads come from a parallel
-  `/app_availability_prod.json` endpoint that the official Android
-  app fetches at runtime. The library now joins both sources, picks
-  the chipset+firmware-matched payload for the device's SoC
-  (extracted from `BINARIES.ViziOS`), and exposes a filtered apps
-  list via the CLI `app list` command. `app list --all` returns the
-  unfiltered catalog; `--chipset` / `--firmware` override the
-  auto-detected device values.
-- `Vizio` constructor `apps=` and `availability=` kwargs — caller-owned
-  caches for Home Assistant coordinators and similar integrations
-  that want to fetch + cache once and share across many `Vizio`
-  instances. The library never writes to disk regardless.
+- App catalog data sourced from `scfs.vizio.com` (the URL the
+  SmartCast Android app fetches from, discovered via APK
+  decompilation). Bundled `data/apps.json` carries 351 metadata
+  entries (`name`, `id`, `country`, `mobileAppInfo`); per-app launch
+  payloads live alongside in a parallel
+  `/app_availability_prod.json` endpoint, bundled as
+  `data/app_availability.json` for the offline fallback case.
+- `AppAvailability` and `ChipsetPayload` dataclasses representing
+  the per-chipset, per-firmware launch payload data. The library
+  joins catalog + availability, extracts the device's chipset from
+  `BINARIES.ViziOS`, and picks the right payload variant based on
+  `SYSTEM_INFO.VERSION` firmware bounds.
+- `Vizio.list_available_apps()`, `Vizio.list_apps()`,
+  `Vizio.get_chipset()`, `Vizio.get_firmware_version()`, and
+  availability-aware `Vizio.launch_app()` resolution. `chipset` /
+  `firmware` kwargs override the auto-detected device values for
+  preview / debugging.
+- CLI `app list` (with `--country`, `--chipset`, `--firmware`,
+  `--all`) and `app chipset` debug helper. `app launch` accepts
+  `--chipset` / `--firmware` overrides.
+- `Vizio` constructor `apps=` and `availability=` kwargs —
+  caller-owned caches for Home Assistant coordinators and similar
+  integrations that want to fetch + cache once and share across
+  many `Vizio` instances. The library never writes either dataset
+  to disk.
 - `AppRecord.id`, `AppRecord.description`, and `AppRecord.icon_url`
-  fields populated from the modern catalog's `mobileAppInfo`. Legacy
-  `config[]` is still parsed when present.
+  fields populated from the catalog's `mobileAppInfo`.
 - `InputInfo.cname` — the device's canonical lowercase identifier
   (e.g. `"hdmi2"`, `"cast"`). Hardware probing revealed this is the
   **only** form `current_input` accepts in a PUT body — display name
@@ -86,14 +94,6 @@ that integrators should be aware of.
 
 ### Changed
 
-- **App catalog source URL.** `hometest.buddytv.netdna-cdn.com` is
-  permanently dead; the SmartCast Android app fetches from
-  `scfs.vizio.com/appservice/vizio_apps_prod.json`. Bundled
-  `data/apps.json` regenerated from the new endpoint (351 entries
-  vs. 150 in the prior bundle). The new shape carries no per-app
-  launch `config[]`; callers that previously relied on
-  `AppRecord.config[0]` for launch payloads will get the equivalent
-  payload via the new availability-data lookup automatically.
 - **BREAKING (all releases pre-0.1.0): `set_input` now uses PUT method.**
   Previously it sent the body in a GET request, which the device
   silently ignored and returned success — `set_input` was effectively
