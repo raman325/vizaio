@@ -19,13 +19,3 @@ jobs:
         with:
           configuration-path: .github/labeler.yml
           sync-labels: true
-
-  release-drafter:
-    name: Update release draft
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: release-drafter/release-drafter@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
