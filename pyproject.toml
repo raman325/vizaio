@@ -137,10 +137,6 @@ enable_error_code = [
   "truthy-iterable",     # Flag always-truthy iterable checks (likely bug)
 ]
 
-[[tool.mypy.overrides]]
-module = ["aioresponses.*"]
-ignore_missing_imports = true
-
 # ---------------------------------------------------------------------------
 # Pytest
 # ---------------------------------------------------------------------------
