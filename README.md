@@ -282,8 +282,9 @@ vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
 ```
 
 `--device-type` defaults to `tv`. All subcommands accept `--device-id`
-(defaults to `vizio-cli`) and `--device-name` (defaults to
-`vizio-smartcast CLI`) to match the identity sent during pairing.
+(defaults to `vizio-cli`); `begin`, `cancel`, and `interactive` also accept
+`--device-name` (defaults to `vizio-smartcast CLI`) to match the identity
+sent during pairing.
 
 `pair begin` prints the `pair complete` command with all flags filled in
 except `--pin`, making it trivially scriptable.

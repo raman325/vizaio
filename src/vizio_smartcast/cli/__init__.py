@@ -20,6 +20,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
+import shlex
 from typing import Annotated, Any
 
 from rich.console import Console
@@ -380,9 +381,9 @@ def pair_begin(
         raise typer.Exit(code=1) from e
 
     hint = (
-        f"vizio-smartcast pair complete {host}"
+        f"vizio-smartcast pair complete {shlex.quote(host)}"
         f" --device-type {device_type.value}"
-        f" --device-id {device_id}"
+        f" --device-id {shlex.quote(device_id)}"
         f" --challenge-type {challenge.challenge_type}"
         f" --pairing-token {challenge.token}"
         f" --pin <PIN>"
@@ -522,6 +523,14 @@ def pair_interactive(
     device_type: Annotated[
         DeviceType, typer.Option("--device-type", help="Device family.")
     ] = DeviceType.TV,
+    device_id: Annotated[
+        str,
+        typer.Option("--device-id", help="Client device ID sent to the TV."),
+    ] = "vizio-cli",
+    device_name: Annotated[
+        str,
+        typer.Option("--device-name", help="Client device name sent to the TV."),
+    ] = "vizio-smartcast CLI",
     save_as: Annotated[
         str | None,
         typer.Option("--save-as", help="Save the resulting alias for later."),
@@ -535,9 +544,7 @@ def pair_interactive(
     async def _go() -> str:
         async with (
             Vizio(host=host, device_type=device_type) as v,
-            v.pair_session(
-                device_id="vizio-cli", device_name="vizio-smartcast CLI"
-            ) as session,
+            v.pair_session(device_id=device_id, device_name=device_name) as session,
         ):
             _err.print(
                 f"Pairing started — PIN should appear on the device. "
