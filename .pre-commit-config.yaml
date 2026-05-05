@@ -6,8 +6,10 @@
 #   prek run --all-files        # run all hooks against the repo
 #   prek autoupdate             # bump pinned versions
 ci:
-  # CI runs all hooks; the local 'fast' set is for hot-path commits.
-  skip: []
+  # CI runs all hooks except no-commit-to-branch — that hook is a local
+  # guard against accidental direct commits to main, but in CI the
+  # checkout is already on main (push events) so it always fails.
+  skip: [no-commit-to-branch]
 
 minimum_pre_commit_version: 3.2.0
 

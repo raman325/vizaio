@@ -57,6 +57,7 @@ from vizio_smartcast import (
     VizioConnectionError,
     VizioInvalidInputError,
     VizioInvalidParameterError,
+    VizioResponseError,
     VizioUnsupportedError,
 )
 from vizio_smartcast.wire import Response
@@ -1332,6 +1333,23 @@ class TestPairSession:
         ) as session:
             assert session.challenge.challenge_type == 1
             assert session.challenge.token == 54321
+
+    async def test_begin_pair_failure_cancels(self, mock_client: AsyncMock) -> None:
+        """If begin_pair raises after the HTTP request is sent (e.g., malformed
+        response), the device is left in pairing mode. __aenter__ must
+        cancel so the device doesn't get stuck."""
+        v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
+        mock_client.side_effect = [
+            VizioResponseError("malformed begin_pair response"),
+            _resp(make_success_response()),  # cancel response
+        ]
+        with pytest.raises(VizioResponseError):
+            async with v.pair_session(
+                device_id="ha-coord", device_name="HomeAssistant"
+            ):
+                pass
+        endpoints_hit = _all_call_paths(mock_client)
+        assert endpoints_hit[-1] == ("/pairing/cancel",)
 
 
 class TestBeginPair:

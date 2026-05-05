@@ -942,7 +942,7 @@ class TestPairCommand:
             ],
         )
         assert result.exit_code == 0, result.output
-        assert "Pairing cancelled" in result.output
+        assert "Cancel request sent" in result.output
 
     def test_pair_interactive_prints_token_when_no_save_as(
         self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses

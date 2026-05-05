@@ -512,8 +512,13 @@ def pair_cancel(
         async with Vizio(host=host, device_type=device_type) as v:
             await v.cancel_pair(device_id=device_id, device_name=device_name)
 
-    asyncio.run(_go())
-    _print(render_message("Pairing cancelled", fmt=fmt))
+    try:
+        asyncio.run(_go())
+    except VizioError as e:
+        _err.print(f"Pairing cancel failed: {e}")
+        raise typer.Exit(code=1) from e
+
+    _print(render_message("Cancel request sent", fmt=fmt))
 
 
 @pair_app.command("interactive")

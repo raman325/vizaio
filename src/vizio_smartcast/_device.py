@@ -1007,9 +1007,15 @@ class PairSession:
         return self._challenge
 
     async def __aenter__(self) -> Self:
-        self._challenge = await self._vizio.begin_pair(
-            device_id=self._device_id, device_name=self._device_name
-        )
+        try:
+            self._challenge = await self._vizio.begin_pair(
+                device_id=self._device_id, device_name=self._device_name
+            )
+        except BaseException:
+            await self._vizio.cancel_pair(
+                device_id=self._device_id, device_name=self._device_name
+            )
+            raise
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
