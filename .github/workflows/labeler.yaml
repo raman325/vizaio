@@ -23,6 +23,8 @@ jobs:
   release-drafter:
     name: Update release draft
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: release-drafter/release-drafter@v6
         env:
