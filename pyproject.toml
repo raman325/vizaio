@@ -41,7 +41,7 @@ dev = [
 ]
 
 [project.scripts]
-vizio = "vizio_smartcast.cli:app"
+vizio-smartcast = "vizio_smartcast.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/raman325/vizio-smartcast"

@@ -1,5 +1,5 @@
 """
-Typer-based CLI entry point: ``vizio ...``.
+Typer-based CLI entry point: ``vizio-smartcast ...``.
 
 Global flags (set on the parent ``app``):
 - ``--device NAME`` — alias from the config file
@@ -75,7 +75,7 @@ class CLIState:
 # ---------------------------------------------------------------------------
 
 app = typer.Typer(
-    name="vizio",
+    name="vizio-smartcast",
     help="Control Vizio SmartCast devices from the command line.",
     add_completion=True,
     no_args_is_help=True,
@@ -195,12 +195,12 @@ def _exec[T](ctx: typer.Context, fn: Callable[[Vizio], Awaitable[T]]) -> T:
         _err.print(str(e))
         raise typer.Exit(code=1) from e
     except VizioError as e:
-        _err.print(f"vizio: {e}")
+        _err.print(f"vizio-smartcast: {e}")
         raise typer.Exit(code=1) from e
 
 
 # ---------------------------------------------------------------------------
-# `vizio device ...` — alias management
+# `vizio-smartcast device ...` — alias management
 # ---------------------------------------------------------------------------
 
 device_app = typer.Typer(name="device", help="Manage saved device aliases.")
@@ -306,7 +306,7 @@ def device_show(
 
 
 # ---------------------------------------------------------------------------
-# `vizio discover`
+# `vizio-smartcast discover`
 # ---------------------------------------------------------------------------
 
 
@@ -336,7 +336,7 @@ def discover_cmd(
 
 
 # ---------------------------------------------------------------------------
-# `vizio pair`
+# `vizio-smartcast pair`
 # ---------------------------------------------------------------------------
 
 
@@ -391,7 +391,7 @@ def pair(
 
 
 # ---------------------------------------------------------------------------
-# `vizio power ...`
+# `vizio-smartcast power ...`
 # ---------------------------------------------------------------------------
 
 power_app = typer.Typer(name="power", help="Power control.")
@@ -416,7 +416,7 @@ def power_off(ctx: typer.Context) -> None:
 
 
 # ---------------------------------------------------------------------------
-# `vizio volume ...`
+# `vizio-smartcast volume ...`
 # ---------------------------------------------------------------------------
 
 volume_app = typer.Typer(name="volume", help="Volume + mute control.")
@@ -464,7 +464,7 @@ def volume_max(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 
 # ---------------------------------------------------------------------------
-# `vizio input ...`
+# `vizio-smartcast input ...`
 # ---------------------------------------------------------------------------
 
 input_app = typer.Typer(name="input", help="Input control.")
@@ -501,7 +501,7 @@ def input_next(ctx: typer.Context) -> None:
 
 
 # ---------------------------------------------------------------------------
-# `vizio remote ...`
+# `vizio-smartcast remote ...`
 # ---------------------------------------------------------------------------
 
 remote_app = typer.Typer(name="remote", help="Remote key presses.")
@@ -588,7 +588,7 @@ def settings_set(
 
 
 # ---------------------------------------------------------------------------
-# `vizio app ...`
+# `vizio-smartcast app ...`
 # ---------------------------------------------------------------------------
 
 apps_app = typer.Typer(name="app", help="SmartCast app control.")
@@ -625,7 +625,7 @@ def app_launch_config(
 
 
 # ---------------------------------------------------------------------------
-# `vizio info ...`
+# `vizio-smartcast info ...`
 # ---------------------------------------------------------------------------
 
 info_app = typer.Typer(name="info", help="Device identity.")
