@@ -20,6 +20,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
+import shlex
 from typing import Annotated, Any
 
 from rich.console import Console
@@ -28,6 +29,7 @@ import typer
 from .. import (
     AppConfig,
     DeviceType,
+    PairChallenge,
     Vizio,
     VizioError,
     VizioInvalidInputError,
@@ -340,11 +342,204 @@ def discover_cmd(
 # ---------------------------------------------------------------------------
 
 
-@app.command()
-def pair(
+pair_app = typer.Typer(name="pair", help="Device pairing operations.")
+app.add_typer(pair_app)
+
+
+@pair_app.command("begin")
+def pair_begin(
     ctx: typer.Context,
     host: Annotated[str, typer.Argument(help="Device IP or IP:PORT.")],
-    device_type: Annotated[DeviceType, typer.Option("--device-type")] = DeviceType.TV,
+    device_type: Annotated[
+        DeviceType, typer.Option("--device-type", help="Device family.")
+    ] = DeviceType.TV,
+    device_id: Annotated[
+        str,
+        typer.Option("--device-id", help="Client device ID sent to the TV."),
+    ] = "vizio-cli",
+    device_name: Annotated[
+        str,
+        typer.Option("--device-name", help="Client device name sent to the TV."),
+    ] = "vizio-smartcast CLI",
+    output_format: FormatOption = None,
+) -> None:
+    """
+    Start a pairing session and output the challenge data.
+
+    After running this command, complete pairing with ``pair complete``.
+    """
+    fmt = _fmt(ctx, output_format)
+
+    async def _go() -> PairChallenge:
+        async with Vizio(host=host, device_type=device_type) as v:
+            return await v.begin_pair(device_id=device_id, device_name=device_name)
+
+    try:
+        challenge = asyncio.run(_go())
+    except VizioError as e:
+        _err.print(f"Pairing begin failed: {e}")
+        raise typer.Exit(code=1) from e
+
+    hint = (
+        f"vizio-smartcast pair complete {shlex.quote(host)}"
+        f" --device-type {device_type.value}"
+        f" --device-id {shlex.quote(device_id)}"
+        f" --challenge-type {challenge.challenge_type}"
+        f" --pairing-token {challenge.token}"
+        f" --pin <PIN>"
+    )
+
+    if fmt is OutputFormat.JSON:
+        _print(
+            render_value(
+                {
+                    "challenge_type": challenge.challenge_type,
+                    "pairing_token": challenge.token,
+                    "next_step": hint,
+                },
+                fmt=fmt,
+            )
+        )
+    else:
+        _err.print("PIN should appear on the device.")
+        _print(
+            render_rows(
+                [
+                    {
+                        "challenge_type": challenge.challenge_type,
+                        "pairing_token": challenge.token,
+                    }
+                ],
+                fmt=fmt,
+            )
+        )
+        _err.print(f"\nNext step: {hint}")
+
+
+@pair_app.command("complete")
+def pair_complete(
+    ctx: typer.Context,
+    host: Annotated[str, typer.Argument(help="Device IP or IP:PORT.")],
+    challenge_type: Annotated[
+        int,
+        typer.Option("--challenge-type", help="From pair begin output."),
+    ],
+    pairing_token: Annotated[
+        int,
+        typer.Option("--pairing-token", help="From pair begin output."),
+    ],
+    pin: Annotated[
+        str,
+        typer.Option("--pin", help="PIN displayed on the device."),
+    ],
+    device_type: Annotated[
+        DeviceType, typer.Option("--device-type", help="Device family.")
+    ] = DeviceType.TV,
+    device_id: Annotated[
+        str,
+        typer.Option(
+            "--device-id",
+            help="Must match the device_id used in pair begin.",
+        ),
+    ] = "vizio-cli",
+    save_as: Annotated[
+        str | None,
+        typer.Option("--save-as", help="Save the resulting alias for later."),
+    ] = None,
+    output_format: FormatOption = None,
+) -> None:
+    """Complete pairing with the PIN and challenge data from ``pair begin``."""
+    state = _state(ctx)
+    fmt = _fmt(ctx, output_format)
+
+    async def _go() -> str:
+        async with Vizio(host=host, device_type=device_type) as v:
+            return await v.finish_pair(
+                device_id=device_id,
+                challenge_type=challenge_type,
+                token=pairing_token,
+                pin=pin,
+            )
+
+    try:
+        token = asyncio.run(_go())
+    except VizioError as e:
+        _err.print(f"Pairing complete failed: {e}")
+        raise typer.Exit(code=1) from e
+
+    if save_as:
+        state.config.add_device(
+            DeviceRecord(
+                name=save_as,
+                host=host,
+                device_type=device_type,
+                auth_token=token,
+            )
+        )
+        state.config.save()
+        _print(render_message(f"Paired and saved as {save_as!r}", fmt=fmt))
+    elif fmt is OutputFormat.JSON:
+        _print(render_value({"auth_token": token}, fmt=fmt))
+    else:
+        _print(render_rows([{"auth_token": token}], fmt=fmt))
+
+
+@pair_app.command("cancel")
+def pair_cancel(
+    ctx: typer.Context,
+    host: Annotated[str, typer.Argument(help="Device IP or IP:PORT.")],
+    device_type: Annotated[
+        DeviceType, typer.Option("--device-type", help="Device family.")
+    ] = DeviceType.TV,
+    device_id: Annotated[
+        str,
+        typer.Option(
+            "--device-id",
+            help="Must match the device_id used in pair begin.",
+        ),
+    ] = "vizio-cli",
+    device_name: Annotated[
+        str,
+        typer.Option(
+            "--device-name",
+            help="Must match the device_name used in pair begin.",
+        ),
+    ] = "vizio-smartcast CLI",
+    output_format: FormatOption = None,
+) -> None:
+    """Cancel an in-progress pairing session."""
+    fmt = _fmt(ctx, output_format)
+
+    async def _go() -> None:
+        async with Vizio(host=host, device_type=device_type) as v:
+            await v.cancel_pair(device_id=device_id, device_name=device_name)
+
+    try:
+        asyncio.run(_go())
+    except VizioError as e:
+        # cancel_pair() suppresses pairing errors internally, so any
+        # VizioError here comes from the connection/session setup.
+        _err.print(f"Pairing cancel failed: {e}")
+        raise typer.Exit(code=1) from e
+
+    _print(render_message("Cancel request sent", fmt=fmt))
+
+
+@pair_app.command("interactive")
+def pair_interactive(
+    ctx: typer.Context,
+    host: Annotated[str, typer.Argument(help="Device IP or IP:PORT.")],
+    device_type: Annotated[
+        DeviceType, typer.Option("--device-type", help="Device family.")
+    ] = DeviceType.TV,
+    device_id: Annotated[
+        str,
+        typer.Option("--device-id", help="Client device ID sent to the TV."),
+    ] = "vizio-cli",
+    device_name: Annotated[
+        str,
+        typer.Option("--device-name", help="Client device name sent to the TV."),
+    ] = "vizio-smartcast CLI",
     save_as: Annotated[
         str | None,
         typer.Option("--save-as", help="Save the resulting alias for later."),
@@ -358,9 +553,7 @@ def pair(
     async def _go() -> str:
         async with (
             Vizio(host=host, device_type=device_type) as v,
-            v.pair_session(
-                device_id="vizio-cli", device_name="vizio-smartcast CLI"
-            ) as session,
+            v.pair_session(device_id=device_id, device_name=device_name) as session,
         ):
             _err.print(
                 f"Pairing started — PIN should appear on the device. "
@@ -386,8 +579,10 @@ def pair(
         )
         state.config.save()
         _print(render_message(f"Paired and saved as {save_as!r}", fmt=fmt))
-    else:
+    elif fmt is OutputFormat.JSON:
         _print(render_value({"auth_token": token}, fmt=fmt))
+    else:
+        _print(render_rows([{"auth_token": token}], fmt=fmt))
 
 
 # ---------------------------------------------------------------------------

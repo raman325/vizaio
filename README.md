@@ -10,8 +10,9 @@ work happens here.
 
 - `vizio-smartcast` CLI with named device aliases, a default device, and TTY-aware output
   (rich tables on a terminal, TSV when piped, `--format json/plain` on demand).
-- Pairing as a single command — `vizio-smartcast pair <ip> --save-as <alias>` — with
-  auto-cancel if the PIN entry fails.
+- Pairing via subcommand group — `vizio-smartcast pair begin` + `pair complete`
+  for scripting, `pair interactive` for human use — with auto-cancel if the PIN
+  entry fails.
 - Hashval-aware setting writes that survive the
   [pyvizio #135 / #140](https://github.com/raman325/pyvizio/issues/135) race.
 - WebSocket event subscription (push-based state updates on supported TVs).
@@ -77,7 +78,7 @@ vizio-smartcast discover
 
 # 2. Pair (interactive — TV displays a PIN, you type it back)
 #    --save-as stores the resulting auth token under an alias
-vizio-smartcast pair 192.168.1.50 --save-as livingroom
+vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
 
 # 3. Make this the default so you can drop --device on every call
 vizio-smartcast device set-default livingroom
@@ -110,9 +111,9 @@ and Crave speakers all use `PUT /pairing/start`, `/pairing/pair`,
 WebSocket in this library is for event subscription **after** you already have
 a token.
 
-`vizio-smartcast pair` returns an **auth token** — an opaque string sent on every
-authenticated REST call as a literal `AUTH:` header (not `Authorization`,
-not `Bearer`). Tokens are:
+The `pair complete` and `pair interactive` subcommands return an
+**auth token** — an opaque string sent on every authenticated REST call as a
+literal `AUTH:` header (not `Authorization`, not `Bearer`). Tokens are:
 
 - **Durable.** No documented TTL or refresh. Save the token; reuse it
   forever. Re-pair only if you reset the TV or change the `device_id` you
@@ -131,20 +132,34 @@ not `Bearer`). Tokens are:
 ### CLI
 
 ```bash
-# Print the token to stdout — useful in scripts, JSON output piped to jq
-vizio-smartcast pair 192.168.1.50
+# Interactive — prompts for PIN on stderr
+vizio-smartcast pair interactive 192.168.1.50
+vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
 
-# Pair, save under an alias, set up for use immediately
-vizio-smartcast pair 192.168.1.50 --save-as livingroom
-vizio-smartcast device set-default livingroom
+# Two-step (scriptable) — begin outputs challenge data + a ready-to-run
+# "pair complete" command with all flags filled in except --pin
+vizio-smartcast pair begin 192.168.1.50
+# → challenge_type  pairing_token
+# → 1               54321
+# → Next step: vizio-smartcast pair complete 192.168.1.50 \
+#     --challenge-type 1 --pairing-token 54321 --pin <PIN>
+
+vizio-smartcast pair complete 192.168.1.50 \
+    --challenge-type 1 --pairing-token 54321 --pin 1234 \
+    --save-as livingroom
+
+# Cancel a pairing session early (best-effort)
+vizio-smartcast pair cancel 192.168.1.50
 
 # Soundbars and Crave speakers don't require auth — skip pairing entirely
 vizio-smartcast device add kitchen-bar --host 192.168.1.51 --device-type soundbar
 ```
 
-`--device-type` defaults to `tv`. The CLI prompts for the PIN interactively
-on stderr; if `complete()` fails (wrong PIN, timeout, etc.), it cancels the
-pairing on the way out so the TV doesn't get stuck in pairing mode.
+`--device-type` defaults to `tv`. The interactive subcommand prompts for the
+PIN on stderr; if the PIN is wrong, it cancels the pairing on the way out so
+the TV doesn't get stuck in pairing mode. The `begin`/`complete` subcommands
+are stateless — they make a single HTTP call each, making them safe for
+scripts, CI, and non-interactive environments.
 
 ### Finding the device IP
 
@@ -159,10 +174,10 @@ Or programmatically — see [Discovery](#discovery).
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| `vizio-smartcast: ... pairing` after entering PIN | Wrong PIN, or PIN entered after the device's pairing window expired | Re-run `vizio-smartcast pair`; the previous attempt was already canceled |
+| `vizio-smartcast: ... pairing` after entering PIN | Wrong PIN, or PIN entered after the device's pairing window expired | Re-run `vizio-smartcast pair interactive`; the previous attempt was already canceled |
 | `VizioAuthError` on first call after pairing | Token saved correctly but `device_type` was wrong on the next call (e.g., paired a TV but the alias says `soundbar`) | Run `vizio-smartcast device show <alias>` and re-pair with the right `--device-type` |
-| `vizio-smartcast: failed to reach https://...` during `pair` | Wrong port. TVs typically listen on **7345** (mDNS-advertised), occasionally **9000** on older firmware | Try `vizio-smartcast pair 192.168.1.50:9000` if the default fails |
-| `vizio-smartcast: ... timeout` on `pair` | Device isn't in pairing mode (e.g., already paired and not reset), or it's powered off | Power-cycle the TV, or factory-reset SmartCast pairing in its menu |
+| `vizio-smartcast: failed to reach https://...` during `pair begin` | Wrong port. TVs typically listen on **7345** (mDNS-advertised), occasionally **9000** on older firmware | Try `vizio-smartcast pair begin 192.168.1.50:9000` if the default fails |
+| `vizio-smartcast: ... timeout` on `pair begin` | Device isn't in pairing mode (e.g., already paired and not reset), or it's powered off | Power-cycle the TV, or factory-reset SmartCast pairing in its menu |
 | Device displays no PIN | Soundbars and Crave speakers don't display a PIN — they don't require auth at all. Use `vizio-smartcast device add` directly with `--device-type soundbar` (or `crave_*`) and skip pairing. | — |
 
 ### Library equivalent
@@ -245,18 +260,33 @@ vizio-smartcast discover --timeout 10 --no-ssdp   # zeroconf only, 10s
 
 Exit code 1 if nothing was found.
 
-### `vizio-smartcast pair HOST`
+### `vizio-smartcast pair`
+
+Device pairing operations. Four subcommands:
 
 ```bash
-# Print token to stdout
-vizio-smartcast pair 192.168.1.50
+# Begin a pairing session — outputs challenge data and a ready-to-run command
+vizio-smartcast pair begin 192.168.1.50
 
-# Pair, save under alias, set as default — fastest first-time setup
-vizio-smartcast pair 192.168.1.50 --save-as livingroom
-vizio-smartcast device set-default livingroom
+# Complete pairing with the challenge data from "pair begin"
+vizio-smartcast pair complete 192.168.1.50 \
+    --challenge-type 1 --pairing-token 54321 --pin 1234
+
+# Cancel an in-progress pairing session
+vizio-smartcast pair cancel 192.168.1.50
+
+# Interactive pairing — prompts for PIN
+vizio-smartcast pair interactive 192.168.1.50
+vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
 ```
 
-`--device-type` defaults to `tv`. The CLI prompts for the PIN interactively.
+`--device-type` defaults to `tv`. All subcommands accept `--device-id`
+(defaults to `vizio-cli`); `begin`, `cancel`, and `interactive` also accept
+`--device-name` (defaults to `vizio-smartcast CLI`) to match the identity
+sent during pairing.
+
+`pair begin` prints the `pair complete` command with all flags filled in
+except `--pin`, making it trivially scriptable.
 
 ### `vizio-smartcast power`
 
@@ -340,7 +370,7 @@ vizio-smartcast --device livingroom input list --format tsv | awk -F'\t' '/HDMI/
 vizio-smartcast settings list audio --format json | jq '.[] | select(.name=="volume") | .value'
 
 # Set a default and then control without the flag
-vizio-smartcast pair 192.168.1.50 --save-as den
+vizio-smartcast pair interactive 192.168.1.50 --save-as den
 vizio-smartcast device set-default den
 vizio-smartcast power on
 vizio-smartcast volume up --steps 5
@@ -464,6 +494,10 @@ Notes:
 
 ### Pairing
 
+Two ways to pair from Python:
+
+**Stateful (context manager)** — the safety-net approach for interactive use:
+
 ```python
 import asyncio
 
@@ -501,6 +535,33 @@ The context manager is the safety net: if `complete()` is never reached —
 for any reason, including `KeyboardInterrupt` — `__aexit__` issues a
 best-effort `PUT /pairing/cancel` so the TV doesn't sit in pairing mode
 until reboot.
+
+**Stateless (one-shot methods)** — for scripted or multi-process pairing:
+
+```python
+from vizio_smartcast import DeviceType, PairChallenge, Vizio
+
+async with Vizio(host="192.168.1.50", device_type=DeviceType.TV) as v:
+    # Step 1: begin — device displays a PIN
+    challenge: PairChallenge = await v.begin_pair(
+        device_id="my-app", device_name="My App"
+    )
+    # challenge.challenge_type and challenge.token are needed for step 2
+
+    # Step 2: complete — submit the PIN
+    auth_token: str = await v.finish_pair(
+        device_id="my-app",
+        challenge_type=challenge.challenge_type,
+        token=challenge.token,
+        pin="1234",
+    )
+
+    # Optional: cancel a pairing session early (best-effort, swallows errors)
+    await v.cancel_pair(device_id="my-app", device_name="My App")
+```
+
+These are the same primitives the CLI's `pair begin` / `pair complete` /
+`pair cancel` subcommands use internally.
 
 ### Power
 

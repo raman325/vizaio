@@ -781,36 +781,96 @@ class TestDiscoverCommand:
 
 
 class TestPairCommand:
-    def test_pair_prints_token_when_no_save_as(
+    def test_pair_begin_outputs_challenge_and_hint(
         self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
     ) -> None:
-        host = "192.0.2.42"
         mock_aio.put(
-            f"https://{host}{resolve(Endpoint.BEGIN_PAIR, DeviceType.TV.profile).paths[0]}",
+            _tv_url(Endpoint.BEGIN_PAIR),
             payload=make_pair_begin_response(challenge_type=1, token=99),
         )
+        result = runner.invoke(
+            app,
+            [
+                "--config",
+                str(cfg_path),
+                "pair",
+                "begin",
+                TV_HOST_PORT,
+                "--format",
+                "json",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.output)
+        assert data["challenge_type"] == 1
+        assert data["pairing_token"] == 99
+        assert "pair complete" in data["next_step"]
+        assert "--challenge-type 1" in data["next_step"]
+        assert "--pairing-token 99" in data["next_step"]
+
+    def test_pair_begin_table_output(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
         mock_aio.put(
-            f"https://{host}{resolve(Endpoint.FINISH_PAIR, DeviceType.TV.profile).paths[0]}",
+            _tv_url(Endpoint.BEGIN_PAIR),
+            payload=make_pair_begin_response(challenge_type=1, token=99),
+        )
+        result = runner.invoke(
+            app,
+            ["--config", str(cfg_path), "pair", "begin", TV_HOST_PORT],
+        )
+        assert result.exit_code == 0, result.output
+        assert "1" in result.output
+        assert "99" in result.output
+        assert "pair complete" in result.output
+
+    def test_pair_begin_failure_exits_1(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(
+            _tv_url(Endpoint.BEGIN_PAIR),
+            payload={"STATUS": {"RESULT": "INVALID_PARSED", "DETAIL": "bad"}},
+        )
+        result = runner.invoke(
+            app,
+            ["--config", str(cfg_path), "pair", "begin", TV_HOST_PORT],
+        )
+        assert result.exit_code == 1
+        assert "Pairing begin failed" in result.output
+
+    def test_pair_complete_returns_token(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(
+            _tv_url(Endpoint.FINISH_PAIR),
             payload=make_pair_finish_response(auth_token="TOK-XYZ"),
         )
         result = runner.invoke(
             app,
-            ["--config", str(cfg_path), "pair", host, "--format", "json"],
-            input="1234\n",
+            [
+                "--config",
+                str(cfg_path),
+                "pair",
+                "complete",
+                TV_HOST_PORT,
+                "--challenge-type",
+                "1",
+                "--pairing-token",
+                "99",
+                "--pin",
+                "1234",
+                "--format",
+                "json",
+            ],
         )
         assert result.exit_code == 0, result.output
         assert "TOK-XYZ" in result.output
 
-    def test_pair_saves_when_save_as(
+    def test_pair_complete_saves_when_save_as(
         self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
     ) -> None:
-        host = "192.0.2.42"
         mock_aio.put(
-            f"https://{host}{resolve(Endpoint.BEGIN_PAIR, DeviceType.TV.profile).paths[0]}",
-            payload=make_pair_begin_response(challenge_type=1, token=99),
-        )
-        mock_aio.put(
-            f"https://{host}{resolve(Endpoint.FINISH_PAIR, DeviceType.TV.profile).paths[0]}",
+            _tv_url(Endpoint.FINISH_PAIR),
             payload=make_pair_finish_response(auth_token="TOK-SAVED"),
         )
         result = runner.invoke(
@@ -819,7 +879,117 @@ class TestPairCommand:
                 "--config",
                 str(cfg_path),
                 "pair",
-                host,
+                "complete",
+                TV_HOST_PORT,
+                "--challenge-type",
+                "1",
+                "--pairing-token",
+                "99",
+                "--pin",
+                "0000",
+                "--save-as",
+                "tvalias",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        cfg = Config.load(cfg_path)
+        assert cfg.get_device("tvalias").host == TV_HOST_PORT
+        assert cfg.get_device("tvalias").auth_token == "TOK-SAVED"
+
+    def test_pair_complete_failure_exits_1(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(
+            _tv_url(Endpoint.FINISH_PAIR),
+            payload={"STATUS": {"RESULT": "PAIRING_DENIED", "DETAIL": "wrong PIN"}},
+        )
+        result = runner.invoke(
+            app,
+            [
+                "--config",
+                str(cfg_path),
+                "pair",
+                "complete",
+                TV_HOST_PORT,
+                "--challenge-type",
+                "1",
+                "--pairing-token",
+                "99",
+                "--pin",
+                "9999",
+            ],
+        )
+        assert result.exit_code == 1
+        assert "Pairing complete failed" in result.output
+
+    def test_pair_cancel_succeeds(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(
+            _tv_url(Endpoint.CANCEL_PAIR),
+            payload=make_success_response(),
+        )
+        result = runner.invoke(
+            app,
+            [
+                "--config",
+                str(cfg_path),
+                "pair",
+                "cancel",
+                TV_HOST_PORT,
+                "--format",
+                "json",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Cancel request sent" in result.output
+
+    def test_pair_interactive_prints_token_when_no_save_as(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(
+            _tv_url(Endpoint.BEGIN_PAIR),
+            payload=make_pair_begin_response(challenge_type=1, token=99),
+        )
+        mock_aio.put(
+            _tv_url(Endpoint.FINISH_PAIR),
+            payload=make_pair_finish_response(auth_token="TOK-XYZ"),
+        )
+        result = runner.invoke(
+            app,
+            [
+                "--config",
+                str(cfg_path),
+                "pair",
+                "interactive",
+                TV_HOST_PORT,
+                "--format",
+                "json",
+            ],
+            input="1234\n",
+        )
+        assert result.exit_code == 0, result.output
+        assert "TOK-XYZ" in result.output
+
+    def test_pair_interactive_saves_when_save_as(
+        self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(
+            _tv_url(Endpoint.BEGIN_PAIR),
+            payload=make_pair_begin_response(challenge_type=1, token=99),
+        )
+        mock_aio.put(
+            _tv_url(Endpoint.FINISH_PAIR),
+            payload=make_pair_finish_response(auth_token="TOK-SAVED"),
+        )
+        result = runner.invoke(
+            app,
+            [
+                "--config",
+                str(cfg_path),
+                "pair",
+                "interactive",
+                TV_HOST_PORT,
                 "--save-as",
                 "tvalias",
             ],
@@ -827,31 +997,28 @@ class TestPairCommand:
         )
         assert result.exit_code == 0, result.output
         cfg = Config.load(cfg_path)
-        assert cfg.get_device("tvalias").host == host
+        assert cfg.get_device("tvalias").host == TV_HOST_PORT
         assert cfg.get_device("tvalias").auth_token == "TOK-SAVED"
 
-    def test_pair_failure_exits_1(
+    def test_pair_interactive_failure_exits_1(
         self, runner: CliRunner, cfg_path: Path, mock_aio: aioresponses
     ) -> None:
-        host = "192.0.2.42"
         mock_aio.put(
-            f"https://{host}{resolve(Endpoint.BEGIN_PAIR, DeviceType.TV.profile).paths[0]}",
+            _tv_url(Endpoint.BEGIN_PAIR),
             payload=make_pair_begin_response(challenge_type=1, token=99),
         )
-        # finish_pair returns PAIRING_DENIED — surfaces as VizioAuthError.
         mock_aio.put(
-            f"https://{host}{resolve(Endpoint.FINISH_PAIR, DeviceType.TV.profile).paths[0]}",
+            _tv_url(Endpoint.FINISH_PAIR),
             payload={"STATUS": {"RESULT": "PAIRING_DENIED", "DETAIL": "wrong PIN"}},
         )
-        # The pair_session's exit will cancel; mock that too.
         mock_aio.put(
-            f"https://{host}/pairing/cancel",
+            _tv_url(Endpoint.CANCEL_PAIR),
             payload=make_success_response(),
             repeat=True,
         )
         result = runner.invoke(
             app,
-            ["--config", str(cfg_path), "pair", host],
+            ["--config", str(cfg_path), "pair", "interactive", TV_HOST_PORT],
             input="9999\n",
         )
         assert result.exit_code == 1

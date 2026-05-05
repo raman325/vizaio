@@ -6,8 +6,10 @@
 #   prek run --all-files        # run all hooks against the repo
 #   prek autoupdate             # bump pinned versions
 ci:
-  # CI runs all hooks; the local 'fast' set is for hot-path commits.
-  skip: []
+  # pre-commit.ci service: skip no-commit-to-branch (fails on push-to-main
+  # checkouts). For GitHub Actions, the SKIP env var in integration.yaml
+  # handles the same exclusion.
+  skip: [no-commit-to-branch]
 
 minimum_pre_commit_version: 3.2.0
 
