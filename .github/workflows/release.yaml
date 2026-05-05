@@ -45,7 +45,7 @@ jobs:
           uv pip install --system build
           python -m build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -63,7 +63,7 @@ jobs:
       # https://docs.pypi.org/trusted-publishers/
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
