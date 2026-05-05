@@ -1,0 +1,33 @@
+---
+name: Integration
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    uses: ./.github/workflows/python-checks.yml
+    secrets: inherit
+
+  pre-commit:
+    name: pre-commit hooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install pre-commit
+        run: uv pip install --system pre-commit
+      - name: Run all hooks
+        run: pre-commit run --all-files --show-diff-on-failure

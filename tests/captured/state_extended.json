@@ -1,0 +1,23 @@
+{
+  "APP_CURRENT": {
+    "APP_ID": "1",
+    "MESSAGE": "{\"app\":\"home\",\"bundle\":\"bundles/home\"}",
+    "NAME_SPACE": 4
+  },
+  "CURRENT_INPUT": {
+    "HASHVAL": 3009117460,
+    "NAME": "SMARTCAST"
+  },
+  "DEVICE_NAME": "Test TV",
+  "ERRORS": [],
+  "MEDIA_STATE": "MediaState::Stopped",
+  "POWER_MODE": {
+    "HASHVAL": 3026334404,
+    "VALUE": "Quick Start"
+  },
+  "POWER_STATUS": {
+    "VALUE": 1
+  },
+  "SCREEN_MODE": "Full screen",
+  "URI": "/state_extended"
+}

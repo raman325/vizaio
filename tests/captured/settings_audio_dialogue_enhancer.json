@@ -1,0 +1,26 @@
+{
+  "HASHLIST": [
+    1264646194,
+    1620755520
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "dialogue_enhancer",
+      "HASHVAL": 4284435521,
+      "INDEX": 0,
+      "NAME": "ClearDialog",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Off"
+    }
+  ],
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/menu_native/dynamic/tv_settings/audio/dialogue_enhancer"
+}

@@ -1,0 +1,30 @@
+---
+# MD013 — line length. We allow long lines in code blocks (URLs, CLI),
+# tables, and headings.
+MD013:
+  line_length: 100
+  code_blocks: false
+  tables: false
+  headings: false
+
+# MD024 — multiple headings with same content. Allowed under different
+# parents (release notes, change-log entries).
+MD024:
+  siblings_only: true
+
+# MD033 — inline HTML. Some docs need raw <details>/<sub> for collapsibles.
+MD033: false
+
+# MD041 — first line should be a top-level header. README.md adheres but
+# fragment docs in /assets and migration notes don't.
+MD041: false
+
+# MD060 — table column style. Project tables use compact style without
+# leading/trailing space padding; tightening this universally would just
+# churn formatting without improving readability.
+MD060: false
+
+# MD040 — fenced code language. Many of our docs paste raw HTTP, shell
+# output, and protocol traces in fences; the "language" is "literal
+# capture" so requiring a hint is noise.
+MD040: false

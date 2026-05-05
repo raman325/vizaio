@@ -1,0 +1,25 @@
+{
+  "HASHLIST": [
+    1264646194,
+    1620755520
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "lip_sync",
+      "HASHVAL": 83475440,
+      "NAME": "Lip Sync",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 0
+    }
+  ],
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/menu_native/dynamic/tv_settings/audio/lip_sync"
+}

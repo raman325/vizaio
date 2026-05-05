@@ -1,0 +1,32 @@
+---
+name: Feature request
+description: Suggest a new capability or API change.
+title: "[FR] "
+labels: [enhancement, pending]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do? What's currently in your way?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: |
+        How would you like vizio-smartcast to behave? Sketch the API or
+        CLI shape if relevant.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or third-party tools you've tried.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context

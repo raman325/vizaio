@@ -1,0 +1,24 @@
+---
+extends: default
+
+rules:
+  # GitHub Actions has many lines that exceed 80 chars; keep generous.
+  line-length:
+    max: 120
+    level: warning
+
+  # GHA's `on:` key is YAML's `True`. yamllint flags it as a truthy bool.
+  truthy:
+    check-keys: false
+
+  # Comments don't need 2 spaces before `#` after a value.
+  comments:
+    min-spaces-from-content: 1
+
+  # Allow up to 2 blank lines for visual section separation.
+  empty-lines:
+    max: 2
+
+  # Don't enforce document-start `---` everywhere; markdownlint already
+  # asks for it on `.md` files.
+  document-start: disable

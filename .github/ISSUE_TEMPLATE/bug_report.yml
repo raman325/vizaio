@@ -1,0 +1,90 @@
+---
+name: Bug report
+description: Report something that isn't working as expected.
+title: "[BUG] "
+labels: [bug, pending]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please fill in the relevant fields below.
+        Logs and the device's exact firmware version are the most useful
+        artifacts for diagnosis.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you observe? What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: "## Environment"
+
+  - type: input
+    id: vizio_smartcast_version
+    attributes:
+      label: vizio-smartcast version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      placeholder: "3.12.7"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device_type
+    attributes:
+      label: Device family
+      options:
+        - TV
+        - Soundbar
+        - Crave Go (SP30-E0)
+        - Crave 360 (SP50-D5)
+        - Crave Pro (SP70-D5)
+        - Other / unknown
+    validations:
+      required: true
+
+  - type: input
+    id: device_model
+    attributes:
+      label: Exact device model
+      description: From `vizio info model` or the back of the device.
+      placeholder: "V505-G9"
+    validations:
+      required: true
+
+  - type: input
+    id: firmware_version
+    attributes:
+      label: Device firmware version
+      description: From `vizio info version`.
+      placeholder: "4.0.20.1"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: |
+        Enable with `vizio -v <command>` or `logging.getLogger("vizio_smartcast").setLevel("DEBUG")`.
+        Paste the relevant section.
+      render: text

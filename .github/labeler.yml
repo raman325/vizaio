@@ -1,0 +1,50 @@
+# Configuration for actions/labeler - file-based labels.
+# See: https://github.com/actions/labeler
+---
+python:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.py'
+          - 'src/**/*.py'
+          - 'tests/**/*.py'
+          - 'pyproject.toml'
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - 'docs/**/*'
+          - 'assets/**/*.md'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'tests/**/*'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'pyproject.toml'
+          - 'uv.lock'
+
+github-config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**/*'
+
+pre-commit:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.pre-commit-config.yaml'
+
+cli:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/vizio_smartcast/cli/**/*'
+
+websocket:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/vizio_smartcast/_websocket.py'
+          - 'tests/test_websocket.py'
+          - 'docs/websocket-protocol-notes.md'

@@ -1,0 +1,15 @@
+{
+  "ITEMS": [
+    {
+      "CNAME": "power_mode",
+      "NAME": "Power Mode",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 1
+    }
+  ],
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/state/device/power_mode"
+}

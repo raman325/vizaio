@@ -1,0 +1,103 @@
+---
+name: Python Checks
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_call:
+
+env:
+  TARGET_PYTHON: "3.12"
+  OTHER_PYTHON_VERSIONS: '["3.13", "3.14"]'
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      target-python: ${{ env.TARGET_PYTHON }}
+      python-versions: ${{ steps.versions.outputs.matrix }}
+    steps:
+      - name: Build version matrix
+        id: versions
+        env:
+          OTHER: ${{ env.OTHER_PYTHON_VERSIONS }}
+          TARGET: ${{ env.TARGET_PYTHON }}
+        run: |
+          MATRIX=$(echo "$OTHER" | jq -c --arg t "$TARGET" '. + [$t] | unique | sort')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.TARGET_PYTHON }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv pip install --system ruff
+      - name: Check formatting
+        run: ruff format --check .
+      - name: Check linting
+        run: ruff check .
+
+  mypy:
+    name: Mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.TARGET_PYTHON }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev,discovery]"
+      - name: Run mypy
+        run: mypy src/vizio_smartcast/
+
+  pytest:
+    name: Pytest (${{ matrix.python-version }})
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(needs.setup.outputs.python-versions) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: |
+          uv pip install --system -e ".[dev,discovery]" \
+            pytest-github-actions-annotate-failures
+      - name: Run tests + coverage
+        run: |
+          pytest ./tests/ \
+            --cov=vizio_smartcast \
+            --cov-report=xml \
+            --junitxml=junit.xml
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == needs.setup.outputs.target-python
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: python
+          files: coverage.xml
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() && matrix.python-version == needs.setup.outputs.target-python }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: python
+          files: junit.xml

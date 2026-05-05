@@ -1,0 +1,27 @@
+{
+  "HASHLIST": [
+    1264646194,
+    1620755520
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "mute",
+      "ENABLED": "FALSE",
+      "HASHVAL": 2210383572,
+      "INDEX": 0,
+      "NAME": "Mute",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Off"
+    }
+  ],
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/menu_native/dynamic/tv_settings/audio/mute"
+}

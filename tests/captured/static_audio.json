@@ -1,0 +1,242 @@
+{
+  "CNAME": "audio",
+  "GROUP": "G_AUDIO",
+  "HASHVAL": 1234567890,
+  "ITEMS": [
+    {
+      "CNAME": "soundbar_settings",
+      "GROUP": "G_AUDIO",
+      "NAME": "Sound Bar Settings",
+      "TYPE": "T_STRING_V1"
+    },
+    {
+      "CNAME": "soundbar_eq_mode",
+      "GROUP": "G_AUDIO",
+      "NAME": "EQ",
+      "TYPE": "T_LIST_X_V1"
+    },
+    {
+      "CNAME": "soundbar_bass",
+      "ELEMENTS": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Bass",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_treble",
+      "ELEMENTS": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Treble",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_dialogue",
+      "ELEMENTS": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Dialogue",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_subwoofer",
+      "ELEMENTS": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Subwoofer",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_night_mode",
+      "ELEMENTS": [
+        "Off",
+        "On"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Night Mode",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_height",
+      "ELEMENTS": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Height Speakers",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_virtual_x",
+      "ELEMENTS": [
+        "Off",
+        "On"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Virtual X",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "soundbar_speaker_test",
+      "GROUP": "G_AUDIO",
+      "NAME": "Speaker Test",
+      "TYPE": "T_ACTION_V1"
+    },
+    {
+      "CNAME": "soundbar_info",
+      "GROUP": "G_AUDIO",
+      "NAME": "Info",
+      "TYPE": "T_ACTION_V1"
+    },
+    {
+      "CNAME": "tv_audio_settings",
+      "GROUP": "G_AUDIO",
+      "NAME": "TV Audio Settings",
+      "TYPE": "T_STRING_V1"
+    },
+    {
+      "CNAME": "tv_speakers",
+      "GROUP": "G_AUDIO",
+      "NAME": "Audio Out",
+      "TYPE": "T_LIST_X_V1"
+    },
+    {
+      "CNAME": "surround_sound",
+      "ELEMENTS": [
+        "Virtual:X",
+        "On",
+        "Off"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Surround Sound",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "volume_leveling",
+      "ELEMENTS": [
+        "Off",
+        "On"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Volume Leveling",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CENTER": 0,
+      "CNAME": "balance",
+      "DECMARKER": "Left",
+      "GROUP": "G_AUDIO",
+      "INCMARKER": "Right",
+      "INCREMENT": 1,
+      "MAXIMUM": 50,
+      "MINIMUM": -50,
+      "NAME": "Balance",
+      "TYPE": "T_VALUE_ABS_V1"
+    },
+    {
+      "CNAME": "bass",
+      "GROUP": "G_AUDIO",
+      "INCREMENT": 1,
+      "MAXIMUM": 12,
+      "MINIMUM": -12,
+      "NAME": "Bass",
+      "TYPE": "T_VALUE_V1"
+    },
+    {
+      "CNAME": "treble",
+      "GROUP": "G_AUDIO",
+      "INCREMENT": 1,
+      "MAXIMUM": 12,
+      "MINIMUM": -12,
+      "NAME": "Treble",
+      "TYPE": "T_VALUE_V1"
+    },
+    {
+      "CNAME": "lip_sync",
+      "GROUP": "G_AUDIO",
+      "INCREMENT": 1,
+      "MAXIMUM": 20,
+      "MINIMUM": 0,
+      "NAME": "Lip Sync",
+      "TYPE": "T_VALUE_V1"
+    },
+    {
+      "CNAME": "digital_audio_out",
+      "ELEMENTS": [
+        "Auto",
+        "PCM",
+        "Digital"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Digital Audio Out",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "analog_audio_out",
+      "ELEMENTS": [
+        "Fixed",
+        "Variable"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Analog Audio Out",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "dialogue_enhancer",
+      "ELEMENTS": [
+        "Off",
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "ClearDialog",
+      "TYPE": "T_LIST_V1"
+    },
+    {
+      "CNAME": "volume",
+      "GROUP": "G_AUDIO",
+      "INCREMENT": 1,
+      "MAXIMUM": 100,
+      "MINIMUM": 0,
+      "NAME": "Volume",
+      "TYPE": "T_VALUE_V1"
+    },
+    {
+      "CNAME": "mute",
+      "ELEMENTS": [
+        "Off",
+        "On"
+      ],
+      "GROUP": "G_AUDIO",
+      "NAME": "Mute",
+      "TYPE": "T_LIST_V1"
+    }
+  ],
+  "NAME": "Audio",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/static/tv_settings/audio"
+}

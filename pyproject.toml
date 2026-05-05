@@ -1,0 +1,173 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vizio-smartcast"
+version = "0.1.0"
+description = "Modern async Python client and CLI for Vizio SmartCast devices"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+authors = [{ name = "Raman Gupta" }]
+keywords = ["vizio", "smartcast", "tv", "home-assistant", "iot"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Home Automation",
+]
+dependencies = [
+  "aiohttp>=3.9",
+  "platformdirs>=4.0",
+  "rich>=13.0",
+  "tomlkit>=0.13",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+discovery = ["zeroconf>=0.131"]
+dev = [
+  "aioresponses>=0.7",
+  "mypy>=1.20",
+  "pytest>=9.0",
+  "pytest-asyncio>=0.23",
+  "pytest-cov>=5.0",
+  "ruff>=0.15",
+]
+
+[project.scripts]
+vizio = "vizio_smartcast.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/raman325/vizio-smartcast"
+Issues = "https://github.com/raman325/vizio-smartcast/issues"
+Changelog = "https://github.com/raman325/vizio-smartcast/releases"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vizio_smartcast"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/vizio_smartcast", "README.md", "LICENSE"]
+
+# ---------------------------------------------------------------------------
+# Ruff — lint + format. Replaces flake8 + isort + black + pyupgrade.
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "D",   # pydocstyle
+  "G",   # flake8-logging-format
+  "UP",  # pyupgrade
+  "SIM", # flake8-simplify
+  "RET", # flake8-return
+  "PTH", # flake8-use-pathlib
+  "PLC", # pylint conventions
+  "PLE", # pylint errors
+  "PLR", # pylint refactor
+  "PLW", # pylint warnings
+  "RUF", # ruff-specific
+]
+extend-select = [
+  # Docstring style: summary line goes on its own line below the opening
+  # ``"""`` (D213), with closing ``"""`` on its own line below the body
+  # (D209). Single-line docstrings are still single-line.
+  "D213",
+]
+ignore = [
+  # pydocstyle conflicts — these are mutually exclusive with rules we DO
+  # want to enforce:
+  "D203", # 1 blank line before class docstring (conflicts with D211)
+  "D212", # Multi-line summary on first line (conflicts with D213)
+  # pylint complexity rules — readability over arbitrary metrics:
+  "PLR0911", # too many return statements
+  "PLR0912", # too many branches
+  "PLR0913", # too many arguments
+  "PLR0915", # too many statements
+  "PLR2004", # magic value used in comparison
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+known-first-party = ["vizio_smartcast", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests don't need bugbear/RUF rigor and can use shorter/idiomatic forms.
+"tests/**/*.py" = ["B", "RUF", "D", "PLR", "PLC0415"]
+# The endpoint table prizes column alignment over line length.
+"src/vizio_smartcast/endpoints.py" = ["E501"]
+# Migration assets are reference snippets, not library code.
+"assets/**/*.py" = ["D", "PLR"]
+
+# ---------------------------------------------------------------------------
+# Mypy — strict typing for the library. Tests are checked but get a few
+# more affordances (annotation-unchecked).
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src/vizio_smartcast"]
+show_error_codes = true
+local_partial_types = true
+strict_equality = true
+no_implicit_optional = true
+no_implicit_reexport = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_incomplete_stub = true
+enable_error_code = [
+  "ignore-without-code", # Require error codes on `# type: ignore` comments
+  "redundant-self",      # Flag redundant Self type annotations
+  "truthy-iterable",     # Flag always-truthy iterable checks (likely bug)
+]
+
+[[tool.mypy.overrides]]
+module = ["aioresponses.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+addopts = ["-q", "--strict-markers", "--strict-config"]
+filterwarnings = ["error"]
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/vizio_smartcast"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "@abstractmethod",
+  "if __name__ == .__main__.:",
+]
+
+[dependency-groups]
+dev = []

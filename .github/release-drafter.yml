@@ -1,0 +1,44 @@
+---
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+sort-direction: ascending
+
+version-resolver:
+  major:
+    labels: ["semver-major", "breaking-change"]
+  minor:
+    labels: ["semver-minor", "enhancement"]
+  patch:
+    labels: ["semver-patch", "bug", "fix", "bugfix"]
+  default: patch
+
+categories:
+  - title: "⚠️ Breaking Changes"
+    labels: ["breaking-change"]
+  - title: "🆕 Enhancements"
+    labels: ["enhancement", "feature"]
+  - title: "✅ Bug Fixes"
+    labels: ["fix", "bugfix", "bug"]
+  - title: "⚓ Code Quality"
+    labels: ["code-quality", "refactor"]
+  - title: "📝 Documentation"
+    collapse-after: 3
+    labels: ["documentation"]
+    exclude-labels: ["python"]
+  - title: "🧪 Tests"
+    collapse-after: 3
+    labels: ["tests"]
+  - title: "📦 Dependencies"
+    collapse-after: 1
+    labels: ["dependencies", "pre-commit"]
+  - title: "🧹 Housekeeping"
+    collapse-after: 1
+    labels: ["github-config", "chore"]
+    exclude-labels: ["python"]
+
+# yamllint disable rule:line-length
+template: |
+  [![PyPI downloads for this release](https://img.shields.io/github/downloads/raman325/vizio-smartcast/v$RESOLVED_VERSION/total.svg)](https://github.com/raman325/vizio-smartcast/releases/tag/v$RESOLVED_VERSION)
+
+  $CHANGES

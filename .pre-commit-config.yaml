@@ -1,0 +1,88 @@
+---
+# prek-compatible config (also works with pre-commit).
+#
+# Usage:
+#   prek install                # set up the git hook
+#   prek run --all-files        # run all hooks against the repo
+#   prek autoupdate             # bump pinned versions
+ci:
+  # CI runs all hooks; the local 'fast' set is for hot-path commits.
+  skip: []
+
+minimum_pre_commit_version: 3.2.0
+
+repos:
+  # ---- Python: lint + format ------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.12
+    hooks:
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ---- Python: types --------------------------------------------------
+  # Note: docstring style (pydocstyle's D rules) is enforced by ruff via
+  # the [tool.ruff.lint] select list, so no separate pydocstyle hook.
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.20.2
+    hooks:
+      - id: mypy
+        args: [--strict]
+        files: ^src/
+        additional_dependencies:
+          - aiohttp>=3.9
+          - typer>=0.12
+          - rich>=13.0
+          - tomlkit>=0.13
+          - platformdirs>=4.0
+          - zeroconf>=0.131
+
+  # ---- TOML formatter -------------------------------------------------
+  - repo: https://github.com/ComPWA/taplo-pre-commit
+    rev: v0.9.3
+    hooks:
+      - id: taplo-format
+      - id: taplo-lint
+        # Skip remote schema catalog fetch — fails in offline / sandboxed envs.
+        args: [--no-schema]
+
+  # ---- YAML lint ------------------------------------------------------
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        types: [yaml]
+
+  # ---- Markdown lint --------------------------------------------------
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.48.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+
+  # ---- GitHub Actions lint --------------------------------------------
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  # ---- Generic hygiene ------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-ast
+      - id: check-json
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: debug-statements
+      - id: no-commit-to-branch
+        args:
+          - --branch=main
+          - --branch=master

@@ -1,0 +1,152 @@
+{
+  "CNAME": "tv_information",
+  "GROUP": "G_TV_INFORMATION",
+  "HASHLIST": [
+    789235949,
+    3557719922,
+    1463602174,
+    1620755520
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "tv_name",
+      "HASHVAL": 633631551,
+      "NAME": "TV Name",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "Test TV"
+    },
+    {
+      "CNAME": "serial_number",
+      "HASHVAL": 1030748816,
+      "NAME": "Serial Number",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "TEST00000000001"
+    },
+    {
+      "CNAME": "model_name",
+      "HASHVAL": 4270100434,
+      "NAME": "Model Name",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "VHD24M-0810"
+    },
+    {
+      "CNAME": "firmware",
+      "HASHVAL": 2518844691,
+      "NAME": "Firmware",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "3.720.9.1-1"
+    },
+    {
+      "CNAME": "cast_version",
+      "HASHVAL": null,
+      "NAME": "Cast ",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "mtk5583-0.71.0.3|cast_20230306_0602_RC12"
+    },
+    {
+      "CNAME": "vizios",
+      "HASHVAL": 3462191873,
+      "NAME": "VIZIOS",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "ViziOS 1.6.1312.1 82db550"
+    },
+    {
+      "CNAME": "conjure",
+      "HASHVAL": 597354540,
+      "NAME": "Conjure",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "MTKC-108.710.14"
+    },
+    {
+      "CNAME": "sc_config",
+      "HASHVAL": 2075393401,
+      "NAME": "SC Config",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "PROD v59.61"
+    },
+    {
+      "CNAME": "input",
+      "HASHVAL": 3056129548,
+      "NAME": "Input",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "SMARTCAST"
+    },
+    {
+      "CNAME": "resolution",
+      "HASHVAL": 3938900304,
+      "NAME": "Resolution",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": ""
+    },
+    {
+      "CNAME": "frame_rate",
+      "HASHVAL": 2987064861,
+      "NAME": "Frame Rate",
+      "READONLY": "TRUE",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 30
+    },
+    {
+      "CNAME": "audio_in",
+      "HASHVAL": 2337431222,
+      "NAME": "Audio In",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": ""
+    },
+    {
+      "CNAME": "audio_out",
+      "HASHVAL": 539919121,
+      "NAME": "Audio Out",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "PCM"
+    },
+    {
+      "CNAME": "hdr",
+      "HASHVAL": 2172934655,
+      "NAME": "HDR",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "NO"
+    },
+    {
+      "CNAME": "vrr",
+      "HASHVAL": 2286905819,
+      "NAME": "VRR",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "NO"
+    },
+    {
+      "CNAME": "bluetooth_version",
+      "HASHVAL": 2752085363,
+      "NAME": "Bluetooth Driver",
+      "READONLY": "TRUE",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "2.0.22.0"
+    }
+  ],
+  "NAME": "TV Information",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/tv_settings/admin_and_privacy/system_information/tv_information"
+}

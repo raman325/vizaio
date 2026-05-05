@@ -1,0 +1,82 @@
+{
+  "CNAME": "tv_settings",
+  "HASHLIST": [
+    1620755520
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "bluetooth_headphones",
+      "HASHVAL": 2729524779,
+      "NAME": "Headphones",
+      "TYPE": "T_ACTION_V1",
+      "VALUE": "T_ACTION_V1"
+    },
+    {
+      "CNAME": "picture",
+      "HASHVAL": 2812636530,
+      "NAME": "Picture",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "audio",
+      "HASHVAL": 1264646194,
+      "NAME": "Audio",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "network",
+      "HASHVAL": 3515234811,
+      "NAME": "Network",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "channels",
+      "HASHVAL": 364135601,
+      "NAME": "Antenna Channels",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "accessibility",
+      "HASHVAL": 922195149,
+      "NAME": "Accessibility",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "devices",
+      "HASHVAL": 1392727323,
+      "HIDDEN": "TRUE",
+      "NAME": "Input Settings",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "system",
+      "HASHVAL": 1862682698,
+      "NAME": "System",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "admin_and_privacy",
+      "HASHVAL": 1463602174,
+      "NAME": "Admin & Privacy",
+      "TYPE": "T_MENU_V1"
+    },
+    {
+      "CNAME": "cast",
+      "HASHVAL": 1986120602,
+      "NAME": "Cast Settings",
+      "TYPE": "T_MENU_V1"
+    }
+  ],
+  "NAME": "Display Settings",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/tv_settings"
+}
