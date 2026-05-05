@@ -675,13 +675,21 @@ class Vizio:
           ships a wildcard payload only.
         - ``firmware``: explicit firmware version string
           (e.g., ``"3.520.0.0-1"``); ``None`` (default) auto-detects.
-          Pass ``""`` to skip the firmware-bounds filter (apps with
-          firmware bounds will be evaluated using the empty-tuple
-          comparison, which is unbounded below).
+          Pass ``""`` to skip firmware-bounds enforcement entirely
+          (matches the permissive policy applied when the device
+          doesn't expose ``SYSTEM_INFO.VERSION``).
 
-        Apps with no availability entry, or no chipset payload
-        matching the resolved chipset/firmware, are excluded. Use
-        :meth:`list_apps` for an unfiltered catalog.
+        Inclusion rules, after the country filter:
+
+        - records with a non-empty legacy ``config`` are included
+          unconditionally (archived catalogs that ship launch payloads
+          inline don't depend on availability data being joinable).
+        - otherwise, the record's ``id`` must join an
+          :class:`AppAvailability` entry whose chipset+firmware
+          matches the resolved values; non-joinable records are
+          excluded.
+
+        Use :meth:`list_apps` for an unfiltered catalog.
         """
         catalog = await self._get_app_catalog()
         availability = await self._get_app_availability()
@@ -689,11 +697,23 @@ class Vizio:
         resolved_firmware = (
             firmware if firmware is not None else await self._get_firmware()
         )
+        # Build a one-shot id→availability index so the inner loop
+        # is O(1) per record instead of scanning the availability
+        # tuple every iteration. The catalog has ~350 entries today
+        # but HA polls hard enough that the saved scan time matters.
+        availability_by_id = {entry.app_id: entry for entry in availability}
         result: list[AppRecord] = []
         for record in catalog:
             if not app_in_country(record, country):
                 continue
-            entry = find_availability(record.id, availability) if record.id else None
+            # Backward-compat: archived catalog dumps with a populated
+            # legacy ``config[]`` are launchable directly without
+            # availability data. Include them so callers using older
+            # bundled snapshots still get a sensible list.
+            if record.config:
+                result.append(record)
+                continue
+            entry = availability_by_id.get(record.id) if record.id else None
             if entry is None:
                 continue
             if pick_chipset_payload(

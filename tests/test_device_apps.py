@@ -231,6 +231,37 @@ class TestListApps:
             assert await v.list_available_apps() == []
 
 
+class TestListAvailableLegacyConfigBackwardCompat:
+    async def test_record_with_legacy_config_included_without_availability(
+        self,
+    ) -> None:
+        """Archived catalog dumps that ship launch payloads inline don't
+        depend on availability data being joinable. Such records should
+        still appear in list_available_apps without a matching
+        AppAvailability entry."""
+        legacy = AppRecord(
+            name="LegacyApp",
+            country=("*",),
+            config=(AppConfig(app_id="leg", name_space=2),),
+            id="999",
+        )
+        modern_no_avail = AppRecord(name="Modern", country=("*",), id="1000")
+
+        async with Vizio(
+            "1.2.3.4",
+            device_type=DeviceType.TV,
+            apps=(legacy, modern_no_avail),
+            availability=(),
+        ) as v:
+            v._cached_chipset = ""
+            v._cached_firmware = ""
+            apps = await v.list_available_apps()
+
+        # Legacy entry kept (launchable from inline config[0]); modern
+        # entry without availability dropped.
+        assert [r.name for r in apps] == ["LegacyApp"]
+
+
 # ---------------------------------------------------------------------------
 # launch_app via availability
 # ---------------------------------------------------------------------------
