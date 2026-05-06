@@ -791,6 +791,29 @@ class Vizio:
             resolve(Endpoint.LAUNCH_APP, self._profile), body=body
         )
 
+    def set_app_catalog(self, apps: tuple[AppRecord, ...]) -> None:
+        """
+        Replace the cached app catalog with caller-provided data.
+
+        After this call the lib treats ``apps`` as authoritative and never
+        auto-fetches — the caller (e.g., a Home Assistant apps coordinator)
+        owns refresh. Mirrors the constructor's ``apps=`` injection point
+        for callers that want to push fresh data post-construction.
+        """
+        self._cached_apps = apps
+        self._cached_apps_at = datetime.now()
+        self._caller_owned_apps = True
+
+    def set_app_availability(self, availability: tuple[AppAvailability, ...]) -> None:
+        """
+        Replace the cached availability data with caller-provided data.
+
+        Same caller-owned semantics as :meth:`set_app_catalog`.
+        """
+        self._cached_availability = availability
+        self._cached_availability_at = datetime.now()
+        self._caller_owned_availability = True
+
     # ------------------------------------------------------------------
     # Device info
     # ------------------------------------------------------------------

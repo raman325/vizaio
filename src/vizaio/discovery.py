@@ -26,7 +26,9 @@ from xml.etree.ElementTree import ParseError
 
 import aiohttp
 
-from .types import DiscoveredDevice
+from ._device import Vizio
+from .errors import VizioError
+from .types import DeviceType, DiscoveredDevice
 
 if TYPE_CHECKING:
     pass
@@ -416,3 +418,50 @@ def _merge_by_ip(
     for d in secondary:
         seen_ips.setdefault(d.ip, d)
     return list(seen_ips.values())
+
+
+# ---------------------------------------------------------------------------
+# Host probe — pre-construction TV-vs-audio detection
+# ---------------------------------------------------------------------------
+
+
+async def async_is_tv(
+    host: str,
+    *,
+    port: int | None = None,
+    session: aiohttp.ClientSession | None = None,
+    timeout: float | None = None,
+) -> bool:
+    """
+    Probe ``host`` to determine whether it's a Vizio TV (vs. an audio device).
+
+    Uses the asymmetry that audio devices serve their settings tree without
+    auth while TVs require it: hits the audio-settings root with no auth
+    token. Success → audio device → returns ``False``. Any failure
+    (auth required, connection error, malformed response) → ``True``.
+
+    Lenient like pyvizio's ``async_guess_device_type``: an unreachable or
+    otherwise misbehaving device is classified as TV — the dominant case
+    for HA users, and a wrong guess gets corrected when the config flow
+    shows the user a confirmation form.
+
+    ``host`` may be ``"1.2.3.4"`` or ``"1.2.3.4:7345"``. When ``port`` is
+    given separately, ``host`` must not include one.
+    """
+    if port is not None:
+        if ":" in host:
+            raise ValueError(
+                "host already includes a port; pass `port` only when host is bare"
+            )
+        host = f"{host}:{port}"
+    async with Vizio(
+        host,
+        device_type=DeviceType.SOUNDBAR,
+        session=session,
+        timeout=timeout,
+    ) as device:
+        try:
+            await device.ping_auth()
+        except VizioError:
+            return True
+    return False

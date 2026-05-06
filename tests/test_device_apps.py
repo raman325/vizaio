@@ -120,6 +120,75 @@ class TestCacheInjection:
         assert availability == (avail,)
 
 
+class TestCacheInjectionViaSetters:
+    """Caller mutates cached catalog or availability on an existing Vizio
+    instance; subsequent reads use the new value and the lib doesn't
+    auto-fetch (HA apps-coordinator pattern, post-construction)."""
+
+    async def test_set_app_catalog_installs_value_without_fetch(self) -> None:
+        record = AppRecord(name="Pushed", country=("*",), id="42")
+
+        with patch(
+            "vizaio._device.fetch_app_catalog",
+            new=AsyncMock(side_effect=AssertionError("should not fetch")),
+        ):
+            vizio = Vizio("1.2.3.4", device_type=DeviceType.TV)
+            try:
+                vizio.set_app_catalog((record,))
+                catalog = await vizio._get_app_catalog()
+            finally:
+                await vizio.aclose()
+
+        assert catalog == (record,)
+
+    async def test_set_app_availability_installs_value_without_fetch(self) -> None:
+        avail = _av("1", **{"*": [ChipsetPayload(AppConfig("1", 2))]})
+
+        with patch(
+            "vizaio._device.fetch_app_availability",
+            new=AsyncMock(side_effect=AssertionError("should not fetch")),
+        ):
+            vizio = Vizio("1.2.3.4", device_type=DeviceType.TV)
+            try:
+                vizio.set_app_availability((avail,))
+                availability = await vizio._get_app_availability()
+            finally:
+                await vizio.aclose()
+
+        assert availability == (avail,)
+
+    async def test_setter_overrides_constructor_injection(self) -> None:
+        old = AppRecord(name="Old", country=("*",), id="1")
+        new = AppRecord(name="New", country=("*",), id="2")
+
+        with patch(
+            "vizaio._device.fetch_app_catalog",
+            new=AsyncMock(side_effect=AssertionError("should not fetch")),
+        ):
+            vizio = Vizio("1.2.3.4", device_type=DeviceType.TV, apps=(old,))
+            try:
+                vizio.set_app_catalog((new,))
+                catalog = await vizio._get_app_catalog()
+            finally:
+                await vizio.aclose()
+
+        assert catalog == (new,)
+
+    async def test_set_app_catalog_accepts_empty_tuple(self) -> None:
+        with patch(
+            "vizaio._device.fetch_app_catalog",
+            new=AsyncMock(side_effect=AssertionError("should not fetch")),
+        ):
+            vizio = Vizio("1.2.3.4", device_type=DeviceType.TV)
+            try:
+                vizio.set_app_catalog(())
+                catalog = await vizio._get_app_catalog()
+            finally:
+                await vizio.aclose()
+
+        assert catalog == ()
+
+
 # ---------------------------------------------------------------------------
 # list_available_apps + list_apps
 # ---------------------------------------------------------------------------
