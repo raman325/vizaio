@@ -796,10 +796,16 @@ issue history confirms this. The fallback is opt-in via
 
 **Behavior:** The TV exposes a WebSocket interface alongside REST.
 Subscription is opted into by **HTTP** `PUT /event/register` (not a WS
-frame), then a `wss://<host>:<ws_port>/` connection is opened and the
-device pushes `{"URI": "<cname>", ...}` JSON frames when registered
-properties change. There is no per-cname subscription envelope on the
-socket — registration is a single global toggle.
+frame), then a `wss://<host>:<ws_port>/?TOKEN=<auth>` connection is
+opened with an `Authorization: <token>` header, and the device pushes
+`{"URI": "<uri>", ...}` JSON frames when registered properties change.
+The `URI` field carries a full SCPL path like `state/device/power_mode`
+(not an item `cname`). There is no per-URI subscription envelope on
+the socket — registration is a single global toggle.
+
+The `?TOKEN=` query string and the capital-A `Authorization` header
+are both required: the official Android app sends both, and at least
+one firmware revision rejects connections with only one of them.
 
 **Our handling:** `Vizio.subscribe_events()` returns an async-iterable
 `EventStream` (`src/vizaio/_websocket.py`). The implementation:
