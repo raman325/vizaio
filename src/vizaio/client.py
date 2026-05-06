@@ -31,6 +31,7 @@ from typing import Any, Final
 
 from aiohttp import (
     ClientConnectionError,
+    ClientError,
     ClientResponse,
     ClientResponseError,
     ClientSession,
@@ -172,6 +173,14 @@ class SmartCastClient:
             raise VizioConnectionError(
                 f"unexpected HTTP status {e.status} from {url}"
             ) from e
+        except (ClientError, ValueError) as e:
+            # Catches ``InvalidURL`` (yarl can't parse the host:port) and
+            # any other aiohttp ``ClientError`` subclass not covered above.
+            # ``ValueError`` covers cases where yarl raises directly without
+            # going through aiohttp's wrapping. Without this, callers that
+            # promise lenient semantics (e.g., ``async_is_tv``) would leak
+            # transport-layer exception types.
+            raise VizioConnectionError(f"client error reaching {url}: {e}") from e
 
     async def aclose(self) -> None:
         """Close the owned session, if any."""
@@ -251,6 +260,8 @@ class SmartCastClient:
             raise VizioConnectionError(
                 f"unexpected HTTP status {e.status} from {url}"
             ) from e
+        except (ClientError, ValueError) as e:
+            raise VizioConnectionError(f"client error reaching {url}: {e}") from e
 
 
 def _coerce_timeout(
