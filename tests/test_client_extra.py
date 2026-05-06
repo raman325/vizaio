@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, InvalidURL
 from aioresponses import aioresponses
 import pytest
 
@@ -375,3 +375,56 @@ class TestTimeoutCoercion:
         # client.py and may evolve.
         assert client._timeout.sock_read is not None  # type: ignore[attr-defined]
         assert client._timeout.sock_read > 0  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# Broad ClientError + ValueError wrapping
+# ---------------------------------------------------------------------------
+
+
+class TestClientErrorWrapping:
+    """Any aiohttp ``ClientError`` subclass — and any bare ``ValueError``
+    raised by yarl during URL construction — must surface as
+    :class:`VizioConnectionError`. Without this, callers that promise
+    "any device-level failure" semantics (e.g., ``async_is_tv``) leak
+    transport-layer exception types into their public contract."""
+
+    async def test_request_spec_wraps_invalid_url(self) -> None:
+        with aioresponses() as m:
+            m.get(URL, exception=InvalidURL("malformed"))
+            client = SmartCastClient(host=HOST)
+            try:
+                with pytest.raises(VizioConnectionError):
+                    await client.request_spec(_spec_get())
+            finally:
+                await client.aclose()
+
+    async def test_request_spec_wraps_bare_value_error(self) -> None:
+        with aioresponses() as m:
+            m.get(URL, exception=ValueError("yarl rejected authority"))
+            client = SmartCastClient(host=HOST)
+            try:
+                with pytest.raises(VizioConnectionError):
+                    await client.request_spec(_spec_get())
+            finally:
+                await client.aclose()
+
+    async def test_request_raw_json_wraps_invalid_url(self) -> None:
+        with aioresponses() as m:
+            m.get(URL, exception=InvalidURL("malformed"))
+            client = SmartCastClient(host=HOST)
+            try:
+                with pytest.raises(VizioConnectionError):
+                    await client.request_raw_json(_spec_get())
+            finally:
+                await client.aclose()
+
+    async def test_request_raw_json_wraps_bare_value_error(self) -> None:
+        with aioresponses() as m:
+            m.get(URL, exception=ValueError("yarl rejected authority"))
+            client = SmartCastClient(host=HOST)
+            try:
+                with pytest.raises(VizioConnectionError):
+                    await client.request_raw_json(_spec_get())
+            finally:
+                await client.aclose()

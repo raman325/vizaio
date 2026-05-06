@@ -20,12 +20,22 @@ Implementation lands in #27. Tests fail until then.
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from vizaio import DiscoveredDevice
-from vizaio.discovery import discover, discover_ssdp, discover_zeroconf
+from vizaio import (
+    DiscoveredDevice,
+    Vizio,
+    VizioAuthError,
+    VizioConnectionError,
+)
+from vizaio.discovery import (
+    async_is_tv,
+    discover,
+    discover_ssdp,
+    discover_zeroconf,
+)
 
 # ---------------------------------------------------------------------------
 # Zeroconf
@@ -297,6 +307,59 @@ class TestDiscoveredDeviceHost:
     def test_host(self) -> None:
         d = DiscoveredDevice(name="x", ip="192.168.1.50", port=7345, model="y")
         assert d.host == "192.168.1.50:7345"
+
+
+# ---------------------------------------------------------------------------
+# async_is_tv — pre-construction probe used by HA's config flow
+# ---------------------------------------------------------------------------
+
+
+class TestAsyncIsTv:
+    """Probe a host to determine whether it's a TV (auth-gated settings
+    tree) or an audio device (open settings tree). Mirrors pyvizio's
+    ``async_guess_device_type`` lenient semantics: any failure
+    classifies as TV (the dominant case for HA users)."""
+
+    async def test_returns_false_when_settings_succeed_unauthenticated(
+        self,
+    ) -> None:
+        with patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)):
+            assert await async_is_tv("1.2.3.4:9000") is False
+
+    async def test_returns_true_when_auth_required(self) -> None:
+        with patch.object(
+            Vizio,
+            "ping_auth",
+            new=AsyncMock(side_effect=VizioAuthError("REQUIRES_PAIRING")),
+        ):
+            assert await async_is_tv("1.2.3.4:7345") is True
+
+    async def test_returns_true_on_connection_error(self) -> None:
+        # Lenient like pyvizio: an unreachable device defaults to TV
+        # rather than raising. HA's config_flow only needs a binary
+        # answer; a wrong guess gets corrected when the user is shown
+        # the form.
+        with patch.object(
+            Vizio,
+            "ping_auth",
+            new=AsyncMock(side_effect=VizioConnectionError("unreachable")),
+        ):
+            assert await async_is_tv("1.2.3.4:7345") is True
+
+    async def test_port_kwarg_appended_to_host(self) -> None:
+        captured: list[str] = []
+
+        async def capture_host(self: Vizio) -> None:
+            captured.append(self.host)
+
+        with patch.object(Vizio, "ping_auth", new=capture_host):
+            await async_is_tv("1.2.3.4", port=7345)
+
+        assert captured == ["1.2.3.4:7345"]
+
+    async def test_port_kwarg_conflicts_with_inline_port(self) -> None:
+        with pytest.raises(ValueError, match=r"port"):
+            await async_is_tv("1.2.3.4:7345", port=7345)
 
 
 # ---------------------------------------------------------------------------

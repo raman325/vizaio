@@ -396,6 +396,58 @@ class TestFetchAppAvailability:
         assert len(result) > 0
 
 
+class TestFetchAppAvailabilityUrlOverride:
+    """Caller can point ``fetch_app_availability`` at a different URL.
+    The default remains ``REMOTE_AVAILABILITY_URL``."""
+
+    async def test_url_override_is_fetched(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        custom_url = "https://example.invalid/custom_availability.json"
+        payload = [
+            {
+                "id": "888",
+                "chipsets": {
+                    "*": [
+                        {
+                            "app_type_payload": '{"NAME_SPACE":2,"APP_ID":"888"}',
+                            "firmwareMinimum": None,
+                            "firmwareMaximum": None,
+                        }
+                    ]
+                },
+            }
+        ]
+        with aioresponses() as m:
+            m.get(custom_url, payload=payload)
+            result = await fetch_app_availability(session=session, url=custom_url)
+        assert any(entry.app_id == "888" for entry in result)
+
+    async def test_url_override_falls_back_on_failure(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        custom_url = "https://example.invalid/custom_availability.json"
+        with aioresponses() as m:
+            m.get(custom_url, status=500)
+            result = await fetch_app_availability(session=session, url=custom_url)
+        assert result == BUNDLED_AVAILABILITY
+
+    async def test_default_url_constant_unchanged(self) -> None:
+        import inspect
+
+        sig = inspect.signature(fetch_app_availability)
+        assert sig.parameters["url"].default == REMOTE_AVAILABILITY_URL
+
+
+class TestFetchAppAvailabilityTopLevelExport:
+    """``fetch_app_availability`` is part of the documented public API."""
+
+    def test_importable_from_vizaio(self) -> None:
+        import vizaio
+
+        assert vizaio.fetch_app_availability is fetch_app_availability
+
+
 # ---------------------------------------------------------------------------
 # Bundled availability sanity
 # ---------------------------------------------------------------------------
