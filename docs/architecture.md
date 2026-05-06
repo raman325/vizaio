@@ -9,27 +9,31 @@ modules below have no idea modules above exist.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  cli/  (TODO)                       — typer entry points         │
+│  cli/                                — typer entry points        │
 ├──────────────────────────────────────────────────────────────────┤
-│  Vizio class           (_device.py) — public API; capability     │
-│                                       gating; hashval recovery;  │
-│                                       pair_session context mgr   │
+│  Vizio class           (_device.py)  — public API; capability    │
+│                                        gating; hashval recovery; │
+│                                        pair_session context mgr  │
+│  EventStream        (_websocket.py)  — WS event subscription     │
 ├──────────────────────────────────────────────────────────────────┤
-│  apps.py                            — bundled+remote app catalog │
-│  discovery.py                       — zeroconf + SSDP            │
+│  apps.py                             — catalog + availability    │
+│                                        (bundled + remote refresh)│
+│  discovery.py                        — zeroconf + SSDP fallback  │
 ├──────────────────────────────────────────────────────────────────┤
-│  SmartCastClient       (_client.py) — HTTP transport             │
-│                                       (auth, SSL, fallback paths)│
+│  SmartCastClient        (client.py)  — HTTP transport            │
+│                                        (auth, SSL, fallback paths)│
 ├──────────────────────────────────────────────────────────────────┤
-│  resolve()           (_endpoints.py) — Endpoint enum + per-      │
-│                                       profile EndpointSpec       │
-│  _payloads.py                       — PUT body builders          │
+│  resolve()           (endpoints.py)  — Endpoint enum + per-      │
+│                                        profile EndpointSpec      │
+│  _payloads.py                        — PUT body builders         │
 ├──────────────────────────────────────────────────────────────────┤
-│  Response  (_wire.py) — case-normalized envelope; Item dataclass │
-│  _parse.py            — high-level Response → typed-result helpers│
+│  Response             (wire.py)      — case-normalized envelope; │
+│                                        Item dataclass            │
+│  parse.py                            — high-level Response →     │
+│                                        typed-result helpers      │
 ├──────────────────────────────────────────────────────────────────┤
-│  DeviceProfile / DeviceType  (_types.py, _profiles.py, _keys.py) │
-│  VizioError + subclasses                          (_errors.py)   │
+│  DeviceProfile / DeviceType  (types.py, profiles.py, _keys.py)   │
+│  VizioError + subclasses                            (errors.py)  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -47,7 +51,7 @@ Take a single call: `await vizio.power_on()` on a TV.
    `{"KEYLIST": [{"CODESET": ..., "CODE": ..., "ACTION": "KEYPRESS"}]}`.
    Payload builders are pure data — no I/O, no auth, no validation.
 4. **`Vizio._request(Endpoint.KEY_PRESS)`** calls `resolve(KEY_PRESS, profile)`
-   from `_endpoints.py` to get an `EndpointSpec`:
+   from `endpoints.py` to get an `EndpointSpec`:
    `{paths: ("/key_command/",), method: "PUT", auth: REQUIRED, item_cname: None}`.
    The resolver is a registry of `Endpoint → fn(profile) → EndpointSpec`,
    so the same enum produces different specs for different device types.
@@ -56,13 +60,13 @@ Take a single call: `await vizio.power_on()` on a TV.
    before any HTTP work. (Defense in depth: `SmartCastClient` checks
    again, but mocking-friendly tests need the upper-layer check too.)
 6. **`SmartCastClient.request_spec(spec, body=...)`** is the HTTP layer
-   in `_client.py`. It iterates `spec.paths` (only one for `KEY_PRESS`,
+   in `client.py`. It iterates `spec.paths` (only one for `KEY_PRESS`,
    but multiple for ESN/serial/version per APK quirk #3). For each path:
    constructs `https://{host}{path}`, adds `AUTH` header (per
    `spec.auth` and configured token), adds `VIZIO-SmartCast-Source`
    header, sends the request with `ssl=False` (devices use self-signed
    certs).
-7. The response goes through **`Response.from_json(data)`** in `_wire.py`
+7. The response goes through **`Response.from_json(data)`** in `wire.py`
    — the boundary that lowercases all keys (per APK quirk #1) and
    builds `Item` dataclasses. Status mapping turns `STATUS.RESULT` into
    the `ResponseStatus` enum and translates non-success results into
@@ -547,27 +551,27 @@ hardware data on which firmware revisions support it reliably.
 
 If you want to read your way through the source from the bottom up:
 
-1. **`_errors.py`** — small, sets the exception vocabulary.
-2. **`_types.py`** — `DeviceType`, `DeviceProfile`, `InputInfo`,
+1. **`errors.py`** — small, sets the exception vocabulary.
+2. **`types.py`** — `DeviceType`, `DeviceProfile`, `InputInfo`,
    `SettingInfo`, `AppConfig`. Pure data.
 3. **`_keys.py`** — remote key catalogs per device family.
-4. **`_profiles.py`** — three (now five with Crave variants) preset
+4. **`profiles.py`** — three (now five with Crave variants) preset
    `DeviceProfile` instances.
-5. **`_wire.py`** — `Item` and `Response`. The wire boundary.
+5. **`wire.py`** — `Item` and `Response`. The wire boundary.
 6. **`_payloads.py`** — PUT body builders. Pure data, mirror of
-   `_wire.py`.
-7. **`_endpoints.py`** — `Endpoint` enum, `EndpointSpec` dataclass,
+   `wire.py`.
+7. **`endpoints.py`** — `Endpoint` enum, `EndpointSpec` dataclass,
    path builders, and the `resolve(endpoint, profile)` registry. The
    most important file in the codebase for understanding the protocol.
-8. **`_parse.py`** — higher-level helpers built on `Response`. Inputs
+8. **`parse.py`** — higher-level helpers built on `Response`. Inputs
    filtering, settings merging, app config extraction.
-9. **`_client.py`** — `SmartCastClient`. The HTTP layer. Owns the
+9. **`client.py`** — `SmartCastClient`. The HTTP layer. Owns the
    aiohttp session, applies auth, walks `EndpointSpec.paths` for
    firmware-fallback.
 10. **`apps.py`** — bundled JSON + remote refresh + `find_app_name`.
 11. **`discovery.py`** — zeroconf + SSDP.
 12. **`_websocket.py`** — `EventStream` + `_parse_event_frame`. The
-    push-side counterpart to `_client.py`. Independent of `_device.py`
+    push-side counterpart to `client.py`. Independent of `_device.py`
     until you reach `Vizio.subscribe_events()`.
 13. **`_device.py`** — `Vizio` class, the public API. This is the only
     file in the package that touches all the others.
@@ -599,13 +603,13 @@ the bug is in.
 | Adding... | Edit |
 |-----------|------|
 | A new remote key | `_keys.py` (the per-device keymap) |
-| A new endpoint | `_endpoints.py` (add `Endpoint` member + `_resolve_*` fn + register in `_RESOLVERS`) |
-| A new device family | `_profiles.py` (add a `DeviceProfile` preset) + `_keys.py` (its keymap) |
-| A new wire-format quirk | `_wire.py` (extend `Response.from_json` or `_item_from_dict`) |
+| A new endpoint | `endpoints.py` (add `Endpoint` member + `_resolve_*` fn + register in `_RESOLVERS`) |
+| A new device family | `profiles.py` (add a `DeviceProfile` preset) + `_keys.py` (its keymap) |
+| A new wire-format quirk | `wire.py` (extend `Response.from_json` or `_item_from_dict`) |
 | A new public method | `_device.py` (the only place public API lives) |
-| A new exception subclass | `_errors.py` |
+| A new exception subclass | `errors.py` |
 | A new fixture for tests | `tests/_fixtures.py` |
-| A new event field discovered on real hardware | `_types.py` (extend `StateEvent`) + `_websocket.py::_extract_item` |
+| A new event field discovered on real hardware | `types.py` (extend `StateEvent`) + `_websocket.py::_extract_item` |
 
 ## Summary
 
@@ -617,5 +621,5 @@ live in tight, single-purpose modules. Only `_device.py` knows about
 "a Vizio" as a coherent thing.
 
 If you remember one thing: **`EndpointSpec` is the protocol contract**.
-Reading the resolver in `_endpoints.py` tells you everything the
+Reading the resolver in `endpoints.py` tells you everything the
 library can ask the device for.

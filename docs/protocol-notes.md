@@ -790,56 +790,53 @@ issue history confirms this. The fallback is opt-in via
 
 ---
 
-## 28. WebSocket SCPL — event subscription (future work, not v0.1)
+## 28. WebSocket SCPL — event subscription
 
-**Confidence:** APK CONFIRMED EXISTS — protocol details PENDING
+**Confidence:** APK CONFIRMED + HARDWARE VERIFIED
 
-**Behavior:** The TV exposes a WebSocket interface (`V2SCPWebsocketApi`)
-alongside the REST API. Supports event subscription via an
-`eventRegister` operation with body `{"REQUEST": "MODIFY"}`. Could
-replace polling: when the user changes the active input via the physical
-remote, the TV pushes an event instead of waiting for HA to poll.
+**Behavior:** The TV exposes a WebSocket interface alongside REST.
+Subscription is opted into by **HTTP** `PUT /event/register` (not a WS
+frame), then a `wss://<host>:<ws_port>/` connection is opened and the
+device pushes `{"URI": "<cname>", ...}` JSON frames when registered
+properties change. There is no per-cname subscription envelope on the
+socket — registration is a single global toggle.
 
-**Status:** APK source confirmed the surface exists. Full protocol
-details (URL, subscription envelope, event payload shape, capability
-gating, reconnect semantics, which fields broadcast) are NOT YET
-characterized — pending dedicated investigation (task #37).
+**Our handling:** `Vizio.subscribe_events()` returns an async-iterable
+`EventStream` (`src/vizaio/_websocket.py`). The implementation:
+
+- Sends `PUT /event/register` with body `{"REQUEST":"MODIFY","VALUE":"TRUE"}`
+  before opening the WS. (Hardware probe: omitting `VALUE` returns
+  `INVALID_PARAMETER`; `VALUE: true` (JSON bool) crashes the device's
+  parser and returns HTTP 500 with HTML body. The string `"TRUE"` is
+  the only form that works on at least one firmware revision —
+  3.720.9.1-1 / VHD24M-0810.)
+- Decodes incoming frames into `StateEvent` typed dataclasses with the
+  raw envelope preserved on `.raw` for unknown URIs.
+- Auto-reconnects on disconnect by default; `auto_reconnect=False`
+  ends the iterator on first drop.
+- Surfaces "device rejected event-register" as
+  `VizioUnsupportedError("device rejected event-register …")` so
+  callers can fall back to polling on firmware that doesn't support
+  the surface.
+
+See `docs/websocket-protocol-notes.md` for the full protocol writeup
+(URL/port discovery, header set, payload shape, reconnect behavior,
+known-URI taxonomy).
+
+**Why it matters:**
+
+- Sub-100ms state updates vs. ~10s polling lag.
+- Eliminates the GET/PUT burst pattern implicated in pyvizio issue #175
+  ("TV stops responding").
+- Lower device load (one long-lived connection vs. dozens of round trips
+  per minute).
 
 **Evidence:**
 
-- APK `V2SCPWebsocketApi` class referenced at
-  `DeviceCommandBuilder.java:360`.
-- `eventRegister` operation, body `{"REQUEST": "MODIFY"}`.
+- APK `V2SCPWebsocketApi` referenced at `DeviceCommandBuilder.java:360`.
+- `eventRegister` operation, body shape captured live.
 - Voice search uses a separate WebSocket (`VoiceSearch.java`) — out of
   scope for our library.
-
-**Why we care:** if it works as advertised, this is a substantial
-reliability + UX upgrade for the HA integration:
-
-- Sub-100ms state updates vs. ~10s polling lag
-- Eliminates the GET/PUT burst pattern implicated in pyvizio issue #175
-  ("TV stops responding")
-- Lower device load (one long-lived connection vs. dozens of round trips
-  per minute)
-
-**Why not v0.1:**
-
-- Protocol details unknown
-- Capability gating implies non-trivial fallback path (older firmware
-  doesn't have it)
-- Out of scope for the initial REST-only release
-- Library v0.1 is API-shaping; WS support is additive in v0.2+
-
-**Plan:**
-
-1. v0.1 ships REST-only (this work).
-2. Task #37 characterizes the WS protocol via APK + hardware capture.
-3. v0.2 adds `Vizio.subscribe_events()` — an `AsyncIterator` of state
-   changes — as an opt-in complement to polling. HA integration adopts
-   event-driven updates where supported, falls back to polling where not.
-
-**Stub:** `vizaio/_websocket.py` exists as an empty module with
-TODOs documenting what to investigate. Do not import — placeholder only.
 
 ---
 
