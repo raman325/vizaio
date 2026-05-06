@@ -539,15 +539,18 @@ async def fetch_app_catalog(
     session: aiohttp.ClientSession | None = None,
     *,
     timeout: float = 10.0,
+    url: str = REMOTE_CATALOG_URL,
 ) -> tuple[AppRecord, ...]:
     """
-    Fetch the catalog from :data:`REMOTE_CATALOG_URL`.
+    Fetch the catalog from ``url`` (defaults to :data:`REMOTE_CATALOG_URL`).
 
-    Falls back to :data:`BUNDLED_APPS` on ANY failure (connection error,
-    timeout, malformed JSON, unexpected shape). Never raises — caller
-    invariants assume "we always have a catalog."
+    Pass a different ``url`` to point at a regional mirror, an internal
+    proxy, or a test fixture — the parser is the same regardless of
+    source. Falls back to :data:`BUNDLED_APPS` on ANY failure (connection
+    error, timeout, malformed JSON, unexpected shape). Never raises —
+    caller invariants assume "we always have a catalog."
     """
-    payload = await _fetch_json(REMOTE_CATALOG_URL, session, timeout, "catalog")
+    payload = await _fetch_json(url, session, timeout, "catalog")
     if payload is None:
         return BUNDLED_APPS
     parsed = _parse_catalog(payload)
@@ -561,18 +564,19 @@ async def fetch_app_availability(
     session: aiohttp.ClientSession | None = None,
     *,
     timeout: float = 10.0,
+    url: str = REMOTE_AVAILABILITY_URL,
 ) -> tuple[AppAvailability, ...]:
     """
-    Fetch availability data from :data:`REMOTE_AVAILABILITY_URL`.
+    Fetch availability data from ``url``.
 
-    Falls back to :data:`BUNDLED_AVAILABILITY` on any failure. Never
-    raises. The bundled snapshot drifts from upstream (Vizio rolls
-    availability forward with firmware), so callers should prefer fresh
-    fetches at session start.
+    Defaults to :data:`REMOTE_AVAILABILITY_URL`. Pass a different
+    ``url`` to point at a regional mirror, an internal
+    proxy, or a test fixture. Falls back to :data:`BUNDLED_AVAILABILITY`
+    on any failure. Never raises. The bundled snapshot drifts from
+    upstream (Vizio rolls availability forward with firmware), so callers
+    should prefer fresh fetches at session start.
     """
-    payload = await _fetch_json(
-        REMOTE_AVAILABILITY_URL, session, timeout, "availability"
-    )
+    payload = await _fetch_json(url, session, timeout, "availability")
     if payload is None:
         return BUNDLED_AVAILABILITY
     parsed = _parse_availability(payload)

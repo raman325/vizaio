@@ -284,3 +284,51 @@ class TestFetchAppCatalogNeverRaises:
             # Must not propagate. We log debug, fall back to bundled.
             catalog = await fetch_app_catalog(session=session)
         assert len(catalog) > 0
+
+
+class TestFetchAppCatalogUrlOverride:
+    """Caller can point ``fetch_app_catalog`` at a different URL — useful
+    for region-specific catalogs, internal mirrors, or testing. The
+    default remains ``REMOTE_CATALOG_URL``."""
+
+    async def test_url_override_is_fetched(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        custom_url = "https://example.invalid/custom_apps.json"
+        remote_payload = [
+            {
+                "name": "Mirror App",
+                "country": ["*"],
+                "config": [{"APP_ID": "777", "NAME_SPACE": 2}],
+            }
+        ]
+        with aioresponses() as m:
+            m.get(custom_url, payload=remote_payload)
+            catalog = await fetch_app_catalog(session=session, url=custom_url)
+        assert any(r.name == "Mirror App" for r in catalog)
+
+    async def test_url_override_falls_back_on_failure(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        custom_url = "https://example.invalid/custom_apps.json"
+        with aioresponses() as m:
+            m.get(custom_url, status=500)
+            catalog = await fetch_app_catalog(session=session, url=custom_url)
+        assert tuple(catalog) == BUNDLED_APPS
+
+    async def test_default_url_constant_unchanged(self) -> None:
+        # Guard against accidentally rebinding the default in a refactor.
+        import inspect
+
+        sig = inspect.signature(fetch_app_catalog)
+        assert sig.parameters["url"].default == REMOTE_CATALOG_URL
+
+
+class TestFetchAppCatalogTopLevelExport:
+    """``fetch_app_catalog`` is part of the documented public API and
+    importable from the top-level package."""
+
+    def test_importable_from_vizaio(self) -> None:
+        import vizaio
+
+        assert vizaio.fetch_app_catalog is fetch_app_catalog
