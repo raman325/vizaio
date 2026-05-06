@@ -41,10 +41,17 @@ from ._websocket import (
 from .apps import (
     APP_HOME,
     BUNDLED_APPS,
+    BUNDLED_AVAILABILITY,
     NO_APP_RUNNING,
     UNKNOWN_APP,
+    app_in_country,
+    extract_chipset,
+    fetch_app_availability,
     fetch_app_catalog,
     find_app_name,
+    find_app_record,
+    find_availability,
+    pick_chipset_payload,
 )
 from .client import SmartCastClient
 from .endpoints import (
@@ -63,6 +70,7 @@ from .parse import (
     parse_current_app_config,
     parse_current_input,
     parse_current_input_item,
+    parse_firmware_version,
     parse_inputs,
     parse_model_name,
     parse_pair_challenge,
@@ -70,8 +78,10 @@ from .parse import (
     parse_setting_types,
     parse_settings,
     parse_state_extended,
+    parse_vizios_binary,
 )
 from .types import (
+    AppAvailability,
     AppConfig,
     AppRecord,
     AuthRequirement,
@@ -100,6 +110,10 @@ _KEYLIST_CHUNK_SIZE: Final = 50
 # App catalog refresh policy.
 _APP_CATALOG_TTL: Final = timedelta(hours=24)
 
+# Availability data rolls forward with firmware updates — TTL is shorter so
+# users on a fresh firmware see new apps without restarting their client.
+_APP_AVAILABILITY_TTL: Final = timedelta(hours=6)
+
 # Per-field identity endpoints used as fallback when the aggregate
 # tv_information endpoint isn't exposed (older firmware). Modern firmware
 # rejects these per-field paths with URI_NOT_FOUND; the aggregate path
@@ -124,6 +138,8 @@ class Vizio:
         session: ClientSession | None = None,
         timeout: float | ClientTimeout | None = None,
         max_concurrent_requests: int = 1,
+        apps: tuple[AppRecord, ...] | None = None,
+        availability: tuple[AppAvailability, ...] | None = None,
     ) -> None:
         if profile is not None and device_type is not None:
             raise ValueError("specify exactly one of device_type or profile")
@@ -142,14 +158,31 @@ class Vizio:
             max_concurrent=max_concurrent_requests,
         )
 
-        self._cached_apps: tuple[AppRecord, ...] | None = None
-        self._cached_apps_at: datetime | None = None
+        # Optional injection points for callers (e.g., Home Assistant
+        # coordinators) that want to fetch + cache the catalog and
+        # availability data themselves and share them across many
+        # Vizio instances. When supplied, the instance treats them as
+        # fresh forever and never auto-fetches. Set ``None`` (default)
+        # to use the lib's own per-instance, in-memory, TTL-bounded
+        # cache. The lib never writes either to disk.
+        now = datetime.now() if apps or availability else None
+        self._cached_apps: tuple[AppRecord, ...] | None = apps
+        self._cached_apps_at: datetime | None = now if apps else None
+        self._caller_owned_apps = apps is not None
+        self._cached_availability: tuple[AppAvailability, ...] | None = availability
+        self._cached_availability_at: datetime | None = now if availability else None
+        self._caller_owned_availability = availability is not None
         # Identity is immutable for the device lifetime, so we cache it
         # for the full Vizio session. ``_loaded`` distinguishes "not
         # fetched yet" (None means try) from "fetched and aggregate
         # unavailable" (None means don't bother).
         self._cached_identity: dict[str, str] | None = None
         self._cached_identity_loaded = False
+        # Chipset + firmware are read once per session from deviceinfo.
+        # Empty string is the "no data" sentinel here — the device may
+        # legitimately not expose either field on older firmware.
+        self._cached_chipset: str | None = None
+        self._cached_firmware: str | None = None
         self._closed = False
 
     # ------------------------------------------------------------------
@@ -508,12 +541,18 @@ class Vizio:
         we return ``None`` for cleaner Python idioms. Use
         :data:`vizio_smartcast.apps.NO_APP_RUNNING` if the sentinel form
         is desired downstream.
+
+        Resolution prefers availability data (the modern catalog ships
+        no per-app launch config; ids must be joined to availability),
+        and falls back to the legacy ``config[]`` field on archived
+        catalog dumps for backward compatibility.
         """
         config = await self.get_current_app_config()
         if config is None:
             return None
         catalog = await self._get_app_catalog()
-        name = find_app_name(config, [APP_HOME, *catalog])
+        availability = await self._get_app_availability()
+        name = find_app_name(config, [APP_HOME, *catalog], availability=availability)
         if name == NO_APP_RUNNING:
             return None
         if name is None:
@@ -559,13 +598,188 @@ class Vizio:
         response = await self._request(Endpoint.CURRENT_APP)
         return parse_current_app_config(response)
 
-    async def launch_app(self, name: str) -> None:
+    async def launch_app(
+        self,
+        name: str,
+        *,
+        chipset: str | None = None,
+        firmware: str | None = None,
+    ) -> None:
+        """
+        Launch an app by name (case-insensitive).
+
+        Resolution order:
+
+        1. Catalog record's legacy ``config[0]`` if populated (archived
+           catalog dumps; the live ``scfs.vizio.com`` endpoint won't
+           supply it).
+        2. Availability data — picks the chipset+firmware-matched
+           launch payload for this device.
+
+        ``chipset`` and ``firmware`` override the auto-detected device
+        values for the availability lookup. Pass them when you want to
+        launch using a different variant's payload (e.g., to test the
+        wildcard payload explicitly: ``chipset="*"``).
+
+        Raises :class:`VizioInvalidParameterError` when the name isn't
+        in the catalog, or when no availability payload matches the
+        chipset/firmware combination in use.
+        """
         catalog = await self._get_app_catalog()
-        for record in [APP_HOME, *catalog]:
-            if record.name.lower() == name.lower():
-                await self.launch_app_config(record.config[0])
-                return
-        raise VizioInvalidParameterError(f"app {name!r} not in catalog")
+        if APP_HOME.name.lower() == name.lower():
+            await self.launch_app_config(APP_HOME.config[0])
+            return
+        record = find_app_record(name, catalog)
+        if record is None:
+            raise VizioInvalidParameterError(f"app {name!r} not in catalog")
+        if record.config:
+            await self.launch_app_config(record.config[0])
+            return
+        config = await self._resolve_launch_config(
+            record, chipset=chipset, firmware=firmware
+        )
+        if config is None:
+            raise VizioInvalidParameterError(
+                f"app {name!r} is not available on this device "
+                f"(chipset/firmware mismatch in availability data)"
+            )
+        await self.launch_app_config(config)
+
+    async def list_apps(self) -> list[AppRecord]:
+        """
+        Return the full app catalog with no filtering.
+
+        Use :meth:`list_available_apps` instead when you want only the
+        apps that work on the current device. This method is the
+        escape hatch for callers that need every catalog entry —
+        e.g., to render a "Browse all apps" UI regardless of what
+        the device can actually launch.
+        """
+        return list(await self._get_app_catalog())
+
+    async def list_available_apps(
+        self,
+        *,
+        country: str | None = None,
+        chipset: str | None = None,
+        firmware: str | None = None,
+    ) -> list[AppRecord]:
+        """
+        List apps available given a chipset + firmware filter.
+
+        - ``country``: ISO code to filter on (case-insensitive); ``None``
+          (default) returns all available apps regardless of region.
+        - ``chipset``: explicit availability chipset key
+          (e.g., ``"MT5586"``); ``None`` (default) auto-detects from
+          the device. Pass ``"*"`` to filter to apps whose availability
+          ships a wildcard payload only.
+        - ``firmware``: explicit firmware version string
+          (e.g., ``"3.520.0.0-1"``); ``None`` (default) auto-detects.
+          Pass ``""`` to skip firmware-bounds enforcement entirely
+          (matches the permissive policy applied when the device
+          doesn't expose ``SYSTEM_INFO.VERSION``).
+
+        Inclusion rules, after the country filter:
+
+        - records with a non-empty legacy ``config`` are included
+          unconditionally (archived catalogs that ship launch payloads
+          inline don't depend on availability data being joinable).
+        - otherwise, the record's ``id`` must join an
+          :class:`AppAvailability` entry whose chipset+firmware
+          matches the resolved values; non-joinable records are
+          excluded.
+
+        Use :meth:`list_apps` for an unfiltered catalog.
+        """
+        catalog = await self._get_app_catalog()
+        availability = await self._get_app_availability()
+        resolved_chipset = chipset if chipset is not None else await self._get_chipset()
+        resolved_firmware = (
+            firmware if firmware is not None else await self._get_firmware()
+        )
+        # Build a one-shot id→availability index so the inner loop
+        # is O(1) per record instead of scanning the availability
+        # tuple every iteration. The catalog has ~350 entries today
+        # but HA polls hard enough that the saved scan time matters.
+        availability_by_id = {entry.app_id: entry for entry in availability}
+        result: list[AppRecord] = []
+        for record in catalog:
+            if not app_in_country(record, country):
+                continue
+            # Backward-compat: archived catalog dumps with a populated
+            # legacy ``config[]`` are launchable directly without
+            # availability data. Include them so callers using older
+            # bundled snapshots still get a sensible list.
+            if record.config:
+                result.append(record)
+                continue
+            entry = availability_by_id.get(record.id) if record.id else None
+            if entry is None:
+                continue
+            if pick_chipset_payload(
+                entry, chipset=resolved_chipset, firmware=resolved_firmware
+            ):
+                result.append(record)
+        return result
+
+    async def _resolve_launch_config(
+        self,
+        record: AppRecord,
+        *,
+        chipset: str | None = None,
+        firmware: str | None = None,
+    ) -> AppConfig | None:
+        """
+        Find the launch payload for ``record`` via availability data.
+
+        ``chipset`` / ``firmware`` override the auto-detected device
+        values. ``None`` triggers auto-detection (the common case).
+        """
+        if not record.id:
+            return None
+        availability = await self._get_app_availability()
+        entry = find_availability(record.id, availability)
+        if entry is None:
+            return None
+        resolved_chipset = chipset if chipset is not None else await self._get_chipset()
+        resolved_firmware = (
+            firmware if firmware is not None else await self._get_firmware()
+        )
+        payload = pick_chipset_payload(
+            entry, chipset=resolved_chipset, firmware=resolved_firmware
+        )
+        return payload.config if payload else None
+
+    async def get_chipset(self) -> str | None:
+        """
+        Return the device's availability chipset key (e.g., ``"MT5583"``).
+
+        Derived from ``BINARIES.ViziOS`` in the deviceinfo response,
+        cross-referenced with the chipset keys present in the active
+        availability data so the ``MT5586``/``MT5586L`` ambiguity
+        resolves to whichever variant the data actually carries.
+        Cached per-instance.
+
+        Returns ``None`` when the device doesn't expose the binary
+        string (older firmware) or when the prefix doesn't match any
+        known SoC vendor — callers should fall back to the wildcard
+        ``"*"`` chipset entry, which :func:`pick_chipset_payload`
+        already does automatically.
+        """
+        return await self._get_chipset()
+
+    async def get_firmware_version(self) -> str:
+        """
+        Return the device's firmware version (e.g., ``"3.720.9.1-1"``).
+
+        Read from ``SYSTEM_INFO.VERSION`` in the deviceinfo aggregate
+        and cached per-instance. This is distinct from
+        :meth:`get_version`, which hits the legacy per-field path
+        (``firmware`` cname) and is what users print — both should
+        agree on modern firmware. Empty string when the device
+        doesn't expose it.
+        """
+        return await self._get_firmware()
 
     async def launch_app_config(self, config: AppConfig) -> None:
         if not self._profile.has_apps:
@@ -875,7 +1089,16 @@ class Vizio:
         )
 
     async def _get_app_catalog(self) -> tuple[AppRecord, ...]:
-        """Return the cached app catalog, refreshing if older than the TTL."""
+        """
+        Return the cached app catalog, refreshing if older than the TTL.
+
+        When the caller injected an ``apps=`` value via the constructor,
+        that value is treated as authoritative and never refetched —
+        the caller (e.g., a Home Assistant coordinator) is taking
+        responsibility for refresh.
+        """
+        if self._caller_owned_apps and self._cached_apps is not None:
+            return self._cached_apps
         now = datetime.now()
         if (
             self._cached_apps is not None
@@ -887,6 +1110,64 @@ class Vizio:
         self._cached_apps = catalog or BUNDLED_APPS
         self._cached_apps_at = now
         return self._cached_apps
+
+    async def _get_app_availability(self) -> tuple[AppAvailability, ...]:
+        """
+        Return cached availability data, refreshing if older than the TTL.
+
+        Caller-injected values (constructor's ``availability=``) are
+        treated as authoritative and never refetched.
+        """
+        if self._caller_owned_availability and self._cached_availability is not None:
+            return self._cached_availability
+        now = datetime.now()
+        if (
+            self._cached_availability is not None
+            and self._cached_availability_at is not None
+            and now - self._cached_availability_at < _APP_AVAILABILITY_TTL
+        ):
+            return self._cached_availability
+        availability = await fetch_app_availability()
+        self._cached_availability = availability or BUNDLED_AVAILABILITY
+        self._cached_availability_at = now
+        return self._cached_availability
+
+    async def _get_chipset(self) -> str | None:
+        """Lazily read + cache the device's availability chipset key."""
+        if self._cached_chipset is None:
+            await self._load_deviceinfo_fields()
+        return self._cached_chipset or None
+
+    async def _get_firmware(self) -> str:
+        """Lazily read + cache the device's firmware version string."""
+        if self._cached_firmware is None:
+            await self._load_deviceinfo_fields()
+        return self._cached_firmware or ""
+
+    async def _load_deviceinfo_fields(self) -> None:
+        """
+        Populate cached chipset + firmware from a single deviceinfo fetch.
+
+        Both fields come from the same response payload, so doing them in
+        one round-trip keeps ``list_available_apps`` and the
+        availability-aware ``launch_app`` from issuing two back-to-back
+        ``state/device/deviceinfo`` GETs on first use. Empty string is
+        the "fetched but field absent / device unreachable" sentinel —
+        once set, neither field will trigger another fetch.
+        """
+        try:
+            response = await self._request(Endpoint.DEVICE_INFO)
+        except VizioError:
+            if self._cached_chipset is None:
+                self._cached_chipset = ""
+            if self._cached_firmware is None:
+                self._cached_firmware = ""
+            return
+        binary = parse_vizios_binary(response)
+        availability = await self._get_app_availability()
+        keys = {k for entry in availability for k in entry.chipsets}
+        self._cached_chipset = extract_chipset(binary, available_keys=keys) or ""
+        self._cached_firmware = parse_firmware_version(response)
 
 
 def _validate_setting_value(value: int | str, info: SettingInfo) -> int | str:

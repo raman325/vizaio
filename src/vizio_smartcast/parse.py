@@ -330,6 +330,48 @@ def parse_model_name(response: Response, *, settings_root: str) -> str:
     return info.get("name", "")
 
 
+def parse_vizios_binary(response: Response) -> str:
+    """
+    Extract ``BINARIES.ViziOS`` from a device info response.
+
+    Returns the bare string (e.g., ``"mtk5583-1.6.1312.1"``) so callers
+    can hand it to :func:`apps.extract_chipset`. Empty string when
+    absent — older firmware may not expose it.
+    """
+    if not response.items:
+        return ""
+    value = response.items[0].value
+    if not isinstance(value, Mapping):
+        return ""
+    binaries = value.get("binaries")
+    if not isinstance(binaries, Mapping):
+        return ""
+    vizios = binaries.get("vizios")
+    return str(vizios) if vizios else ""
+
+
+def parse_firmware_version(response: Response) -> str:
+    """
+    Extract ``SYSTEM_INFO.VERSION`` from a device info response.
+
+    Distinct from :meth:`Vizio.get_version`: that hits the legacy
+    per-field path (``firmware`` cname) and is what users print. This
+    helper reads the same value but from the deviceinfo aggregate, so
+    the chipset+firmware availability lookup can be done in one
+    request without a second round-trip. Empty string when absent.
+    """
+    if not response.items:
+        return ""
+    value = response.items[0].value
+    if not isinstance(value, Mapping):
+        return ""
+    system_info = value.get("system_info")
+    if not isinstance(system_info, Mapping):
+        return ""
+    version = system_info.get("version")
+    return str(version) if version else ""
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
