@@ -465,3 +465,19 @@ async def async_is_tv(
         except VizioError:
             return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# Pure model-string classifiers (layers 2 + 3)
+# ---------------------------------------------------------------------------
+
+
+def is_crave_model(model: str) -> bool:
+    """
+    Return ``True`` iff ``model`` is a Crave-family identifier.
+
+    Crave models follow the ``SP*-*`` pattern (``SP30-E0``,
+    ``SP50-D5``, ``SP70-D5``); no other Vizio audio device uses this
+    prefix. Case-insensitive. Empty string returns ``False``.
+    """
+    return model.upper().startswith("SP")

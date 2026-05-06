@@ -35,6 +35,7 @@ from vizaio.discovery import (
     discover,
     discover_ssdp,
     discover_zeroconf,
+    is_crave_model,
 )
 
 # ---------------------------------------------------------------------------
@@ -360,6 +361,34 @@ class TestAsyncIsTv:
     async def test_port_kwarg_conflicts_with_inline_port(self) -> None:
         with pytest.raises(ValueError, match=r"port"):
             await async_is_tv("1.2.3.4:7345", port=7345)
+
+
+class TestIsCraveModel:
+    """Pure prefix check for Vizio's Crave product line. Crave models
+    follow the ``SP*-*`` pattern (``SP30-E0``, ``SP50-D5``,
+    ``SP70-D5``); no other Vizio audio device uses this prefix."""
+
+    def test_sp30_is_crave(self) -> None:
+        assert is_crave_model("SP30-E0") is True
+
+    def test_sp50_is_crave(self) -> None:
+        assert is_crave_model("SP50-D5") is True
+
+    def test_sp70_is_crave(self) -> None:
+        assert is_crave_model("SP70-D5") is True
+
+    def test_lowercase_is_crave(self) -> None:
+        assert is_crave_model("sp30-e0") is True
+
+    def test_tv_model_is_not_crave(self) -> None:
+        assert is_crave_model("V505-G9") is False
+
+    def test_soundbar_model_is_not_crave(self) -> None:
+        # Vizio soundbars use prefixes like SB36*, S5*, M5*.
+        assert is_crave_model("SB36514-G6") is False
+
+    def test_empty_string_is_not_crave(self) -> None:
+        assert is_crave_model("") is False
 
 
 # ---------------------------------------------------------------------------
