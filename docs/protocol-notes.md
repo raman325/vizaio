@@ -50,7 +50,13 @@ firmware and `POWER_MODE` on another. The casing of the *envelope key* itself
 
 **Our handling:** `Response.from_json` normalizes ALL keys to lowercase at
 the wire boundary, once. Downstream parsers and the device class never see
-mixed case. The `_ci_get` helper does NOT exist in vizaio.
+mixed case for standard `STATUS`/`ITEMS` envelopes — pyvizio's pervasive
+`_ci_get` lookups inside parsers are unnecessary here. A small `_ci_get`
+helper does exist in `parse.py` for one specific case: the `/state_extended`
+endpoint uses a non-standard flat-keyed payload that bypasses
+`Response.from_json`, so `parse_state_extended` does its own
+case-insensitive lookups. Every other parser relies on boundary
+normalization.
 
 **Tests:** Fixtures emit both casings (`POWER_MODE` and `power_mode`).
 `Response.from_json` produces identical `Item` for both. See

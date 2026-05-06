@@ -719,7 +719,7 @@ def remote_keys(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 
 # ---------------------------------------------------------------------------
-# `vizio settings ...`
+# `vizaio settings ...`
 # ---------------------------------------------------------------------------
 
 settings_app = typer.Typer(name="settings", help="Read and write device settings.")
@@ -960,7 +960,7 @@ def info_all(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 
 # ---------------------------------------------------------------------------
-# `vizio battery ...` (Crave only)
+# `vizaio battery ...` (Crave only)
 # ---------------------------------------------------------------------------
 
 battery_app = typer.Typer(name="battery", help="Battery (Crave devices only).")

@@ -2,6 +2,8 @@
 # and language stats.
 src/vizaio/data/apps.json linguist-generated=true
 src/vizaio/data/apps.json linguist-vendored=true
+src/vizaio/data/app_availability.json linguist-generated=true
+src/vizaio/data/app_availability.json linguist-vendored=true
 
 # Always treat these as text with LF line endings.
 *.py    text eol=lf
