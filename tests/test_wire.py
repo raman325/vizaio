@@ -33,12 +33,12 @@ from tests._fixtures import (
     make_settings_response,
     make_success_response,
 )
-from vizio_smartcast import (
+from vizaio import (
     ResponseStatus,
     VizioNotFoundError,
     VizioResponseError,
 )
-from vizio_smartcast.wire import Item, Response
+from vizaio.wire import Item, Response
 
 CASINGS = ["upper", "lower", "mixed"]
 

@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from vizio_smartcast import (
+from vizaio import (
     AppAvailability,
     AppConfig,
     AppRecord,
@@ -28,8 +28,8 @@ from vizio_smartcast import (
     DeviceType,
     Vizio,
 )
-from vizio_smartcast.parse import parse_firmware_version, parse_vizios_binary
-from vizio_smartcast.wire import Response
+from vizaio.parse import parse_firmware_version, parse_vizios_binary
+from vizaio.wire import Response
 
 
 def _av(app_id: str, **chipsets: list[ChipsetPayload]) -> AppAvailability:
@@ -96,11 +96,11 @@ class TestCacheInjection:
 
         with (
             patch(
-                "vizio_smartcast._device.fetch_app_catalog",
+                "vizaio._device.fetch_app_catalog",
                 new=AsyncMock(side_effect=AssertionError("should not fetch")),
             ),
             patch(
-                "vizio_smartcast._device.fetch_app_availability",
+                "vizaio._device.fetch_app_availability",
                 new=AsyncMock(side_effect=AssertionError("should not fetch")),
             ),
         ):
@@ -343,7 +343,7 @@ class TestLaunchAppViaAvailability:
             apps=(),
             availability=(),
         ) as v:
-            from vizio_smartcast import VizioInvalidParameterError
+            from vizaio import VizioInvalidParameterError
 
             with pytest.raises(VizioInvalidParameterError, match="not in catalog"):
                 await v.launch_app("Nope")

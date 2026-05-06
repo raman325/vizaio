@@ -1,4 +1,4 @@
-# Contributing to vizio-smartcast
+# Contributing to vizaio
 
 ## Tooling
 
@@ -51,7 +51,7 @@ prek autoupdate
 
 ## Layout
 
-- `src/vizio_smartcast/` — library code
+- `src/vizaio/` — library code
 - `tests/` — pytest suite. `_fixtures.py` contains JSON-shape factories
   ported from pyvizio plus casing variations.
 - `docs/protocol-notes.md` — every protocol quirk and how we handle it
@@ -76,7 +76,7 @@ uv run pytest
 uv run pytest tests/test_wire.py -v
 
 # Check coverage gaps.
-uv run pytest --cov=vizio_smartcast --cov-report=term-missing
+uv run pytest --cov=vizaio --cov-report=term-missing
 ```
 
 ## Commit hooks

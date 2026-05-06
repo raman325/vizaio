@@ -24,8 +24,8 @@ from unittest.mock import patch
 
 import pytest
 
-from vizio_smartcast import DiscoveredDevice
-from vizio_smartcast.discovery import discover, discover_ssdp, discover_zeroconf
+from vizaio import DiscoveredDevice
+from vizaio.discovery import discover, discover_ssdp, discover_zeroconf
 
 # ---------------------------------------------------------------------------
 # Zeroconf
@@ -46,7 +46,7 @@ class TestDiscoverZeroconf:
             properties={b"name": b"V505-G9", b"id": b"abc123"},
         )
         with patch(
-            "vizio_smartcast.discovery._zeroconf_scan",
+            "vizaio.discovery._zeroconf_scan",
             return_value=[fake_service],
         ):
             results = await discover_zeroconf(timeout=0.1)
@@ -68,7 +68,7 @@ class TestDiscoverZeroconf:
             properties={b"name": b"V435-J01"},  # no 'id' property
         )
         with patch(
-            "vizio_smartcast.discovery._zeroconf_scan",
+            "vizaio.discovery._zeroconf_scan",
             return_value=[fake_service],
         ):
             results = await discover_zeroconf(timeout=0.1)
@@ -76,7 +76,7 @@ class TestDiscoverZeroconf:
 
     async def test_returns_empty_when_no_services(self) -> None:
         with patch(
-            "vizio_smartcast.discovery._zeroconf_scan",
+            "vizaio.discovery._zeroconf_scan",
             return_value=[],
         ):
             results = await discover_zeroconf(timeout=0.1)
@@ -87,10 +87,10 @@ class TestDiscoverZeroconf:
         install command, not a cryptic ModuleNotFoundError."""
         with (
             patch(
-                "vizio_smartcast.discovery._ZEROCONF_AVAILABLE",
+                "vizaio.discovery._ZEROCONF_AVAILABLE",
                 False,
             ),
-            pytest.raises(ImportError, match=r"vizio-smartcast\[discovery\]"),
+            pytest.raises(ImportError, match=r"vizaio\[discovery\]"),
         ):
             await discover_zeroconf()
 
@@ -116,11 +116,11 @@ class TestDiscoverSsdp:
         )
         with (
             patch(
-                "vizio_smartcast.discovery._ssdp_msearch",
+                "vizaio.discovery._ssdp_msearch",
                 return_value=[ssdp_response],
             ),
             patch(
-                "vizio_smartcast.discovery._fetch_dial_xml",
+                "vizaio.discovery._fetch_dial_xml",
                 return_value=xml_description,
             ),
         ):
@@ -145,11 +145,11 @@ class TestDiscoverSsdp:
         )
         with (
             patch(
-                "vizio_smartcast.discovery._ssdp_msearch",
+                "vizaio.discovery._ssdp_msearch",
                 return_value=[ssdp_response],
             ),
             patch(
-                "vizio_smartcast.discovery._fetch_dial_xml",
+                "vizaio.discovery._fetch_dial_xml",
                 return_value=chromecast_xml,
             ),
         ):
@@ -164,11 +164,11 @@ class TestDiscoverSsdp:
         )
         with (
             patch(
-                "vizio_smartcast.discovery._ssdp_msearch",
+                "vizaio.discovery._ssdp_msearch",
                 return_value=[ssdp_response],
             ),
             patch(
-                "vizio_smartcast.discovery._fetch_dial_xml",
+                "vizaio.discovery._fetch_dial_xml",
                 side_effect=TimeoutError(),
             ),
         ):
@@ -190,11 +190,11 @@ class TestDiscoverUnified:
         assert both helpers were called."""
         with (
             patch(
-                "vizio_smartcast.discovery.discover_zeroconf",
+                "vizaio.discovery.discover_zeroconf",
                 return_value=[],
             ) as zc,
             patch(
-                "vizio_smartcast.discovery.discover_ssdp",
+                "vizaio.discovery.discover_ssdp",
                 return_value=[],
             ) as ss,
         ):
@@ -225,11 +225,11 @@ class TestDiscoverUnified:
         ]
         with (
             patch(
-                "vizio_smartcast.discovery.discover_zeroconf",
+                "vizaio.discovery.discover_zeroconf",
                 return_value=zc_result,
             ),
             patch(
-                "vizio_smartcast.discovery.discover_ssdp",
+                "vizaio.discovery.discover_ssdp",
                 return_value=ssdp_result,
             ),
         ):
@@ -242,7 +242,7 @@ class TestDiscoverUnified:
         """A TV via zeroconf and a soundbar via SSDP — both surfaced."""
         with (
             patch(
-                "vizio_smartcast.discovery.discover_zeroconf",
+                "vizaio.discovery.discover_zeroconf",
                 return_value=[
                     DiscoveredDevice(
                         name="TV", ip="192.168.1.50", port=7345, model="V505"
@@ -250,7 +250,7 @@ class TestDiscoverUnified:
                 ],
             ),
             patch(
-                "vizio_smartcast.discovery.discover_ssdp",
+                "vizaio.discovery.discover_ssdp",
                 return_value=[
                     DiscoveredDevice(
                         name="SB", ip="192.168.1.51", port=8008, model="SB3651"
@@ -268,11 +268,11 @@ class TestDiscoverUnified:
         still try SSDP and return its results rather than aborting."""
         with (
             patch(
-                "vizio_smartcast.discovery.discover_zeroconf",
+                "vizaio.discovery.discover_zeroconf",
                 side_effect=ImportError("install zeroconf"),
             ),
             patch(
-                "vizio_smartcast.discovery.discover_ssdp",
+                "vizaio.discovery.discover_ssdp",
                 return_value=[
                     DiscoveredDevice(
                         name="SB", ip="192.168.1.51", port=8008, model="SB"

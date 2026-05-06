@@ -55,7 +55,7 @@ class SettingsRoot(StrEnum):
 
 
 # ---------------------------------------------------------------------------
-# Endpoint enum — every protocol surface vizio-smartcast knows about
+# Endpoint enum — every protocol surface vizaio knows about
 # ---------------------------------------------------------------------------
 
 

@@ -19,12 +19,12 @@ from __future__ import annotations
 
 import pytest
 
-from vizio_smartcast import (
+from vizaio import (
     AuthRequirement,
     DeviceType,
     VizioUnsupportedError,
 )
-from vizio_smartcast.endpoints import (
+from vizaio.endpoints import (
     Endpoint,
     EndpointSpec,
     SettingsRoot,
@@ -256,6 +256,6 @@ class TestEndpointSpecImmutability:
 
 def _resolve(endpoint: Endpoint, dtype: DeviceType) -> EndpointSpec:
     """Resolve an endpoint for a device type, going through the profile."""
-    from vizio_smartcast.endpoints import resolve
+    from vizaio.endpoints import resolve
 
     return resolve(endpoint, dtype.profile)

@@ -35,9 +35,9 @@ body:
       value: "## Environment"
 
   - type: input
-    id: vizio_smartcast_version
+    id: vizaio_version
     attributes:
-      label: vizio-smartcast version
+      label: vizaio version
       placeholder: "0.1.0"
     validations:
       required: true
@@ -85,6 +85,6 @@ body:
     attributes:
       label: Debug logs
       description: |
-        Enable with `vizio -v <command>` or `logging.getLogger("vizio_smartcast").setLevel("DEBUG")`.
+        Enable with `vizio -v <command>` or `logging.getLogger("vizaio").setLevel("DEBUG")`.
         Paste the relevant section.
       render: text

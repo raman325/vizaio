@@ -28,7 +28,7 @@ from tests._fixtures import (
     make_settings_response,
     make_success_response,
 )
-from vizio_smartcast import (
+from vizaio import (
     DeviceType,
     InputInfo,
     Vizio,
@@ -36,9 +36,9 @@ from vizio_smartcast import (
     VizioInvalidParameterError,
     VizioUnsupportedError,
 )
-from vizio_smartcast._device import _resolve_input_target
-from vizio_smartcast.endpoints import Endpoint, resolve
-from vizio_smartcast.profiles import TV_PROFILE
+from vizaio._device import _resolve_input_target
+from vizaio.endpoints import Endpoint, resolve
+from vizaio.profiles import TV_PROFILE
 
 
 def _tv_url(endpoint: Endpoint, *, suffix: str = "") -> str:
@@ -274,7 +274,7 @@ class TestAppsUnsupported:
                 await v.get_current_app_config()
 
     async def test_launch_app_config_raises_for_soundbar(self) -> None:
-        from vizio_smartcast.types import AppConfig
+        from vizaio.types import AppConfig
 
         async with Vizio(host=SOUNDBAR_HOST_PORT, device_type=DeviceType.SOUNDBAR) as v:
             with pytest.raises(VizioUnsupportedError):

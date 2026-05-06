@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -e ".[dev,discovery]"
       - name: Run mypy
-        run: mypy src/vizio_smartcast/
+        run: mypy src/vizaio/
 
   pytest:
     name: Pytest (${{ matrix.python-version }})
@@ -84,7 +84,7 @@ jobs:
       - name: Run tests + coverage
         run: |
           pytest ./tests/ \
-            --cov=vizio_smartcast \
+            --cov=vizaio \
             --cov-report=xml \
             --junitxml=junit.xml
       - name: Upload coverage to Codecov

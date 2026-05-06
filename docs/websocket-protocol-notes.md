@@ -313,7 +313,7 @@ Minimum firmware version: NOT-FOUND.
 - TLS posture matches REST: self-signed accepted via
   `InsecureTrustManagerFactory`.
 
-## Recommendations for vizio-smartcast
+## Recommendations for vizaio
 
 Concrete API shape (proposed):
 

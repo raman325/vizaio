@@ -7,7 +7,7 @@
 > CONFIRMED** or **APK CORRECTED**.
 
 This document captures protocol quirks observed in the wild and **how
-`vizio-smartcast` handles each one**. Every entry is classified by evidence
+`vizaio` handles each one**. Every entry is classified by evidence
 strength so future maintainers can tell which behaviors are device-imposed
 (must port forward) vs which were workarounds in `pyvizio` that we've
 deliberately not carried over.
@@ -50,7 +50,7 @@ firmware and `POWER_MODE` on another. The casing of the *envelope key* itself
 
 **Our handling:** `Response.from_json` normalizes ALL keys to lowercase at
 the wire boundary, once. Downstream parsers and the device class never see
-mixed case. The `_ci_get` helper does NOT exist in vizio-smartcast.
+mixed case. The `_ci_get` helper does NOT exist in vizaio.
 
 **Tests:** Fixtures emit both casings (`POWER_MODE` and `power_mode`).
 `Response.from_json` produces identical `Item` for both. See
@@ -499,7 +499,7 @@ community work has cracked the algorithm.
   ITEMS array" — treats it as opaque.
 - No commits, issues, or threads suggest anyone has cracked it.
 
-**Implications for vizio-smartcast:**
+**Implications for vizaio:**
 
 - 2 round trips on every setting write is the unavoidable baseline.
 - `set_setting(..., hashval=N)` skips the GET when caller has it cached —
@@ -544,7 +544,7 @@ returns invalid_parameter, second GET+PUT succeeds.
 - No refresh, expiry, or rotation code in pyvizio or HA.
 - Commit `3c543f5` rationale: "device overloading", not session limits.
 
-**Implications for vizio-smartcast:**
+**Implications for vizaio:**
 
 - Treat tokens as durable. No refresh logic needed.
 - Document `device_id` arg to `pair_session` as the **identity used at
@@ -581,7 +581,7 @@ test).
   (string hex pairs) — never the KEYLIST.
 - All 156 `KeyCommandItem` constructors pass `"KEYPRESS"` literally.
 
-**Implications for vizio-smartcast:**
+**Implications for vizaio:**
 
 - `volume_up(steps=N)` sends a single PUT for any N up to a defensive
   cap of **50**. Above that, chunk into multiple PUTs through the
@@ -612,7 +612,7 @@ firmware appears to serialize internally.
 - HA core uses pyvizio with default semaphore; no concurrency-specific
   bug reports.
 
-**Implications for vizio-smartcast:**
+**Implications for vizaio:**
 
 - Keep instance-level `asyncio.Semaphore(1)` as default — matches pyvizio.
 - Allow caller override via constructor `max_concurrent_requests=N`,
@@ -643,7 +643,7 @@ in protocol notes only.
 pyvizio's stateless approach (no client-side pairing tracking) implies the
 device handles its own state.
 
-**Implications for vizio-smartcast:**
+**Implications for vizaio:**
 
 - `pair_session.__aexit__` cancels on error — safe in the common case.
 - If user retries pairing after a failure, our context manager handles it
@@ -760,7 +760,7 @@ vestigial `Authorization`-header construction in
 (dead code from an earlier design).
 
 **Our handling:** `SmartCastClient` adds `AUTH: <token>` for auth-required
-endpoints. Also sends `VIZIO-SmartCast-Source: vizio-smartcast` to
+endpoints. Also sends `VIZIO-SmartCast-Source: vizaio` to
 identify the client honestly (matches the app's pattern of sending
 `SMARTCAST_ANDROID`).
 
@@ -832,7 +832,7 @@ reliability + UX upgrade for the HA integration:
    changes — as an opt-in complement to polling. HA integration adopts
    event-driven updates where supported, falls back to polling where not.
 
-**Stub:** `vizio_smartcast/_websocket.py` exists as an empty module with
+**Stub:** `vizaio/_websocket.py` exists as an empty module with
 TODOs documenting what to investigate. Do not import — placeholder only.
 
 ---
@@ -943,7 +943,7 @@ correct, or extend the APK-derived sections above.
 ### V3 — New status codes discovered
 
 The following `STATUS.RESULT` values were emitted by the live device
-and are now first-class enum members in `vizio_smartcast.types.ResponseStatus`:
+and are now first-class enum members in `vizaio.types.ResponseStatus`:
 
 | Status | Mapping | Notes |
 | --- | --- | --- |

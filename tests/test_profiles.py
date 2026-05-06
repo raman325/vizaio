@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from vizio_smartcast import (
+from vizaio import (
     CRAVE360_PROFILE,
     CRAVE_GO_PROFILE,
     CRAVE_PRO_PROFILE,
@@ -27,7 +27,7 @@ from vizio_smartcast import (
     DeviceType,
     RemoteKey,
 )
-from vizio_smartcast.endpoints import SettingsRoot
+from vizaio.endpoints import SettingsRoot
 
 PROFILES_AND_TYPES = [
     (TV_PROFILE, DeviceType.TV),

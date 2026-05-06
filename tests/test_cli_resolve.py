@@ -1,4 +1,4 @@
-"""Tests for ``vizio_smartcast.cli._resolve``."""
+"""Tests for ``vizaio.cli._resolve``."""
 
 from __future__ import annotations
 
@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from vizio_smartcast.cli._config import Config, DeviceRecord
-from vizio_smartcast.cli._resolve import (
+from vizaio.cli._config import Config, DeviceRecord
+from vizaio.cli._resolve import (
     CLIResolutionError,
     resolve_device,
 )
-from vizio_smartcast.types import DeviceType
+from vizaio.types import DeviceType
 
 
 @pytest.fixture

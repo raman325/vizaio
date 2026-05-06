@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from vizio_smartcast import apps as apps_module
-from vizio_smartcast.apps import _parse_catalog
-from vizio_smartcast.types import AppConfig
+from vizaio import apps as apps_module
+from vizaio.apps import _parse_catalog
+from vizaio.types import AppConfig
 
 
 class TestParseCatalogTolerance:

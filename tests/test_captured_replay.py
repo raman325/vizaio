@@ -22,11 +22,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from vizio_smartcast.errors import (
+from vizaio.errors import (
     VizioInvalidParameterError,
     VizioNotFoundError,
 )
-from vizio_smartcast.parse import (
+from vizaio.parse import (
     parse_current_app_config,
     parse_current_input,
     parse_inputs,
@@ -35,8 +35,8 @@ from vizio_smartcast.parse import (
     parse_settings,
     parse_state_extended,
 )
-from vizio_smartcast.types import ResponseStatus, SettingType
-from vizio_smartcast.wire import Response
+from vizaio.types import ResponseStatus, SettingType
+from vizaio.wire import Response
 
 CAPTURED = Path(__file__).parent / "captured"
 
@@ -323,9 +323,9 @@ class TestStatusToExceptionMapping:
     and types.ResponseStatus enum."""
 
     def test_uri_not_found_maps_to_not_found_error(self) -> None:
-        from vizio_smartcast.client import _check_status
-        from vizio_smartcast.endpoints import EndpointSpec
-        from vizio_smartcast.types import AuthRequirement
+        from vizaio.client import _check_status
+        from vizaio.endpoints import EndpointSpec
+        from vizaio.types import AuthRequirement
 
         response = Response.from_json(_load("esn_modern_404"))
         spec = EndpointSpec(
@@ -341,9 +341,9 @@ class TestStatusToExceptionMapping:
         raise AssertionError("expected VizioNotFoundError")
 
     def test_invalid_parameter_maps_to_invalid_parameter_error(self) -> None:
-        from vizio_smartcast.client import _check_status
-        from vizio_smartcast.endpoints import EndpointSpec
-        from vizio_smartcast.types import AuthRequirement
+        from vizaio.client import _check_status
+        from vizaio.endpoints import EndpointSpec
+        from vizaio.types import AuthRequirement
 
         response = Response.from_json(_load("event_register_unsup"))
         spec = EndpointSpec(

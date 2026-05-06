@@ -9,7 +9,7 @@ Owns the aiohttp session and orchestrates requests against
 - Auth header: ``AUTH: <token>`` for endpoints whose ``EndpointSpec.auth``
   is ``OPTIONAL`` and a token is configured, or ``REQUIRED``. Raises
   :class:`VizioAuthError` upfront if REQUIRED and no token set.
-- Identity header: ``VIZIO-SmartCast-Source: vizio-smartcast`` (matches
+- Identity header: ``VIZIO-SmartCast-Source: vizaio`` (matches
   the pattern of the official app sending ``SMARTCAST_ANDROID``).
 - Status validation: HTTP 200 + SmartCast ``STATUS.RESULT == success``,
   with per-result-code mapping to typed exceptions.
@@ -58,7 +58,7 @@ DEFAULT_READ_TIMEOUT: Final = 10.0
 
 HEADER_AUTH: Final = "AUTH"
 HEADER_SOURCE: Final = "VIZIO-SmartCast-Source"
-SOURCE_IDENTIFIER: Final = "vizio-smartcast"
+SOURCE_IDENTIFIER: Final = "vizaio"
 
 
 class SmartCastClient:

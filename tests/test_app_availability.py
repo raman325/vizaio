@@ -17,13 +17,13 @@ import aiohttp
 from aioresponses import aioresponses
 import pytest
 
-from vizio_smartcast import (
+from vizaio import (
     AppAvailability,
     AppConfig,
     AppRecord,
     ChipsetPayload,
 )
-from vizio_smartcast.apps import (
+from vizaio.apps import (
     BUNDLED_AVAILABILITY,
     REMOTE_AVAILABILITY_URL,
     _parse_availability,

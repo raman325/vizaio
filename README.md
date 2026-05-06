@@ -1,4 +1,4 @@
-# vizio-smartcast
+# vizaio
 
 Modern async Python client and CLI for Vizio SmartCast devices — TVs, soundbars,
 and Crave portable speakers. Successor to
@@ -8,9 +8,9 @@ work happens here.
 > **Status: 0.1.0-alpha.** API is settling but not yet stable across patch
 > releases. Not yet on PyPI; install from source until 0.1.0 ships.
 
-- `vizio-smartcast` CLI with named device aliases, a default device, and TTY-aware output
+- `vizaio` CLI with named device aliases, a default device, and TTY-aware output
   (rich tables on a terminal, TSV when piped, `--format json/plain` on demand).
-- Pairing via subcommand group — `vizio-smartcast pair begin` + `pair complete`
+- Pairing via subcommand group — `vizaio pair begin` + `pair complete`
   for scripting, `pair interactive` for human use — with auto-cancel if the PIN
   entry fails.
 - Hashval-aware setting writes that survive the
@@ -41,28 +41,28 @@ Requires **Python 3.12 or newer**.
 
 ```bash
 # core (REST + WebSocket events + CLI)
-uv add vizio-smartcast
-# or: pip install vizio-smartcast
+uv add vizaio
+# or: pip install vizaio
 
 # core + zeroconf network discovery (optional)
-uv add 'vizio-smartcast[discovery]'
-# or: pip install 'vizio-smartcast[discovery]'
+uv add 'vizaio[discovery]'
+# or: pip install 'vizaio[discovery]'
 ```
 
 The `[discovery]` extra pulls in
 [`zeroconf`](https://pypi.org/project/zeroconf/). Without the extra,
-`vizio-smartcast discover` falls back to SSDP only (no extra dependency required, since
+`vizaio discover` falls back to SSDP only (no extra dependency required, since
 SSDP uses just the standard library plus the already-required `aiohttp`).
 
 Until 0.1.0 ships on PyPI, install from source:
 
 ```bash
-git clone https://github.com/raman325/vizio-smartcast.git
-cd vizio-smartcast
+git clone https://github.com/raman325/vizaio.git
+cd vizaio
 uv sync --all-extras
 ```
 
-The `vizio-smartcast` console script is installed as a project entry point in either
+The `vizaio` console script is installed as a project entry point in either
 case.
 
 ---
@@ -74,31 +74,31 @@ device.
 
 ```bash
 # 1. Find devices on your network
-vizio-smartcast discover
+vizaio discover
 
 # 2. Pair (interactive — TV displays a PIN, you type it back)
 #    --save-as stores the resulting auth token under an alias
-vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
+vizaio pair interactive 192.168.1.50 --save-as livingroom
 
 # 3. Make this the default so you can drop --device on every call
-vizio-smartcast device set-default livingroom
+vizaio device set-default livingroom
 ```
 
 After that, control the device:
 
 ```bash
-vizio-smartcast power on
-vizio-smartcast volume level
-vizio-smartcast volume up --steps 5
-vizio-smartcast input list
-vizio-smartcast input set HDMI-2
-vizio-smartcast app launch Netflix
+vizaio power on
+vizaio volume level
+vizaio volume up --steps 5
+vizaio input list
+vizaio input set HDMI-2
+vizaio app launch Netflix
 ```
 
 Use the alias explicitly when you have more than one device:
 
 ```bash
-vizio-smartcast --device kitchen-bar volume mute
+vizaio --device kitchen-bar volume mute
 ```
 
 ---
@@ -133,26 +133,26 @@ literal `AUTH:` header (not `Authorization`, not `Bearer`). Tokens are:
 
 ```bash
 # Interactive — prompts for PIN on stderr
-vizio-smartcast pair interactive 192.168.1.50
-vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
+vizaio pair interactive 192.168.1.50
+vizaio pair interactive 192.168.1.50 --save-as livingroom
 
 # Two-step (scriptable) — begin outputs challenge data + a ready-to-run
 # "pair complete" command with all flags filled in except --pin
-vizio-smartcast pair begin 192.168.1.50
+vizaio pair begin 192.168.1.50
 # → challenge_type  pairing_token
 # → 1               54321
-# → Next step: vizio-smartcast pair complete 192.168.1.50 \
+# → Next step: vizaio pair complete 192.168.1.50 \
 #     --challenge-type 1 --pairing-token 54321 --pin <PIN>
 
-vizio-smartcast pair complete 192.168.1.50 \
+vizaio pair complete 192.168.1.50 \
     --challenge-type 1 --pairing-token 54321 --pin 1234 \
     --save-as livingroom
 
 # Cancel a pairing session early (best-effort)
-vizio-smartcast pair cancel 192.168.1.50
+vizaio pair cancel 192.168.1.50
 
 # Soundbars and Crave speakers don't require auth — skip pairing entirely
-vizio-smartcast device add kitchen-bar --host 192.168.1.51 --device-type soundbar
+vizaio device add kitchen-bar --host 192.168.1.51 --device-type soundbar
 ```
 
 `--device-type` defaults to `tv`. The interactive subcommand prompts for the
@@ -164,8 +164,8 @@ scripts, CI, and non-interactive environments.
 ### Finding the device IP
 
 ```bash
-vizio-smartcast discover                          # zeroconf + SSDP, 5s timeout
-vizio-smartcast discover --timeout 10 --no-ssdp   # zeroconf only, 10s
+vizaio discover                          # zeroconf + SSDP, 5s timeout
+vizaio discover --timeout 10 --no-ssdp   # zeroconf only, 10s
 ```
 
 Or programmatically — see [Discovery](#discovery).
@@ -174,11 +174,11 @@ Or programmatically — see [Discovery](#discovery).
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| `vizio-smartcast: ... pairing` after entering PIN | Wrong PIN, or PIN entered after the device's pairing window expired | Re-run `vizio-smartcast pair interactive`; the previous attempt was already canceled |
-| `VizioAuthError` on first call after pairing | Token saved correctly but `device_type` was wrong on the next call (e.g., paired a TV but the alias says `soundbar`) | Run `vizio-smartcast device show <alias>` and re-pair with the right `--device-type` |
-| `vizio-smartcast: failed to reach https://...` during `pair begin` | Wrong port. TVs typically listen on **7345** (mDNS-advertised), occasionally **9000** on older firmware | Try `vizio-smartcast pair begin 192.168.1.50:9000` if the default fails |
-| `vizio-smartcast: ... timeout` on `pair begin` | Device isn't in pairing mode (e.g., already paired and not reset), or it's powered off | Power-cycle the TV, or factory-reset SmartCast pairing in its menu |
-| Device displays no PIN | Soundbars and Crave speakers don't display a PIN — they don't require auth at all. Use `vizio-smartcast device add` directly with `--device-type soundbar` (or `crave_*`) and skip pairing. | — |
+| `vizaio: ... pairing` after entering PIN | Wrong PIN, or PIN entered after the device's pairing window expired | Re-run `vizaio pair interactive`; the previous attempt was already canceled |
+| `VizioAuthError` on first call after pairing | Token saved correctly but `device_type` was wrong on the next call (e.g., paired a TV but the alias says `soundbar`) | Run `vizaio device show <alias>` and re-pair with the right `--device-type` |
+| `vizaio: failed to reach https://...` during `pair begin` | Wrong port. TVs typically listen on **7345** (mDNS-advertised), occasionally **9000** on older firmware | Try `vizaio pair begin 192.168.1.50:9000` if the default fails |
+| `vizaio: ... timeout` on `pair begin` | Device isn't in pairing mode (e.g., already paired and not reset), or it's powered off | Power-cycle the TV, or factory-reset SmartCast pairing in its menu |
+| Device displays no PIN | Soundbars and Crave speakers don't display a PIN — they don't require auth at all. Use `vizaio device add` directly with `--device-type soundbar` (or `crave_*`) and skip pairing. | — |
 
 ### Library equivalent
 
@@ -189,7 +189,7 @@ If you'd rather pair from Python (e.g., a Home Assistant config flow), see
 
 ## CLI reference
 
-The `vizio-smartcast` command is a thin wrapper over the library. Output adapts to
+The `vizaio` command is a thin wrapper over the library. Output adapts to
 context: pretty tables when stdout is a TTY, TSV when piped, switchable to
 JSON or plain.
 
@@ -201,7 +201,7 @@ JSON or plain.
 | `--host HOST` | Ad-hoc target (`IP` or `IP:PORT`); overrides `--device` |
 | `--auth TOKEN` | Ad-hoc auth token; overrides any saved token |
 | `--device-type tv\|soundbar\|crave_go\|crave360\|crave_pro` | Override the device family |
-| `--config PATH` | Override the config file path; also via `$VIZIO_SMARTCAST_CONFIG` |
+| `--config PATH` | Override the config file path; also via `$VIZAIO_CONFIG` |
 | `--format table\|tsv\|json\|plain` | Force an output format (auto by default). Also accepted on each output-producing subcommand — leaf wins on conflict. |
 | `-v`, `--verbose` | Enable debug logging to stderr |
 
@@ -209,10 +209,10 @@ Resolution order: `--host` > `--device` > `config.default_device`.
 
 ### Config file
 
-Stored at `$VIZIO_SMARTCAST_CONFIG` if set, otherwise
-`platformdirs.user_config_dir("vizio-smartcast") / config.toml`
-(macOS: `~/Library/Application Support/vizio-smartcast/config.toml`,
-Linux: `~/.config/vizio-smartcast/config.toml`).
+Stored at `$VIZAIO_CONFIG` if set, otherwise
+`platformdirs.user_config_dir("vizaio") / config.toml`
+(macOS: `~/Library/Application Support/vizaio/config.toml`,
+Linux: `~/.config/vizaio/config.toml`).
 
 ```toml
 default_device = "livingroom"
@@ -230,150 +230,150 @@ device_type = "soundbar"
 
 The file is created on first write with mode `0600` on Unix-like systems.
 
-### `vizio-smartcast device` — manage saved aliases
+### `vizaio device` — manage saved aliases
 
 ```bash
 # Save a TV with a token
-vizio-smartcast device add livingroom --host 192.168.1.50 --device-type tv --auth Zabc1234
+vizaio device add livingroom --host 192.168.1.50 --device-type tv --auth Zabc1234
 
 # Save a soundbar (no auth needed)
-vizio-smartcast device add kitchen-bar --host 192.168.1.51 --device-type soundbar
+vizaio device add kitchen-bar --host 192.168.1.51 --device-type soundbar
 
-vizio-smartcast device list
-vizio-smartcast device show livingroom
-vizio-smartcast device set-default livingroom
-vizio-smartcast device remove kitchen-bar
+vizaio device list
+vizaio device show livingroom
+vizaio device set-default livingroom
+vizaio device remove kitchen-bar
 ```
 
 After `set-default`, every other subcommand can drop `--device`:
 
 ```bash
-vizio-smartcast power on              # acts on the default device
+vizaio power on              # acts on the default device
 ```
 
-### `vizio-smartcast discover`
+### `vizaio discover`
 
 ```bash
-vizio-smartcast discover                          # zeroconf + SSDP, 5s timeout
-vizio-smartcast discover --timeout 10 --no-ssdp   # zeroconf only, 10s
+vizaio discover                          # zeroconf + SSDP, 5s timeout
+vizaio discover --timeout 10 --no-ssdp   # zeroconf only, 10s
 ```
 
 Exit code 1 if nothing was found.
 
-### `vizio-smartcast pair`
+### `vizaio pair`
 
 Device pairing operations. Four subcommands:
 
 ```bash
 # Begin a pairing session — outputs challenge data and a ready-to-run command
-vizio-smartcast pair begin 192.168.1.50
+vizaio pair begin 192.168.1.50
 
 # Complete pairing with the challenge data from "pair begin"
-vizio-smartcast pair complete 192.168.1.50 \
+vizaio pair complete 192.168.1.50 \
     --challenge-type 1 --pairing-token 54321 --pin 1234
 
 # Cancel an in-progress pairing session
-vizio-smartcast pair cancel 192.168.1.50
+vizaio pair cancel 192.168.1.50
 
 # Interactive pairing — prompts for PIN
-vizio-smartcast pair interactive 192.168.1.50
-vizio-smartcast pair interactive 192.168.1.50 --save-as livingroom
+vizaio pair interactive 192.168.1.50
+vizaio pair interactive 192.168.1.50 --save-as livingroom
 ```
 
 `--device-type` defaults to `tv`. All subcommands accept `--device-id`
 (defaults to `vizio-cli`); `begin`, `cancel`, and `interactive` also accept
-`--device-name` (defaults to `vizio-smartcast CLI`) to match the identity
+`--device-name` (defaults to `vizaio CLI`) to match the identity
 sent during pairing.
 
 `pair begin` prints the `pair complete` command with all flags filled in
 except `--pin`, making it trivially scriptable.
 
-### `vizio-smartcast power`
+### `vizaio power`
 
 ```bash
-vizio-smartcast power state           # 'on' or 'off'
-vizio-smartcast power on
-vizio-smartcast power off
+vizaio power state           # 'on' or 'off'
+vizaio power on
+vizaio power off
 ```
 
-### `vizio-smartcast volume`
+### `vizaio volume`
 
 ```bash
-vizio-smartcast volume level          # current value (0..max)
-vizio-smartcast volume max            # the device's max-volume scale
-vizio-smartcast volume up --steps 3
-vizio-smartcast volume down
-vizio-smartcast volume mute
-vizio-smartcast volume unmute
+vizaio volume level          # current value (0..max)
+vizaio volume max            # the device's max-volume scale
+vizaio volume up --steps 3
+vizaio volume down
+vizaio volume mute
+vizaio volume unmute
 ```
 
-### `vizio-smartcast input` (TV-only)
+### `vizaio input` (TV-only)
 
 ```bash
-vizio-smartcast input list                         # name, meta_name, current
-vizio-smartcast input current                      # just the name
-vizio-smartcast input set HDMI-2
-vizio-smartcast input next
+vizaio input list                         # name, meta_name, current
+vizaio input current                      # just the name
+vizaio input set HDMI-2
+vizaio input next
 ```
 
-### `vizio-smartcast remote`
+### `vizaio remote`
 
 ```bash
-vizio-smartcast remote keys                        # all valid key names for this device
-vizio-smartcast remote send MENU
-vizio-smartcast remote send GUIDE
-vizio-smartcast remote send NUM_5
+vizaio remote keys                        # all valid key names for this device
+vizaio remote send MENU
+vizaio remote send GUIDE
+vizaio remote send NUM_5
 ```
 
-### `vizio-smartcast settings`
+### `vizaio settings`
 
 ```bash
-vizio-smartcast settings types                     # top-level categories
-vizio-smartcast settings list audio                # all settings under 'audio'
-vizio-smartcast settings get audio volume          # single value
-vizio-smartcast settings set audio volume 30       # write (uses one-shot retry on race)
+vizaio settings types                     # top-level categories
+vizaio settings list audio                # all settings under 'audio'
+vizaio settings get audio volume          # single value
+vizaio settings set audio volume 30       # write (uses one-shot retry on race)
 ```
 
-### `vizio-smartcast app` (TV-only)
+### `vizaio app` (TV-only)
 
 ```bash
-vizio-smartcast app current                        # 'Netflix' or '(no app running)'
-vizio-smartcast app launch Netflix
-vizio-smartcast app launch-config 3 4              # raw app_id, name_space
-vizio-smartcast app launch-config 3 4 'optional-message'
+vizaio app current                        # 'Netflix' or '(no app running)'
+vizaio app launch Netflix
+vizaio app launch-config 3 4              # raw app_id, name_space
+vizaio app launch-config 3 4 'optional-message'
 ```
 
-### `vizio-smartcast info`
+### `vizaio info`
 
 ```bash
-vizio-smartcast info model
-vizio-smartcast info serial
-vizio-smartcast info esn
-vizio-smartcast info version
-vizio-smartcast info all                           # one row, all fields
+vizaio info model
+vizaio info serial
+vizaio info esn
+vizaio info version
+vizaio info all                           # one row, all fields
 ```
 
-### `vizio-smartcast battery` (Crave only)
+### `vizaio battery` (Crave only)
 
 ```bash
-vizio-smartcast battery level                      # integer
-vizio-smartcast battery charging                   # 'not_charging' | 'charging' | 'fully_charged'
+vizaio battery level                      # integer
+vizaio battery charging                   # 'not_charging' | 'charging' | 'fully_charged'
 ```
 
 ### Real-world combinations
 
 ```bash
 # All HDMI inputs, names only
-vizio-smartcast --device livingroom input list --format tsv | awk -F'\t' '/HDMI/ {print $1}'
+vizaio --device livingroom input list --format tsv | awk -F'\t' '/HDMI/ {print $1}'
 
 # Audio settings as JSON for jq
-vizio-smartcast settings list audio --format json | jq '.[] | select(.name=="volume") | .value'
+vizaio settings list audio --format json | jq '.[] | select(.name=="volume") | .value'
 
 # Set a default and then control without the flag
-vizio-smartcast pair interactive 192.168.1.50 --save-as den
-vizio-smartcast device set-default den
-vizio-smartcast power on
-vizio-smartcast volume up --steps 5
+vizaio pair interactive 192.168.1.50 --save-as den
+vizaio device set-default den
+vizaio power on
+vizaio volume up --steps 5
 ```
 
 ---
@@ -386,7 +386,7 @@ when you're building a config flow or web UI on top of the library:
 ```python
 import asyncio
 
-from vizio_smartcast.discovery import (
+from vizaio.discovery import (
     discover,
     discover_zeroconf,
     discover_ssdp,
@@ -424,15 +424,15 @@ also speak DIAL.
 | --- | --- | --- | --- |
 | Auth required | yes | no | no |
 | `max_volume` | 100 | 31 | 24 |
-| `vizio-smartcast input list` / `set` | yes | no | no |
-| `vizio-smartcast app ...` | yes | no | no |
-| `vizio-smartcast battery ...` | no | no | yes |
+| `vizaio input list` / `set` | yes | no | no |
+| `vizaio app ...` | yes | no | no |
+| `vizaio battery ...` | no | no | yes |
 | WebSocket events | yes (probe-and-fall-back) | rejected by device | rejected by device |
 | Remote keymap | full (channels, nav, numerics, …) | power, volume, mute, play/pause, input-next | same as soundbar |
 
 A few non-obvious consequences:
 
-- **Soundbar volume scales differently.** `vizio-smartcast settings set audio volume 1`
+- **Soundbar volume scales differently.** `vizaio settings set audio volume 1`
   on a soundbar is roughly **3% perceived volume** (1/31), not 1% (1/100).
   This is hardware behavior, not a bug; if you treat all SmartCast volume
   as a 0–100 scale you will surprise users with quiet soundbars. The
@@ -460,7 +460,7 @@ home-automation glue scripts, web services.
 ```python
 import asyncio
 
-from vizio_smartcast import DeviceType, Vizio
+from vizaio import DeviceType, Vizio
 
 
 async def main() -> None:
@@ -501,7 +501,7 @@ Two ways to pair from Python:
 ```python
 import asyncio
 
-from vizio_smartcast import DeviceType, Vizio, VizioError
+from vizaio import DeviceType, Vizio, VizioError
 
 
 async def pair() -> None:
@@ -539,7 +539,7 @@ until reboot.
 **Stateless (one-shot methods)** — for scripted or multi-process pairing:
 
 ```python
-from vizio_smartcast import DeviceType, PairChallenge, Vizio
+from vizaio import DeviceType, PairChallenge, Vizio
 
 async with Vizio(host="192.168.1.50", device_type=DeviceType.TV) as v:
     # Step 1: begin — device displays a PIN
@@ -623,7 +623,7 @@ name: str | None = await v.get_current_app()
 await v.launch_app("Netflix")           # case-insensitive; matches catalog name
 
 # Power-user: launch by raw config (skip catalog lookup)
-from vizio_smartcast import AppConfig
+from vizaio import AppConfig
 await v.launch_app_config(AppConfig(app_id="3", name_space=4, message=None))
 ```
 
@@ -662,7 +662,7 @@ fires — caller is in charge.
 ### Remote keys
 
 ```python
-from vizio_smartcast import RemoteKey
+from vizaio import RemoteKey
 
 await v.send_key("MENU")                # raw string
 await v.send_key(RemoteKey.GUIDE)       # or the StrEnum
@@ -767,9 +767,9 @@ When Vizio ships a new soundbar variant or you want to override
 `max_volume` for a quirky firmware, build a custom profile:
 
 ```python
-from vizio_smartcast import DeviceProfile, Vizio
-from vizio_smartcast.endpoints import SettingsRoot
-from vizio_smartcast._keys import SOUNDBAR_KEYS
+from vizaio import DeviceProfile, Vizio
+from vizaio.endpoints import SettingsRoot
+from vizaio._keys import SOUNDBAR_KEYS
 
 custom = DeviceProfile(
     name="My Vizio Frankenbar",
@@ -792,7 +792,7 @@ async with Vizio(host="192.168.1.99", profile=custom) as v:
 
 ## Exception hierarchy
 
-All exceptions raised by `vizio-smartcast` derive from `VizioError`. Catch the
+All exceptions raised by `vizaio` derive from `VizioError`. Catch the
 base class for "any device problem", or a specific subclass when you want to
 distinguish (e.g., a Home Assistant config flow that handles auth failures
 differently from connection failures).

@@ -40,11 +40,11 @@ from tests._fixtures import (
     make_settings_response,
     make_success_response,
 )
-import vizio_smartcast.cli as cli_module
-from vizio_smartcast.cli import app
-from vizio_smartcast.cli._config import Config, DeviceRecord
-from vizio_smartcast.endpoints import Endpoint, resolve
-from vizio_smartcast.types import DeviceType, DiscoveredDevice
+import vizaio.cli as cli_module
+from vizaio.cli import app
+from vizaio.cli._config import Config, DeviceRecord
+from vizaio.endpoints import Endpoint, resolve
+from vizaio.types import DeviceType, DiscoveredDevice
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -113,7 +113,7 @@ def mock_aio() -> Iterator[aioresponses]:
 
 
 # ---------------------------------------------------------------------------
-# `vizio-smartcast device …` (config-only)
+# `vizaio device …` (config-only)
 # ---------------------------------------------------------------------------
 
 
@@ -716,7 +716,7 @@ class TestErrorPropagation:
         )
         result = _invoke(runner, saved_tv, "power", "state")
         assert result.exit_code == 1
-        assert "vizio-smartcast" in result.output
+        assert "vizaio" in result.output
 
     def test_http_403_exits_1(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
@@ -727,7 +727,7 @@ class TestErrorPropagation:
 
 
 # ---------------------------------------------------------------------------
-# `vizio-smartcast discover` — mocked at the discover() coroutine boundary
+# `vizaio discover` — mocked at the discover() coroutine boundary
 # ---------------------------------------------------------------------------
 
 
@@ -776,7 +776,7 @@ class TestDiscoverCommand:
 
 
 # ---------------------------------------------------------------------------
-# `vizio-smartcast pair` — mocked at the HTTP boundary
+# `vizaio pair` — mocked at the HTTP boundary
 # ---------------------------------------------------------------------------
 
 

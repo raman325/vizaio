@@ -68,7 +68,7 @@ except ImportError:  # pragma: no cover — exercised when extra not installed
 
 _ZEROCONF_INSTALL_HINT = (
     "Network discovery via zeroconf requires the optional extra. "
-    "Install with: pip install 'vizio-smartcast[discovery]'"
+    "Install with: pip install 'vizaio[discovery]'"
 )
 
 

@@ -1,4 +1,4 @@
-"""Tests for ``vizio_smartcast.cli._format`` — pure renderers, no I/O."""
+"""Tests for ``vizaio.cli._format`` — pure renderers, no I/O."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from enum import Enum
 import json
 import sys
 
-from vizio_smartcast.cli._format import (
+from vizaio.cli._format import (
     OutputFormat,
     auto_format,
     render_message,

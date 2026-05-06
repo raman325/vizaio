@@ -23,16 +23,16 @@ from aiohttp import ClientSession
 from aioresponses import aioresponses
 import pytest
 
-from vizio_smartcast.client import SmartCastClient
-from vizio_smartcast.endpoints import EndpointSpec
-from vizio_smartcast.errors import (
+from vizaio.client import SmartCastClient
+from vizaio.endpoints import EndpointSpec
+from vizaio.errors import (
     VizioAuthError,
     VizioBusyError,
     VizioConnectionError,
     VizioNotFoundError,
     VizioResponseError,
 )
-from vizio_smartcast.types import AuthRequirement
+from vizaio.types import AuthRequirement
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -4,7 +4,7 @@ Centralizes every PUT payload construction. Tests assert the exact wire
 format pyvizio uses, because those are the shapes proven to work against
 real devices.
 
-The builders live in ``vizio_smartcast._payloads`` (TODO until #27).
+The builders live in ``vizaio._payloads`` (TODO until #27).
 
 Important: these tests assert the *exact* dict shape, including key
 casing. The device requires uppercase request keys (``HASHVAL``, ``VALUE``,
@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import pytest
 
-from vizio_smartcast import AppConfig
-from vizio_smartcast._payloads import (
+from vizaio import AppConfig
+from vizaio._payloads import (
     begin_pair,
     cancel_pair,
     finish_pair,

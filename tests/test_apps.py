@@ -18,8 +18,8 @@ import aiohttp
 from aioresponses import aioresponses
 import pytest
 
-from vizio_smartcast import AppConfig, AppRecord
-from vizio_smartcast.apps import (
+from vizaio import AppConfig, AppRecord
+from vizaio.apps import (
     APP_HOME,
     BUNDLED_APPS,
     NO_APP_RUNNING,
@@ -77,7 +77,7 @@ class TestFindAppNameExactMatch:
 
 class TestNamespaceEquivalence:
     """Quirk #4: NAME_SPACE 2 and 4 are interchangeable — pyvizio commit
-    219260d (PR #97). vizio-smartcast preserves this rule."""
+    219260d (PR #97). vizaio preserves this rule."""
 
     def test_2_matches_4(self) -> None:
         apps = [
@@ -184,7 +184,7 @@ class TestBundledCatalog:
         assert "Netflix" in names
 
     def test_data_file_exists(self) -> None:
-        from vizio_smartcast import apps as apps_module
+        from vizaio import apps as apps_module
 
         data_dir = Path(apps_module.__file__).parent / "data"
         assert (data_dir / "apps.json").exists()
