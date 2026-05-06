@@ -5,9 +5,6 @@ and Crave portable speakers. Successor to
 [`pyvizio`](https://github.com/raman325/pyvizio); pyvizio is frozen and all new
 work happens here.
 
-> **Status: 0.1.0-alpha.** API is settling but not yet stable across patch
-> releases. Not yet on PyPI; install from source until 0.1.0 ships.
-
 - `vizaio` CLI with named device aliases, a default device, and TTY-aware output
   (rich tables on a terminal, TSV when piped, `--format json/plain` on demand).
 - Pairing via subcommand group — `vizaio pair begin` + `pair complete`
@@ -54,7 +51,7 @@ The `[discovery]` extra pulls in
 `vizaio discover` falls back to SSDP only (no extra dependency required, since
 SSDP uses just the standard library plus the already-required `aiohttp`).
 
-Until 0.1.0 ships on PyPI, install from source:
+To install from source (e.g. for development):
 
 ```bash
 git clone https://github.com/raman325/vizaio.git
