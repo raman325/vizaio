@@ -17,7 +17,7 @@ body:
     attributes:
       label: Proposed solution
       description: |
-        How would you like vizio-smartcast to behave? Sketch the API or
+        How would you like vizaio to behave? Sketch the API or
         CLI shape if relevant.
 
   - type: textarea

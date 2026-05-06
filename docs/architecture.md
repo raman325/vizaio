@@ -1,6 +1,6 @@
 # Architecture walkthrough
 
-A guided tour of `vizio-smartcast` for someone reading the codebase for
+A guided tour of `vizaio` for someone reading the codebase for
 the first time. If you're trying to follow a request from "user calls a
 method" to "bytes on the wire" — this is the order to read in.
 
@@ -120,7 +120,7 @@ returns a typed `Item`, and the caller pulls `item.value`.
 
 ```python
 import asyncio
-from vizio_smartcast import DeviceType, Vizio, VizioError
+from vizaio import DeviceType, Vizio, VizioError
 
 async def main():
     async with Vizio(
@@ -157,8 +157,8 @@ Things to notice:
 
 ```python
 import asyncio
-from vizio_smartcast import DeviceType, Vizio
-from vizio_smartcast.discovery import discover
+from vizaio import DeviceType, Vizio
+from vizaio.discovery import discover
 
 async def setup():
     devices = await discover(timeout=5.0)
@@ -203,7 +203,7 @@ Things to notice:
 ### 3. Send key presses
 
 ```python
-from vizio_smartcast import RemoteKey
+from vizaio import RemoteKey
 
 async def navigate(vizio):
     # Single press by enum (preferred — type-checked).
@@ -291,7 +291,7 @@ async def show_app(vizio):
 ### 6. Catching failures
 
 ```python
-from vizio_smartcast import (
+from vizaio import (
     VizioAuthError,
     VizioBusyError,
     VizioConnectionError,
@@ -382,7 +382,7 @@ Client                                          Device
   |                                              |
   |  WS upgrade GET /?TOKEN=<token>              |
   |  Authorization: <token>                      |
-  |  VIZIO-SmartCast-Source: vizio-smartcast     |
+  |  VIZIO-SmartCast-Source: vizaio     |
   |--------------------------------------------->|
   |                          101 Switching ...   |
   |<---------------------------------------------|
@@ -429,7 +429,7 @@ sent. Filter on the caller side.
 ### Public API
 
 ```python
-from vizio_smartcast import Vizio, DeviceType
+from vizaio import Vizio, DeviceType
 
 async with Vizio(host=..., device_type=DeviceType.TV, auth_token=...) as v:
     async with v.subscribe_events() as events:

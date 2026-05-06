@@ -1,4 +1,4 @@
-"""Tests for ``vizio_smartcast.cli._config`` — file persistence and recovery.
+"""Tests for ``vizaio.cli._config`` — file persistence and recovery.
 
 Uses ``tmp_path`` rather than mocking, so the round-trip exercises real
 ``tomlkit`` parse/serialize.
@@ -11,12 +11,12 @@ from pathlib import Path
 
 import pytest
 
-from vizio_smartcast.cli._config import (
+from vizaio.cli._config import (
     Config,
     DeviceRecord,
     default_config_path,
 )
-from vizio_smartcast.types import DeviceType
+from vizaio.types import DeviceType
 
 
 @pytest.fixture
@@ -36,13 +36,13 @@ def _record(name: str = "tv", host: str = "192.0.2.10:7345") -> DeviceRecord:
 class TestDefaultConfigPath:
     def test_env_override_wins(self, monkeypatch, tmp_path: Path) -> None:
         target = tmp_path / "alt" / "myconfig.toml"
-        monkeypatch.setenv("VIZIO_SMARTCAST_CONFIG", str(target))
+        monkeypatch.setenv("VIZAIO_CONFIG", str(target))
         assert default_config_path() == target
 
     def test_falls_back_to_platformdirs(self, monkeypatch) -> None:
         # Path varies per platform; assert only that an env-override does
         # NOT leak through and the result is a Path.
-        monkeypatch.delenv("VIZIO_SMARTCAST_CONFIG", raising=False)
+        monkeypatch.delenv("VIZAIO_CONFIG", raising=False)
         result = default_config_path()
         assert isinstance(result, Path)
         assert result.name == "config.toml"
@@ -59,7 +59,7 @@ class TestConfigLoadEmpty:
         self, monkeypatch, tmp_path: Path
     ) -> None:
         target = tmp_path / "default.toml"
-        monkeypatch.setenv("VIZIO_SMARTCAST_CONFIG", str(target))
+        monkeypatch.setenv("VIZAIO_CONFIG", str(target))
         cfg = Config.load()
         assert cfg.path == target
         assert cfg.list_devices() == []

@@ -1,5 +1,5 @@
 """
-Exception hierarchy for vizio-smartcast.
+Exception hierarchy for vizaio.
 
 All exceptions inherit from :class:`VizioError`. Callers that want to treat
 "any device problem" uniformly can catch :class:`VizioError`; callers that
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 
 class VizioError(Exception):
-    """Base class for all vizio-smartcast exceptions."""
+    """Base class for all vizaio exceptions."""
 
 
 class VizioConnectionError(VizioError):

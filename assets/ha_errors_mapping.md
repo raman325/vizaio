@@ -1,4 +1,4 @@
-# Mapping `vizio-smartcast` exceptions to Home Assistant exceptions
+# Mapping `vizaio` exceptions to Home Assistant exceptions
 
 The exception hierarchy is designed so the HA `vizio` integration can map
 errors cleanly without needing to inspect message text.
@@ -25,7 +25,7 @@ from homeassistant.config_entries import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from vizio_smartcast import (
+from vizaio import (
     VizioAuthError,
     VizioConnectionError,
     VizioError,
@@ -57,7 +57,7 @@ async def _try_validate(host, auth_token, device_type):
 
 ```python
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from vizio_smartcast import VizioError
+from vizaio import VizioError
 
 async def _async_update_data(self):
     try:

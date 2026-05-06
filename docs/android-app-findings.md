@@ -67,7 +67,7 @@ There is one general-purpose hashing utility `com/vizio/redwolf/utils/hashing/Ha
 
 The enum `com/vizio/connectivity/data/network/models/ResponseResult.java` line 35 also includes `HASHVAL_ERROR = "HASHVAL_ERROR"` — confirming the server-side semantics: HASHVAL is an optimistic-concurrency token, and stale values yield this error.
 
-**Implication for vizio-smartcast:** existing implementation (always GET-then-PUT) is exactly what the official app does. Document HASHVAL as "opaque, server-assigned, mandatory echo on MODIFY for menu items, returns HASHVAL_ERROR if stale" with full confidence — no algorithm to mine. There is no HASHVAL on `pairing/*`, `key_command/`, `app/launch`, `state/device/*` — only on settings under `menu_native/...`.
+**Implication for vizaio:** existing implementation (always GET-then-PUT) is exactly what the official app does. Document HASHVAL as "opaque, server-assigned, mandatory echo on MODIFY for menu items, returns HASHVAL_ERROR if stale" with full confidence — no algorithm to mine. There is no HASHVAL on `pairing/*`, `key_command/`, `app/launch`, `state/device/*` — only on settings under `menu_native/...`.
 
 ### 2. Auth token semantics
 

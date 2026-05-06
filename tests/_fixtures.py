@@ -1,7 +1,7 @@
 """Wire-format fixture factories — ground truth for what the device sends.
 
 Adapted from `pyvizio/tests/conftest.py`. These are pure JSON shape
-factories: dict in, dict out. They have no dependency on `vizio_smartcast`
+factories: dict in, dict out. They have no dependency on `vizaio`
 or any HTTP client, so they can be used to test parsing in isolation
 (``test_wire.py``) and to drive higher-level tests via ``aioresponses``.
 

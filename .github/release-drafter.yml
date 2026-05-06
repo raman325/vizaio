@@ -39,6 +39,6 @@ categories:
 
 # yamllint disable rule:line-length
 template: |
-  [![PyPI downloads for this release](https://img.shields.io/github/downloads/raman325/vizio-smartcast/v$RESOLVED_VERSION/total.svg)](https://github.com/raman325/vizio-smartcast/releases/tag/v$RESOLVED_VERSION)
+  [![PyPI downloads for this release](https://img.shields.io/github/downloads/raman325/vizaio/v$RESOLVED_VERSION/total.svg)](https://github.com/raman325/vizaio/releases/tag/v$RESOLVED_VERSION)
 
   $CHANGES

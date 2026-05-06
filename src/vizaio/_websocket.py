@@ -335,7 +335,7 @@ class EventStream:
         return f"wss://{host}:{port}/{suffix}"
 
     def _build_ws_headers(self) -> dict[str, str]:
-        headers = {"VIZIO-SmartCast-Source": "vizio-smartcast"}
+        headers = {"VIZIO-SmartCast-Source": "vizaio"}
         if self._auth_token:
             # Note: WS upgrade uses ``Authorization`` (capital-A,
             # full word). REST uses ``AUTH``. APK confirms.

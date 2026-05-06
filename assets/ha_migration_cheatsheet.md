@@ -1,4 +1,4 @@
-# Migrating from `pyvizio` to `vizio-smartcast`
+# Migrating from `pyvizio` to `vizaio`
 
 A method-by-method mapping for the Home Assistant `vizio` integration and
 other downstream consumers. Behavior is summarized; full details live in
@@ -6,7 +6,7 @@ the test suite (`tests/test_device.py`).
 
 ## Top-level changes
 
-| Change | Old (`pyvizio`) | New (`vizio-smartcast`) |
+| Change | Old (`pyvizio`) | New (`vizaio`) |
 |--------|-----------------|--------------------------|
 | Sync support | `Vizio` (sync) + `VizioAsync` | `Vizio` only — async-only |
 | Constructor | `(device_id, ip, name, auth, device_type)` positional | `(host, *, device_type=, auth_token=)` keyword |
@@ -178,7 +178,7 @@ except VizioConnectionError as e:
 
 | Old | New | Notes |
 |-----|-----|-------|
-| `VizioAsync.discovery_zeroconf(timeout)` static, sync | `await discover_zeroconf(timeout=)` | Module-level, async. Requires `vizio-smartcast[discovery]` extra |
+| `VizioAsync.discovery_zeroconf(timeout)` static, sync | `await discover_zeroconf(timeout=)` | Module-level, async. Requires `vizaio[discovery]` extra |
 | `VizioAsync.discovery_ssdp(timeout)` static, sync | `await discover_ssdp(timeout=)` | Module-level, async. No external deps |
 | — | `await discover(timeout=)` | NEW: runs both protocols concurrently, dedupes by IP |
 

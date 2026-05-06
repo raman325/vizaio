@@ -45,7 +45,7 @@ from tests._fixtures import (
     make_settings_response,
     make_success_response,
 )
-from vizio_smartcast import (
+from vizaio import (
     AppConfig,
     ChargingStatus,
     DeviceType,
@@ -60,7 +60,7 @@ from vizio_smartcast import (
     VizioResponseError,
     VizioUnsupportedError,
 )
-from vizio_smartcast.wire import Response
+from vizaio.wire import Response
 
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
@@ -93,7 +93,7 @@ def mock_client(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     paths) without complex side_effect setup.
     """
     mock = AsyncMock()
-    monkeypatch.setattr("vizio_smartcast.client.SmartCastClient.request_spec", mock)
+    monkeypatch.setattr("vizaio.client.SmartCastClient.request_spec", mock)
     return mock
 
 
@@ -158,7 +158,7 @@ class TestConstruction:
         assert v.host == "1.2.3.4"
 
     def test_custom_profile(self) -> None:
-        from vizio_smartcast import TV_PROFILE
+        from vizaio import TV_PROFILE
 
         v = Vizio(host="1.2.3.4", profile=TV_PROFILE)
         assert v.profile is TV_PROFILE
@@ -1082,7 +1082,7 @@ class TestDeviceInfo:
         endpoint at all. The per-field endpoints (with their own
         firmware-multi-path fallback) must continue to work.
         """
-        from vizio_smartcast.errors import VizioNotFoundError
+        from vizaio.errors import VizioNotFoundError
 
         mock_client.side_effect = [
             VizioNotFoundError("aggregate not exposed"),
@@ -1100,7 +1100,7 @@ class TestDeviceInfo:
         the getter returns ``""`` rather than raising. ``get_device_info``
         depends on this graceful-degrade behavior.
         """
-        from vizio_smartcast.errors import VizioNotFoundError
+        from vizaio.errors import VizioNotFoundError
 
         # Aggregate succeeds but lacks 'esn'; per-field endpoint then 404s.
         mock_client.side_effect = [
@@ -1119,7 +1119,7 @@ class TestDeviceInfo:
         no STATUS/ITEMS). Captured live from VHD24M-0810 fw 3.720.9.1-1.
         Verifies parser pulls the right typed fields from the unique shape.
         """
-        from vizio_smartcast import StateExtended
+        from vizaio import StateExtended
 
         raw = {
             "ERRORS": [],
@@ -1186,7 +1186,7 @@ class TestDeviceInfo:
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
         """get_device_info fetches all identity fields in one call."""
-        from vizio_smartcast import DeviceInfo
+        from vizaio import DeviceInfo
 
         # Mock multiple endpoints needed for full DeviceInfo.
         mock_client.side_effect = [

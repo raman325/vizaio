@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "vizio-smartcast"
+name = "vizaio"
 version = "0.1.0"
 description = "Modern async Python client and CLI for Vizio SmartCast devices"
 readme = "README.md"
@@ -41,18 +41,18 @@ dev = [
 ]
 
 [project.scripts]
-vizio-smartcast = "vizio_smartcast.cli:app"
+vizaio = "vizaio.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/raman325/vizio-smartcast"
-Issues = "https://github.com/raman325/vizio-smartcast/issues"
-Changelog = "https://github.com/raman325/vizio-smartcast/releases"
+Homepage = "https://github.com/raman325/vizaio"
+Issues = "https://github.com/raman325/vizaio/issues"
+Changelog = "https://github.com/raman325/vizaio/releases"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/vizio_smartcast"]
+packages = ["src/vizaio"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/vizio_smartcast", "README.md", "LICENSE"]
+include = ["src/vizaio", "README.md", "LICENSE"]
 
 # ---------------------------------------------------------------------------
 # Ruff — lint + format. Replaces flake8 + isort + black + pyupgrade.
@@ -103,13 +103,13 @@ ignore = [
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 combine-as-imports = true
-known-first-party = ["vizio_smartcast", "tests"]
+known-first-party = ["vizaio", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 # Tests don't need bugbear/RUF rigor and can use shorter/idiomatic forms.
 "tests/**/*.py" = ["B", "RUF", "D", "PLR", "PLC0415", "E501", "SIM117"]
 # The endpoint table prizes column alignment over line length.
-"src/vizio_smartcast/endpoints.py" = ["E501"]
+"src/vizaio/endpoints.py" = ["E501"]
 # Migration assets are reference snippets, not library code.
 "assets/**/*.py" = ["D", "PLR"]
 
@@ -120,7 +120,7 @@ known-first-party = ["vizio_smartcast", "tests"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["src/vizio_smartcast"]
+files = ["src/vizaio"]
 show_error_codes = true
 local_partial_types = true
 strict_equality = true
@@ -159,7 +159,7 @@ filterwarnings = [
 # Coverage
 # ---------------------------------------------------------------------------
 [tool.coverage.run]
-source = ["src/vizio_smartcast"]
+source = ["src/vizaio"]
 branch = true
 
 [tool.coverage.report]

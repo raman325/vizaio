@@ -11,11 +11,11 @@ from __future__ import annotations
 
 import pytest
 
-from vizio_smartcast.errors import (
+from vizaio.errors import (
     VizioNotFoundError,
     VizioResponseError,
 )
-from vizio_smartcast.parse import (
+from vizaio.parse import (
     _bool_or_default,
     _coerce_setting_type,
     _input_meta_name,
@@ -28,8 +28,8 @@ from vizio_smartcast.parse import (
     parse_pair_challenge,
     parse_setting_types,
 )
-from vizio_smartcast.types import SettingType
-from vizio_smartcast.wire import Item, Response
+from vizaio.types import SettingType
+from vizaio.wire import Item, Response
 
 
 def _resp(payload: dict) -> Response:

@@ -13,14 +13,14 @@ import json
 from aioresponses import aioresponses
 import pytest
 
-from vizio_smartcast.client import SmartCastClient
-from vizio_smartcast.endpoints import EndpointSpec
-from vizio_smartcast.errors import (
+from vizaio.client import SmartCastClient
+from vizaio.endpoints import EndpointSpec
+from vizaio.errors import (
     VizioConnectionError,
     VizioNotFoundError,
     VizioResponseError,
 )
-from vizio_smartcast.types import AuthRequirement
+from vizaio.types import AuthRequirement
 
 
 def _envelope(
@@ -129,7 +129,7 @@ class TestEndpointFallbackOnUriNotFound:
         as ``VizioAuthError`` so callers can distinguish "token invalid,
         re-pair needed" from "device unreachable / network problem."
         """
-        from vizio_smartcast.errors import VizioAuthError
+        from vizaio.errors import VizioAuthError
 
         path = "/state/device/power_mode"
         spec = EndpointSpec(

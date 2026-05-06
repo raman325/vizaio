@@ -25,14 +25,14 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 import pytest
 
-from vizio_smartcast import (
+from vizaio import (
     DeviceType,
     StateEvent,
     SubscribeOptions,
     Vizio,
     VizioConnectionError,
 )
-from vizio_smartcast._websocket import (
+from vizaio._websocket import (
     EVENT_REGISTER_BODY,
     EVENT_REGISTER_PATH,
     KNOWN_URIS,
@@ -251,12 +251,12 @@ def vizio_tv() -> Vizio:
 @pytest.fixture
 def mock_register(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     """Replace SmartCastClient.request_spec — used for /event/register."""
-    from vizio_smartcast.wire import Response
+    from vizaio.wire import Response
 
     mock = AsyncMock(
         return_value=Response.from_json({"STATUS": {"RESULT": "SUCCESS", "DETAIL": ""}})
     )
-    monkeypatch.setattr("vizio_smartcast.client.SmartCastClient.request_spec", mock)
+    monkeypatch.setattr("vizaio.client.SmartCastClient.request_spec", mock)
     return mock
 
 
@@ -324,7 +324,7 @@ class TestEventStreamConnect:
                 pass
         headers = factory.call_args.kwargs["headers"]
         assert headers["Authorization"] == TOKEN
-        assert headers["VIZIO-SmartCast-Source"] == "vizio-smartcast"
+        assert headers["VIZIO-SmartCast-Source"] == "vizaio"
 
     async def test_ws_port_override(
         self,
@@ -369,7 +369,7 @@ class TestEventStreamConnect:
         the feature. Map it to VizioUnsupportedError so callers can
         catch it as the capability check it actually is.
         """
-        from vizio_smartcast.errors import (
+        from vizaio.errors import (
             VizioInvalidParameterError,
             VizioUnsupportedError,
         )

@@ -11,7 +11,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from xml.etree import ElementTree
 
-from vizio_smartcast.discovery import (
+from vizaio.discovery import (
     _decode_id_property,
     _decode_int_property,
     _decode_property,
@@ -24,7 +24,7 @@ from vizio_smartcast.discovery import (
     _SsdpProtocol,
     _zeroconf_to_device,
 )
-from vizio_smartcast.types import DiscoveredDevice
+from vizaio.types import DiscoveredDevice
 
 # ---------------------------------------------------------------------------
 # _decode_int_property

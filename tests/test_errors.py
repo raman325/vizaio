@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from vizio_smartcast import (
+from vizaio import (
     VizioAuthError,
     VizioBusyError,
     VizioConnectionError,

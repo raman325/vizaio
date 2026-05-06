@@ -539,7 +539,7 @@ class Vizio:
 
         Migration: pyvizio returned ``NO_APP_RUNNING`` sentinel string;
         we return ``None`` for cleaner Python idioms. Use
-        :data:`vizio_smartcast.apps.NO_APP_RUNNING` if the sentinel form
+        :data:`vizaio.apps.NO_APP_RUNNING` if the sentinel form
         is desired downstream.
 
         Resolution prefers availability data (the modern catalog ships
@@ -953,7 +953,7 @@ class Vizio:
           ``audio/volume/mute``. The TV may emit others — they reach
           your iterator regardless; filter on ``StateEvent.uri``.
 
-        See :data:`vizio_smartcast._websocket.KNOWN_URIS` for the
+        See :data:`vizaio._websocket.KNOWN_URIS` for the
         documented set, and ``docs/websocket-protocol-notes.md`` for
         protocol details.
         """

@@ -1,8 +1,8 @@
 """
 Persistent CLI config: device aliases, default device, auth tokens.
 
-Storage: ``$VIZIO_SMARTCAST_CONFIG`` if set, else
-``platformdirs.user_config_dir("vizio-smartcast") / config.toml``.
+Storage: ``$VIZAIO_CONFIG`` if set, else
+``platformdirs.user_config_dir("vizaio") / config.toml``.
 
 Schema:
 
@@ -32,8 +32,8 @@ from ..types import DeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
-_CONFIG_ENV = "VIZIO_SMARTCAST_CONFIG"
-_APP_NAME = "vizio-smartcast"
+_CONFIG_ENV = "VIZAIO_CONFIG"
+_APP_NAME = "vizaio"
 _CONFIG_FILENAME = "config.toml"
 
 

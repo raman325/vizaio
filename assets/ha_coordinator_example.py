@@ -14,11 +14,11 @@ Demonstrates:
   blank the whole entity.
 
 Tested against:
-- vizio-smartcast 0.1+
+- vizaio 0.1+
 - Home Assistant 2026.x
 
 If this file falls out of date, the test_device.py suite is the source
-of truth for vizio-smartcast's behavior.
+of truth for vizaio's behavior.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from vizio_smartcast import (
+from vizaio import (
     DeviceType,
     SettingInfo,
     Vizio,
@@ -128,7 +128,7 @@ class VizioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_volume(self, level: int) -> None:
         """Set volume using the cached hashval (skips the per-write GET).
 
-        If the cached hashval is stale, vizio-smartcast retries with a
+        If the cached hashval is stale, vizaio retries with a
         fresh GET internally — caller sees no exception unless both
         attempts fail.
         """
