@@ -13,8 +13,6 @@ Covers:
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
@@ -37,15 +35,6 @@ def _av(app_id: str, **chipsets: list[ChipsetPayload]) -> AppAvailability:
         app_id=app_id,
         chipsets=MappingProxyType({k: tuple(v) for k, v in chipsets.items()}),
     )
-
-
-@pytest.fixture
-def deviceinfo_response() -> Response:
-    """Live deviceinfo capture from a real VHD24M-0810 (MT5583, fw 3.720.9.1-1)."""
-    raw = json.loads(
-        (Path(__file__).parent / "captured" / "device_info.json").read_text()
-    )
-    return Response.from_json(raw)
 
 
 # ---------------------------------------------------------------------------

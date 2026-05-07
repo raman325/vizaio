@@ -350,6 +350,32 @@ def parse_vizios_binary(response: Response) -> str:
     return str(vizios) if vizios else ""
 
 
+def parse_system_info_model_name(response: Response) -> str:
+    """
+    Extract ``SYSTEM_INFO.MODEL_NAME`` — the canonical model identifier.
+
+    Distinct from :func:`parse_model_name`, which returns the friendly
+    ``NAME`` field for non-TV settings roots. Crave-prefix matching
+    needs the model identifier (``"SP30-E0"``), not the friendly name
+    (``"Crave Go"``).
+
+    Returns the bare string. Empty string when absent — older firmware
+    may not expose the nested SYSTEM_INFO block.
+    """
+    if not response.items:
+        return ""
+    value = response.items[0].value
+    if not isinstance(value, Mapping):
+        return ""
+    system_info = value.get("system_info")
+    if not isinstance(system_info, Mapping):
+        return ""
+    model_name = system_info.get("model_name")
+    if not isinstance(model_name, str):
+        return ""
+    return model_name
+
+
 def parse_firmware_version(response: Response) -> str:
     """
     Extract ``SYSTEM_INFO.VERSION`` from a device info response.

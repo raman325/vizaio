@@ -14,28 +14,32 @@ Tests:
    metadata when both find the same IP.
 4. ``discover_zeroconf`` raises ``ImportError`` with install hint when
    the ``[discovery]`` extra is not installed.
-
-Implementation lands in #27. Tests fail until then.
 """
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from vizaio import (
+    DeviceType,
     DiscoveredDevice,
     Vizio,
     VizioAuthError,
     VizioConnectionError,
 )
 from vizaio.discovery import (
+    async_classify_device,
     async_is_tv,
+    classify_crave_model,
     discover,
     discover_ssdp,
     discover_zeroconf,
+    is_crave_model,
 )
+from vizaio.wire import Response
 
 # ---------------------------------------------------------------------------
 # Zeroconf
@@ -360,6 +364,225 @@ class TestAsyncIsTv:
     async def test_port_kwarg_conflicts_with_inline_port(self) -> None:
         with pytest.raises(ValueError, match=r"port"):
             await async_is_tv("1.2.3.4:7345", port=7345)
+
+
+class TestIsCraveModel:
+    """Pure prefix check for Vizio's Crave product line. Crave models
+    follow the ``SP*-*`` pattern (``SP30-E0``, ``SP50-D5``,
+    ``SP70-D5``); no other Vizio audio device uses this prefix."""
+
+    def test_sp30_is_crave(self) -> None:
+        assert is_crave_model("SP30-E0") is True
+
+    def test_sp50_is_crave(self) -> None:
+        assert is_crave_model("SP50-D5") is True
+
+    def test_sp70_is_crave(self) -> None:
+        assert is_crave_model("SP70-D5") is True
+
+    def test_lowercase_is_crave(self) -> None:
+        assert is_crave_model("sp30-e0") is True
+
+    def test_tv_model_is_not_crave(self) -> None:
+        assert is_crave_model("V505-G9") is False
+
+    def test_soundbar_model_is_not_crave(self) -> None:
+        # Vizio soundbars use prefixes like SB36*, S5*, M5*.
+        assert is_crave_model("SB36514-G6") is False
+
+    def test_empty_string_is_not_crave(self) -> None:
+        assert is_crave_model("") is False
+
+
+class TestClassifyCraveModel:
+    """Maps a Crave-family model string to its specific
+    ``DeviceType`` variant. Precondition: caller must have verified
+    ``is_crave_model(model)`` first."""
+
+    def test_sp30_maps_to_crave_go(self) -> None:
+        assert classify_crave_model("SP30-E0") is DeviceType.CRAVE_GO
+
+    def test_sp50_maps_to_crave360(self) -> None:
+        assert classify_crave_model("SP50-D5") is DeviceType.CRAVE360
+
+    def test_sp70_maps_to_crave_pro(self) -> None:
+        assert classify_crave_model("SP70-D5") is DeviceType.CRAVE_PRO
+
+    def test_lowercase_resolves_correctly(self) -> None:
+        assert classify_crave_model("sp50-d5") is DeviceType.CRAVE360
+
+    def test_unknown_sp_variant_falls_back_to_crave_go(self) -> None:
+        # Lenient default: unknown SP* models default to the
+        # lowest-spec variant. Forecasted-wrong max_volume is safer
+        # when guessed low than guessed high.
+        assert classify_crave_model("SP99-X1") is DeviceType.CRAVE_GO
+
+    def test_non_crave_model_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match=r"not a Crave"):
+            classify_crave_model("V505-G9")
+
+    def test_empty_string_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match=r"not a Crave"):
+            classify_crave_model("")
+
+
+class TestAsyncClassifyDevice:
+    """Composer that walks the three classification layers. Returns
+    ``DeviceType.TV`` when the auth probe says TV. Otherwise fetches
+    deviceinfo unauthenticated and reads ``SYSTEM_INFO.MODEL_NAME``
+    to refine into SOUNDBAR vs CRAVE_*."""
+
+    async def test_tv_short_circuits_at_layer_1(self) -> None:
+        # async_is_tv → True means we don't hit deviceinfo at all.
+        with patch.object(
+            Vizio,
+            "ping_auth",
+            new=AsyncMock(side_effect=VizioAuthError("REQUIRES_PAIRING")),
+        ):
+            result = await async_classify_device("1.2.3.4:7345")
+        assert result is DeviceType.TV
+
+    async def test_soundbar_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SB36514-G6"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.SOUNDBAR
+
+    async def test_crave_go_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP30-E0"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.CRAVE_GO
+
+    async def test_crave_360_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP50-D5"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.CRAVE360
+
+    async def test_crave_pro_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP70-D5"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.CRAVE_PRO
+
+    async def test_deviceinfo_fetch_failure_falls_back_to_soundbar(
+        self,
+    ) -> None:
+        # async_is_tv → False, but the deviceinfo fetch raises.
+        # Lenient default: SOUNDBAR (we know it's not a TV from layer 1).
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(
+                Vizio,
+                "_request",
+                new=AsyncMock(side_effect=VizioConnectionError("dropped")),
+            ),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.SOUNDBAR
+
+    async def test_deviceinfo_with_empty_model_falls_back_to_soundbar(
+        self,
+    ) -> None:
+        # async_is_tv → False, deviceinfo returns but SYSTEM_INFO is missing.
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [{"VALUE": {}, "CNAME": "deviceinfo"}],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.SOUNDBAR
+
+    async def test_port_kwarg_forwards_to_layers(self) -> None:
+        # Verify port=N is incorporated into the host both when probing
+        # (layer 1) and when fetching deviceinfo (layer 2). The
+        # observable: ping_auth sees host="1.2.3.4:9000", _request sees
+        # host="1.2.3.4:9000".
+        captured: list[str] = []
+
+        async def capture_ping(self: Vizio) -> None:
+            captured.append(self.host)
+
+        async def capture_request(self: Vizio, endpoint: Any) -> Response:
+            captured.append(self.host)
+            return Response.from_json(
+                {
+                    "ITEMS": [
+                        {
+                            "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP30-E0"}},
+                            "CNAME": "deviceinfo",
+                        }
+                    ],
+                    "STATUS": {"RESULT": "SUCCESS"},
+                }
+            )
+
+        with (
+            patch.object(Vizio, "ping_auth", new=capture_ping),
+            patch.object(Vizio, "_request", new=capture_request),
+        ):
+            result = await async_classify_device("1.2.3.4", port=9000)
+
+        assert result is DeviceType.CRAVE_GO
+        assert captured == ["1.2.3.4:9000", "1.2.3.4:9000"]
 
 
 # ---------------------------------------------------------------------------

@@ -27,6 +27,7 @@ from vizaio.parse import (
     parse_model_name,
     parse_pair_challenge,
     parse_setting_types,
+    parse_system_info_model_name,
 )
 from vizaio.types import SettingType
 from vizaio.wire import Item, Response
@@ -397,3 +398,45 @@ class TestCoerceSettingType:
 
     def test_unknown_falls_back_to_menu(self) -> None:
         assert _coerce_setting_type("T_FUTURE_TYPE") is SettingType.MENU
+
+
+# ---------------------------------------------------------------------------
+# parse_system_info_model_name
+# ---------------------------------------------------------------------------
+
+
+class TestParseSystemInfoModelName:
+    """Extracts ``SYSTEM_INFO.MODEL_NAME`` from a deviceinfo response.
+    This is the canonical model identifier (e.g., ``"VHD24M-0810"``,
+    ``"SP30-E0"``) — distinct from the friendly ``NAME`` field that
+    ``parse_model_name`` returns for non-TV settings roots."""
+
+    def test_returns_model_name_from_live_capture(
+        self, deviceinfo_response: Response
+    ) -> None:
+        # Live VHD24M-0810 capture, verified at SYSTEM_INFO.MODEL_NAME.
+        assert parse_system_info_model_name(deviceinfo_response) == "VHD24M-0810"
+
+    def test_returns_empty_when_response_has_no_items(self) -> None:
+        empty = Response.from_json({"ITEMS": [], "STATUS": {"RESULT": "SUCCESS"}})
+        assert parse_system_info_model_name(empty) == ""
+
+    def test_returns_empty_when_system_info_missing(self) -> None:
+        no_system = Response.from_json(
+            {
+                "ITEMS": [{"VALUE": {"MODEL_NAME": "x"}, "CNAME": "deviceinfo"}],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        assert parse_system_info_model_name(no_system) == ""
+
+    def test_returns_empty_when_model_name_missing(self) -> None:
+        no_model = Response.from_json(
+            {
+                "ITEMS": [
+                    {"VALUE": {"SYSTEM_INFO": {"CHIPSET": 4}}, "CNAME": "deviceinfo"}
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        assert parse_system_info_model_name(no_model) == ""

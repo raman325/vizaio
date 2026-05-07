@@ -27,7 +27,9 @@ from xml.etree.ElementTree import ParseError
 import aiohttp
 
 from ._device import Vizio
+from .endpoints import Endpoint
 from .errors import VizioError
+from .parse import parse_system_info_model_name
 from .types import DeviceType, DiscoveredDevice
 
 if TYPE_CHECKING:
@@ -465,3 +467,99 @@ async def async_is_tv(
         except VizioError:
             return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# Pure model-string classifiers (layers 2 + 3)
+# ---------------------------------------------------------------------------
+
+
+def is_crave_model(model: str) -> bool:
+    """
+    Return ``True`` iff ``model`` is a Crave-family identifier.
+
+    Crave models follow the ``SP*-*`` pattern (``SP30-E0``,
+    ``SP50-D5``, ``SP70-D5``); no other Vizio audio device uses this
+    prefix. Case-insensitive. Empty string returns ``False``.
+    """
+    return model.upper().startswith("SP")
+
+
+def classify_crave_model(model: str) -> DeviceType:
+    """
+    Map a Crave-family model string to its specific ``DeviceType`` variant.
+
+    | Prefix (case-insensitive) | Returns                  |
+    |---------------------------|--------------------------|
+    | ``SP30*``                 | ``DeviceType.CRAVE_GO``  |
+    | ``SP50*``                 | ``DeviceType.CRAVE360``  |
+    | ``SP70*``                 | ``DeviceType.CRAVE_PRO`` |
+    | other ``SP*``             | ``DeviceType.CRAVE_GO``  |
+
+    **Precondition:** ``is_crave_model(model)`` must return ``True``.
+    Raises :class:`ValueError` otherwise — calling this on a TV or
+    soundbar model is a programmer error.
+    """
+    if not is_crave_model(model):
+        raise ValueError(f"{model!r} is not a Crave model")
+    upper = model.upper()
+    if upper.startswith("SP30"):
+        return DeviceType.CRAVE_GO
+    if upper.startswith("SP50"):
+        return DeviceType.CRAVE360
+    if upper.startswith("SP70"):
+        return DeviceType.CRAVE_PRO
+    # Unknown SP* variant: default to lowest-spec.
+    return DeviceType.CRAVE_GO
+
+
+async def async_classify_device(
+    host: str,
+    *,
+    port: int | None = None,
+    session: aiohttp.ClientSession | None = None,
+    timeout: float | None = None,
+) -> DeviceType:
+    """
+    Classify ``host`` into one of the five :class:`DeviceType` values.
+
+    Walks the three classification layers:
+
+    1. :func:`async_is_tv` — TV vs audio via auth-asymmetry probe.
+    2. :func:`is_crave_model` — soundbar vs Crave family by
+       ``MODEL_NAME`` prefix.
+    3. :func:`classify_crave_model` — specific Crave variant.
+
+    Lenient on failure: an unreachable host returns ``DeviceType.TV``
+    (matching :func:`async_is_tv`); a reachable audio host whose
+    deviceinfo fetch fails returns ``DeviceType.SOUNDBAR`` (we already
+    established it's not a TV at step 1).
+
+    ``host`` may include a port (``"1.2.3.4:7345"``) or accept one via
+    the ``port`` kwarg — same shape as :func:`async_is_tv`.
+    """
+    if await async_is_tv(host, port=port, session=session, timeout=timeout):
+        return DeviceType.TV
+    if port is not None:
+        # async_is_tv (called above) raises ValueError if host already
+        # includes a port — by the time we get here, host is guaranteed
+        # bare when port is given.
+        host = f"{host}:{port}"
+    async with Vizio(
+        host,
+        device_type=DeviceType.SOUNDBAR,
+        session=session,
+        timeout=timeout,
+    ) as device:
+        # Read the raw Response so we can extract SYSTEM_INFO.MODEL_NAME
+        # (the canonical model identifier) — Vizio.get_model_name() returns
+        # the friendly NAME field for non-TV settings roots, which would
+        # break Crave-prefix matching.
+        try:
+            response = await device._request(Endpoint.DEVICE_INFO)
+        except VizioError:
+            return DeviceType.SOUNDBAR
+        model = parse_system_info_model_name(response)
+    if is_crave_model(model):
+        return classify_crave_model(model)
+    return DeviceType.SOUNDBAR
