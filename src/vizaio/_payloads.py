@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from .types import AppConfig
+from .types import AppConfig, PairChallenge
 
 KeyCode = tuple[int, int]
 """``(codeset, code)`` pair used in KEYLIST entries."""
@@ -49,15 +49,14 @@ def begin_pair(*, device_id: str, device_name: str) -> dict[str, Any]:
 def finish_pair(
     *,
     device_id: str,
-    challenge_type: int,
-    token: int,
+    challenge: PairChallenge,
     pin: str,
 ) -> dict[str, Any]:
     """Complete a pairing handshake with the user-provided PIN."""
     return {
         "DEVICE_ID": device_id,
-        "CHALLENGE_TYPE": challenge_type,
-        "PAIRING_REQ_TOKEN": token,
+        "CHALLENGE_TYPE": challenge.challenge_type,
+        "PAIRING_REQ_TOKEN": challenge.token,
         "RESPONSE_VALUE": pin,
     }
 

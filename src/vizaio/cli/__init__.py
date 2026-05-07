@@ -456,8 +456,9 @@ def pair_complete(
         async with Vizio(host=host, device_type=device_type) as v:
             return await v.finish_pair(
                 device_id=device_id,
-                challenge_type=challenge_type,
-                token=pairing_token,
+                challenge=PairChallenge(
+                    challenge_type=challenge_type, token=pairing_token
+                ),
                 pin=pin,
             )
 
