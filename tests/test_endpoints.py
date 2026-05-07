@@ -11,8 +11,7 @@ Two layers under test:
    pair. Surfaces unsupported endpoints (e.g., ``LAUNCH_APP`` on a
    soundbar) by raising ``VizioUnsupportedError``.
 
-The resolver implementation lives in ``_endpoints.py`` (TODO until #27).
-These tests fail until then.
+The resolver implementation lives in ``endpoints.py``.
 """
 
 from __future__ import annotations

@@ -14,8 +14,6 @@ Tests:
    metadata when both find the same IP.
 4. ``discover_zeroconf`` raises ``ImportError`` with install hint when
    the ``[discovery]`` extra is not installed.
-
-Implementation lands in #27. Tests fail until then.
 """
 
 from __future__ import annotations

@@ -4,7 +4,7 @@ Centralizes every PUT payload construction. Tests assert the exact wire
 format pyvizio uses, because those are the shapes proven to work against
 real devices.
 
-The builders live in ``vizaio._payloads`` (TODO until #27).
+The builders live in ``vizaio._payloads``.
 
 Important: these tests assert the *exact* dict shape, including key
 casing. The device requires uppercase request keys (``HASHVAL``, ``VALUE``,
