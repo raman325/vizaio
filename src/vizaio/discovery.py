@@ -534,11 +534,18 @@ async def async_classify_device(
 
     **Strict on failure:** raises :class:`VizioError` (typically
     :class:`VizioConnectionError`) if the host is unreachable, and
-    :class:`VizioResponseError` if the device responds but the payload
-    is missing ``SETTINGS_ROOT``. This is deliberate contrast to
-    :func:`async_is_tv`, which is lenient by design (matches HA pyvizio
-    drop-in semantics). Callers that want a lenient binary answer
-    should use :func:`async_is_tv` instead.
+    :class:`VizioResponseError` if the device responds but
+    ``SETTINGS_ROOT`` is missing or has an unknown value. This is
+    deliberate contrast to :func:`async_is_tv`, which is lenient by
+    design (matches HA pyvizio drop-in semantics). Callers that want
+    a lenient binary answer should use :func:`async_is_tv` instead.
+
+    One narrow exception to the strict contract: a reachable
+    ``audio_settings`` device with a missing or unrecognized
+    ``MODEL_NAME`` returns :attr:`DeviceType.SOUNDBAR` rather than
+    raising. We already know it's not a TV from ``SETTINGS_ROOT``;
+    SOUNDBAR is the safest fallback within the audio family when
+    we can't refine to a specific Crave variant.
 
     ``host`` may include a port (``"1.2.3.4:7345"``) or accept one via
     the ``port`` kwarg — same shape as :func:`async_is_tv`.
