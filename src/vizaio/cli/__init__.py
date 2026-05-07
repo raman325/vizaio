@@ -693,7 +693,7 @@ def mute_toggle(ctx: typer.Context) -> None:
 # ---------------------------------------------------------------------------
 
 volume_app = typer.Typer(
-    name="volume", help="Volume control. (For mute, see ``vizaio mute``.)"
+    name="volume", help="Volume control. (For mute, see: vizaio mute.)"
 )
 app.add_typer(volume_app)
 
