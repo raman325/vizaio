@@ -257,6 +257,25 @@ vizaio discover --timeout 10 --no-ssdp   # zeroconf only, 10s
 
 Exit code 1 if nothing was found.
 
+### `vizaio probe`
+
+Classify a host as one of the five device types without pairing or any saved
+alias — useful when you don't yet know the device family.
+
+```bash
+vizaio probe 192.168.1.50          # bare IP, uses default port detection
+vizaio probe 192.168.1.50 --port 7345
+vizaio probe 192.168.1.50:7345     # port embedded in host
+vizaio probe 192.168.1.50:7345 --format json
+```
+
+Output columns: `host`, `device_type`. `device_type` is one of `tv`,
+`soundbar`, `crave_go`, `crave360`, `crave_pro`.
+
+Classification is lenient: an unreachable host returns `tv` (the dominant
+case for Home Assistant users); a reachable audio device whose model info
+cannot be fetched returns `soundbar`.
+
 ### `vizaio pair`
 
 Device pairing operations. Four subcommands:

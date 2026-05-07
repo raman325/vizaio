@@ -776,6 +776,118 @@ class TestDiscoverCommand:
 
 
 # ---------------------------------------------------------------------------
+# `vizaio probe` — mocked at the async_classify_device boundary
+# ---------------------------------------------------------------------------
+
+
+class TestProbeCommand:
+    def test_probe_returns_classification(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            return DeviceType.TV
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.50:7345",
+            "--format",
+            "tsv",
+        )
+        assert result.exit_code == 0, result.output
+        assert "192.0.2.50:7345" in result.output
+        assert "tv" in result.output
+
+    def test_probe_with_port_kwarg(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        captured: dict = {}
+
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            captured["host"] = host
+            captured["port"] = port
+            return DeviceType.TV
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.50",
+            "--port",
+            "7345",
+            "--format",
+            "tsv",
+        )
+        assert result.exit_code == 0, result.output
+        assert captured["host"] == "192.0.2.50"
+        assert captured["port"] == 7345
+
+    def test_probe_json_output(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        import json as json_mod
+
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            return DeviceType.SOUNDBAR
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.60:9000",
+            "--format",
+            "json",
+        )
+        assert result.exit_code == 0, result.output
+        data = json_mod.loads(result.output)
+        # JSON renders a list of rows.
+        assert isinstance(data, list)
+        row = data[0]
+        assert row["host"] == "192.0.2.60:9000"
+        assert row["device_type"] == "soundbar"
+
+    def test_probe_returns_crave_subtypes(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            return DeviceType.CRAVE360
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.70:9000",
+            "--format",
+            "tsv",
+        )
+        assert result.exit_code == 0, result.output
+        assert "crave360" in result.output
+
+    def test_probe_classifier_failure_propagates(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        # ValueError raised when host has embedded port AND --port given.
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            raise ValueError("host already includes a port")
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.50:7345",
+            "--port",
+            "7345",
+        )
+        assert result.exit_code != 0
+
+
+# ---------------------------------------------------------------------------
 # `vizaio pair` — mocked at the HTTP boundary
 # ---------------------------------------------------------------------------
 
