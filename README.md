@@ -434,6 +434,55 @@ convenience `host` property combining `ip:port`. SSDP-discovered devices are
 filtered to `manufacturer == "VIZIO"` to weed out Chromecasts and Rokus that
 also speak DIAL.
 
+### Host-targeted classification
+
+When you already have a host (e.g., from a config-flow entry field) but don't
+yet know its device type, use `async_classify_device` for full five-way
+classification or `async_is_tv` for a binary TV-vs-audio result:
+
+```python
+from vizaio.discovery import async_classify_device, async_is_tv
+
+# Full classification — returns one of the five DeviceType values
+dt = await async_classify_device("192.168.1.50:7345")
+
+# Binary probe — True = TV, False = audio device
+is_tv = await async_is_tv("192.168.1.50")
+```
+
+The two functions have **different failure contracts**:
+
+- `async_is_tv` is **lenient** — any probe failure (connection error, timeout,
+  unexpected response) returns `True` (TV). This matches HA config-flow
+  semantics where TV is the dominant case and a wrong default is corrected
+  when the user confirms the device type. Use this when you want a binary
+  answer no matter what.
+- `async_classify_device` is **strict** — issues a single unauthenticated
+  GET to `/state/device/deviceinfo` and raises `VizioConnectionError` if
+  the host is unreachable, or `VizioResponseError` if the response is
+  malformed. The function's job is to classify; if it can't, raising is
+  more honest than returning a lenient default. Wrap in `try`/`except`
+  (or use `async_is_tv` instead) if you want to handle failure as TV.
+
+If you already have a model string from `DiscoveredDevice.model` (returned by
+the `discover_*` functions) or persisted config, you can classify without a
+network round trip using the pure sync helpers. **Note:** `Vizio.get_model_name()`
+is *not* a suitable source — for non-TV settings roots it returns the friendly
+`NAME` field (e.g., `"Crave Go"`) rather than the canonical `SYSTEM_INFO.MODEL_NAME`
+(`"SP30-E0"`) the SP-prefix matching needs.
+
+```python
+from vizaio.discovery import classify_crave_model, is_crave_model
+
+if is_crave_model(model):          # True iff model.upper().startswith("SP")
+    dt = classify_crave_model(model)
+    # SP30* → CRAVE_GO, SP50* → CRAVE360, SP70* → CRAVE_PRO
+    # Unknown SP* → CRAVE_GO (lenient default)
+```
+
+`classify_crave_model` raises `ValueError` if called on a non-Crave model;
+always guard with `is_crave_model` first.
+
 ---
 
 ## Device-type quirks
@@ -727,6 +776,47 @@ non-Crave profiles.
 ```python
 await v.ping()        # unauthenticated; cheapest "is the device reachable" check
 await v.ping_auth()   # validates the configured token actually works
+```
+
+For a pre-construction *device-type probe* (before you have a `Vizio` instance),
+use `async_is_tv` from `vizaio.discovery` — it doesn't require pairing. Note
+that it is **not** a reachability check: lenient semantics mean an unreachable
+host returns `True` (TV default). For genuine reachability, construct a `Vizio`
+and call `ping()` — that surfaces transport failures as exceptions instead of
+silently defaulting.
+
+### App catalog injection
+
+For integrations that manage their own refresh schedule (e.g., an HA apps
+coordinator), fetch the catalog independently and push it into the `Vizio`
+instance rather than letting the library auto-fetch:
+
+```python
+from vizaio import Vizio
+from vizaio.apps import fetch_app_catalog, fetch_app_availability
+
+# Fetch once, share across multiple Vizio instances or cache in coordinator
+catalog = await fetch_app_catalog()                  # falls back to bundled on failure
+availability = await fetch_app_availability()        # same fallback semantics
+
+# Pass at construction time …
+async with Vizio(host="...", auth_token="...", apps=catalog) as v:
+    ...
+
+# … or push fresh data post-construction (e.g., after coordinator refresh)
+v.set_app_catalog(catalog)
+v.set_app_availability(availability)
+```
+
+Each setter independently flips its own caller-owned flag. Calling
+`set_app_catalog` skips auto-fetch for the catalog only; the availability
+side keeps its own auto-fetch + TTL behavior unless you also call
+`set_app_availability`. Same in reverse.
+
+Pass `url=` to point at a regional mirror, internal proxy, or test fixture:
+
+```python
+catalog = await fetch_app_catalog(session=session, url="https://example.com/apps.json")
 ```
 
 ### Bulk state poll (`state_extended`)
