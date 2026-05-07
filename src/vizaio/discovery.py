@@ -549,9 +549,11 @@ async def async_classify_device(
                 "host already includes a port; pass `port` only when host is bare"
             )
         host = f"{host}:{port}"
-    # SOUNDBAR profile lets us hit DEVICE_INFO without auth — the endpoint
-    # is unauthenticated for every profile, but the constructor needs a
-    # device_type and SOUNDBAR's profile has no auth requirement.
+    # The constructor needs *some* device_type, but the only call we make
+    # here is ``Endpoint.DEVICE_INFO`` which is auth=NONE on every profile —
+    # so the choice doesn't affect the wire request. SOUNDBAR is a
+    # conservative default: simplest capability surface, no auth wiring
+    # to trip on, and we'll learn the actual answer from the response.
     async with Vizio(
         host,
         device_type=DeviceType.SOUNDBAR,
@@ -567,6 +569,15 @@ async def async_classify_device(
         )
     if settings_root == "tv_settings":
         return DeviceType.TV
+    if settings_root != "audio_settings":
+        # Strict contract: an unknown SETTINGS_ROOT (future firmware
+        # surface, non-Vizio device pretending to be one, etc.) is
+        # unclassifiable. The two known values are ``tv_settings`` and
+        # ``audio_settings`` — anything else means the API contract has
+        # shifted and we should surface that instead of guessing.
+        raise VizioResponseError(
+            f"unexpected SETTINGS_ROOT {settings_root!r} — cannot classify"
+        )
     # Audio device — refine to the specific Crave variant if MODEL_NAME
     # matches the SP-prefix; otherwise fall through to SOUNDBAR.
     model = parse_system_info_model_name(response)

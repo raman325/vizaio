@@ -506,7 +506,19 @@ class TestAsyncClassifyDevice:
         deviceinfo = _deviceinfo()  # empty value dict
         with (
             patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
-            pytest.raises(VizioResponseError, match=r"SETTINGS_ROOT"),
+            pytest.raises(VizioResponseError, match=r"missing SETTINGS_ROOT"),
+        ):
+            await async_classify_device("1.2.3.4:9000")
+
+    async def test_unknown_settings_root_raises_response_error(self) -> None:
+        # SETTINGS_ROOT present but neither "tv_settings" nor "audio_settings".
+        # Future firmware or a non-Vizio device pretending to be one would
+        # land here. Strict contract: surface the API mismatch rather
+        # than silently bucketing as SOUNDBAR.
+        deviceinfo = _deviceinfo(settings_root="screen_settings")
+        with (
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+            pytest.raises(VizioResponseError, match=r"screen_settings"),
         ):
             await async_classify_device("1.2.3.4:9000")
 
