@@ -413,6 +413,43 @@ convenience `host` property combining `ip:port`. SSDP-discovered devices are
 filtered to `manufacturer == "VIZIO"` to weed out Chromecasts and Rokus that
 also speak DIAL.
 
+### Host-targeted classification
+
+When you already have a host (e.g., from a config-flow entry field) but don't
+yet know its device type, use `async_classify_device` for full five-way
+classification or `async_is_tv` for a binary TV-vs-audio result:
+
+```python
+from vizaio.discovery import async_classify_device, async_is_tv
+
+# Full classification — returns one of the five DeviceType values
+dt = await async_classify_device("192.168.1.50:7345")
+
+# Binary probe — True = TV, False = audio device
+is_tv = await async_is_tv("192.168.1.50")
+```
+
+Both functions are lenient: any probe failure (connection error, timeout,
+unexpected response) returns `True` / `DeviceType.TV`. This matches HA
+config-flow semantics — TV is the dominant case, and a wrong default is
+corrected when the user confirms the device type.
+
+If you already have a model string (from a prior `get_model_name()` call,
+`DiscoveredDevice.model`, or persisted config) and want to classify without
+a network round trip, use the pure sync helpers:
+
+```python
+from vizaio.discovery import classify_crave_model, is_crave_model
+
+if is_crave_model(model):          # True iff model.upper().startswith("SP")
+    dt = classify_crave_model(model)
+    # SP30* → CRAVE_GO, SP50* → CRAVE360, SP70* → CRAVE_PRO
+    # Unknown SP* → CRAVE_GO (lenient default)
+```
+
+`classify_crave_model` raises `ValueError` if called on a non-Crave model;
+always guard with `is_crave_model` first.
+
 ---
 
 ## Device-type quirks
@@ -706,6 +743,43 @@ non-Crave profiles.
 ```python
 await v.ping()        # unauthenticated; cheapest "is the device reachable" check
 await v.ping_auth()   # validates the configured token actually works
+```
+
+For a pre-construction reachability check (before you have a `Vizio` instance),
+use `async_is_tv` from `vizaio.discovery` — it probes without auth and doesn't
+require pairing to have completed.
+
+### App catalog injection
+
+For integrations that manage their own refresh schedule (e.g., an HA apps
+coordinator), fetch the catalog independently and push it into the `Vizio`
+instance rather than letting the library auto-fetch:
+
+```python
+from vizaio import Vizio
+from vizaio.apps import fetch_app_catalog, fetch_app_availability
+
+# Fetch once, share across multiple Vizio instances or cache in coordinator
+catalog = await fetch_app_catalog()                  # falls back to bundled on failure
+availability = await fetch_app_availability()        # same fallback semantics
+
+# Pass at construction time …
+async with Vizio(host="...", auth_token="...", apps=catalog) as v:
+    ...
+
+# … or push fresh data post-construction (e.g., after coordinator refresh)
+v.set_app_catalog(catalog)
+v.set_app_availability(availability)
+```
+
+Once `set_app_catalog` or `set_app_availability` is called, the library treats
+that data as authoritative and skips its own auto-fetch for the lifetime of the
+instance.
+
+Pass `url=` to point at a regional mirror, internal proxy, or test fixture:
+
+```python
+catalog = await fetch_app_catalog(session=session, url="https://example.com/apps.json")
 ```
 
 ### Bulk state poll (`state_extended`)
