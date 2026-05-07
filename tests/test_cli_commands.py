@@ -868,10 +868,11 @@ class TestProbeCommand:
         assert result.exit_code == 0, result.output
         assert "crave360" in result.output
 
-    def test_probe_classifier_failure_propagates(
+    def test_probe_value_error_exits_1_with_message(
         self, runner: CliRunner, cfg_path: Path, monkeypatch
     ) -> None:
-        # ValueError raised when host has embedded port AND --port given.
+        # ValueError raised by the classifier (e.g., conflicting host+port)
+        # is caught and converted to a clean Exit(1) with the message printed.
         async def fake_classify(host, *, port=None, session=None, timeout=None):
             raise ValueError("host already includes a port")
 
@@ -884,7 +885,27 @@ class TestProbeCommand:
             "--port",
             "7345",
         )
-        assert result.exit_code != 0
+        assert result.exit_code == 1
+        assert "host already includes a port" in result.output
+
+    def test_probe_rejects_bare_host_without_port(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        # vizaio doesn't assume a default port. A bare IP would route to
+        # aiohttp's HTTPS default (443) and silently misclassify as TV.
+        # The CLI rejects this early with a clear message.
+        called = False
+
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            nonlocal called
+            called = True
+            return DeviceType.TV
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(runner, cfg_path, "probe", "192.0.2.50")
+        assert result.exit_code == 1
+        assert "no port" in result.output
+        assert called is False, "classifier should not have been invoked"
 
 
 # ---------------------------------------------------------------------------

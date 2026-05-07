@@ -356,6 +356,17 @@ def probe_cmd(
     output_format: FormatOption = None,
 ) -> None:
     """Classify a Vizio device by type (tv, soundbar, crave_go, crave360, crave_pro)."""
+    # Reject bare host without port early — vizaio doesn't assume a default
+    # port, so a bare IP would route to aiohttp's HTTPS default (443),
+    # the probe would silently fail, and the lenient classifier would
+    # return TV regardless of the actual device. Surface the missing port
+    # as a clear CLI error instead.
+    if port is None and ":" not in host:
+        _err.print(
+            f"host {host!r} has no port — pass IP:PORT or --port "
+            "(use 'vizaio discover' to find the right port)"
+        )
+        raise typer.Exit(code=1)
 
     async def _go() -> DeviceType:
         return await async_classify_device(host, port=port)
