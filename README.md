@@ -262,11 +262,13 @@ Exit code 1 if nothing was found.
 Classify a host as one of the five device types without pairing or any saved
 alias — useful when you don't yet know the device family.
 
+A port is required — vizaio doesn't assume a default. TVs typically listen
+on 7345, audio devices on 9000 (verify via `vizaio discover` first).
+
 ```bash
-vizaio probe 192.168.1.50          # bare IP, uses default port detection
-vizaio probe 192.168.1.50 --port 7345
-vizaio probe 192.168.1.50:7345     # port embedded in host
-vizaio probe 192.168.1.50:7345 --format json
+vizaio probe 192.168.1.50:7345                  # port embedded in host
+vizaio probe 192.168.1.50 --port 7345           # port as a separate flag
+vizaio probe 192.168.1.50:7345 --format json    # machine-readable output
 ```
 
 Output columns: `host`, `device_type`. `device_type` is one of `tv`,
