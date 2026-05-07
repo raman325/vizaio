@@ -6,7 +6,7 @@ from ._device import PairSession, Vizio
 from ._keys import RemoteKey
 from ._websocket import EventStream, SubscribeOptions
 from .apps import fetch_app_availability, fetch_app_catalog
-from .discovery import async_is_tv, is_crave_model
+from .discovery import async_is_tv, classify_crave_model, is_crave_model
 from .errors import (
     VizioAuthError,
     VizioBusyError,
@@ -85,6 +85,7 @@ __all__ = [
     "VizioResponseError",
     "VizioUnsupportedError",
     "async_is_tv",
+    "classify_crave_model",
     "fetch_app_availability",
     "fetch_app_catalog",
     "is_crave_model",

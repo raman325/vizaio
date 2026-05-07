@@ -25,6 +25,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from vizaio import (
+    DeviceType,
     DiscoveredDevice,
     Vizio,
     VizioAuthError,
@@ -32,6 +33,7 @@ from vizaio import (
 )
 from vizaio.discovery import (
     async_is_tv,
+    classify_crave_model,
     discover,
     discover_ssdp,
     discover_zeroconf,
@@ -389,6 +391,38 @@ class TestIsCraveModel:
 
     def test_empty_string_is_not_crave(self) -> None:
         assert is_crave_model("") is False
+
+
+class TestClassifyCraveModel:
+    """Maps a Crave-family model string to its specific
+    ``DeviceType`` variant. Precondition: caller must have verified
+    ``is_crave_model(model)`` first."""
+
+    def test_sp30_maps_to_crave_go(self) -> None:
+        assert classify_crave_model("SP30-E0") is DeviceType.CRAVE_GO
+
+    def test_sp50_maps_to_crave360(self) -> None:
+        assert classify_crave_model("SP50-D5") is DeviceType.CRAVE360
+
+    def test_sp70_maps_to_crave_pro(self) -> None:
+        assert classify_crave_model("SP70-D5") is DeviceType.CRAVE_PRO
+
+    def test_lowercase_resolves_correctly(self) -> None:
+        assert classify_crave_model("sp50-d5") is DeviceType.CRAVE360
+
+    def test_unknown_sp_variant_falls_back_to_crave_go(self) -> None:
+        # Lenient default: unknown SP* models default to the
+        # lowest-spec variant. Forecasted-wrong max_volume is safer
+        # when guessed low than guessed high.
+        assert classify_crave_model("SP99-X1") is DeviceType.CRAVE_GO
+
+    def test_non_crave_model_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match=r"not a Crave"):
+            classify_crave_model("V505-G9")
+
+    def test_empty_string_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match=r"not a Crave"):
+            classify_crave_model("")
 
 
 # ---------------------------------------------------------------------------

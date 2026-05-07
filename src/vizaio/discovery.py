@@ -481,3 +481,31 @@ def is_crave_model(model: str) -> bool:
     prefix. Case-insensitive. Empty string returns ``False``.
     """
     return model.upper().startswith("SP")
+
+
+def classify_crave_model(model: str) -> DeviceType:
+    """
+    Map a Crave-family model string to its specific ``DeviceType`` variant.
+
+    | Prefix (case-insensitive) | Returns                  |
+    |---------------------------|--------------------------|
+    | ``SP30*``                 | ``DeviceType.CRAVE_GO``  |
+    | ``SP50*``                 | ``DeviceType.CRAVE360``  |
+    | ``SP70*``                 | ``DeviceType.CRAVE_PRO`` |
+    | other ``SP*``             | ``DeviceType.CRAVE_GO``  |
+
+    **Precondition:** ``is_crave_model(model)`` must return ``True``.
+    Raises :class:`ValueError` otherwise — calling this on a TV or
+    soundbar model is a programmer error.
+    """
+    if not is_crave_model(model):
+        raise ValueError(f"{model!r} is not a Crave model")
+    upper = model.upper()
+    if upper.startswith("SP30"):
+        return DeviceType.CRAVE_GO
+    if upper.startswith("SP50"):
+        return DeviceType.CRAVE360
+    if upper.startswith("SP70"):
+        return DeviceType.CRAVE_PRO
+    # Unknown SP* variant: default to lowest-spec.
+    return DeviceType.CRAVE_GO
