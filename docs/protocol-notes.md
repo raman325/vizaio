@@ -692,6 +692,25 @@ power, and current app in one round trip instead of five. Reduces
 device load (relevant given saturation concerns from issue #175) and
 HA scan-interval pressure.
 
+**Device-vs-app field divergence:** real devices return a superset of
+what the official app deserializes. Live capture (V-series TV, fw
+3.720.x) carries `MEDIA_STATE`, `SCREEN_MODE`, `POWER_MODE`, and
+`URI` alongside the app's six known fields (`POWER_STATUS`, `APP_CURRENT`,
+`CURRENT_INPUT`, `DEVICE_NAME`, `URI`, `ERRORS`). The Android app's
+`ExtendedStateResponse` model silently drops the extras. We capture
+them anyway and expose `media_state` and `screen_mode` in
+`StateExtended`.
+
+`MEDIA_STATE` is **session state, not transport state** — empirically
+verified against YouTube, only two values surface: `MediaState::Playing`
+(any media session loaded) and `MediaState::Stopped` (no session,
+including SmartCast Home and any app's home screen). Pause, seek,
+ad interstitials, and seek-to-unloaded buffering all stay on
+`Playing`. Pyvizio's docstring claims the same two values empirically
+but doesn't document the pause/seek behavior. The C++ enum on the
+device probably has more values (`Buffering` is the obvious candidate)
+that no observed app surface triggers.
+
 ---
 
 ## 23. Direct `/state/device/*` endpoints for battery (Crave)

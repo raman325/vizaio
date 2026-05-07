@@ -371,9 +371,26 @@ class StateExtended:
     """e.g., ``"Full screen"``, ``"PIP"``."""
 
     media_state: str
-    """e.g., ``"MediaState::Stopped"``, ``"MediaState::Playing"``.
+    """Session-level playback indicator. Two values observed empirically:
+
+    - ``"MediaState::Playing"`` — a media session is loaded.
+    - ``"MediaState::Stopped"`` — no media session (SmartCast Home,
+      app's own home screen, app exited, etc.).
+
+    **This is session state, not transport state.** Pause, seek, ad
+    interstitials, and seek-to-unloaded buffering all stay on
+    ``Playing`` — the field flips on "is a session loaded" not "are
+    bytes advancing right now." Empirically verified against YouTube
+    on a V-series TV; firmware 3.720.x. The official Vizio Android app
+    doesn't deserialize this field at all (its ``ExtendedStateResponse``
+    model only carries ``POWER_STATUS``, ``APP_CURRENT``,
+    ``CURRENT_INPUT``, ``DEVICE_NAME``, ``URI``, ``ERRORS``), so there
+    is no canonical client-side enum to consult — the device's C++
+    enum may have additional values that no observed app surface
+    triggers.
+
     Vizio uses C++-style namespace prefixes — caller usually wants
-    ``.split("::", 1)[1]``."""
+    ``.split("::", 1)[1]`` to drop the ``MediaState::`` prefix."""
 
     device_name: str
     """User-set TV name (e.g., ``"Test Living Room"``)."""
