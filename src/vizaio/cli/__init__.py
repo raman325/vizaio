@@ -34,7 +34,7 @@ from .. import (
     VizioError,
     VizioInvalidInputError,
 )
-from ..discovery import discover
+from ..discovery import async_classify_device, discover
 from ._config import Config, DeviceRecord
 from ._format import (
     OutputFormat,
@@ -334,6 +334,51 @@ def discover_cmd(
     if not rows:
         _err.print("No Vizio devices found.")
         raise typer.Exit(code=1)
+    _print(render_rows(rows, fmt=_fmt(ctx, output_format)))
+
+
+# ---------------------------------------------------------------------------
+# `vizaio probe`
+# ---------------------------------------------------------------------------
+
+
+@app.command("probe")
+def probe_cmd(
+    ctx: typer.Context,
+    host: Annotated[
+        str,
+        typer.Argument(help="Device IP or IP:PORT to classify."),
+    ],
+    port: Annotated[
+        int | None,
+        typer.Option("--port", help="Port override (use when host is a bare IP)."),
+    ] = None,
+    output_format: FormatOption = None,
+) -> None:
+    """Classify a Vizio device by type (tv, soundbar, crave_go, crave360, crave_pro)."""
+    # Reject bare host without port early — vizaio doesn't assume a default
+    # port, so a bare IP would route to aiohttp's HTTPS default (443),
+    # the probe would silently fail, and the lenient classifier would
+    # return TV regardless of the actual device. Surface the missing port
+    # as a clear CLI error instead.
+    if port is None and ":" not in host:
+        _err.print(
+            f"host {host!r} has no port — pass IP:PORT or --port "
+            "(use 'vizaio discover' to find the right port)"
+        )
+        raise typer.Exit(code=1)
+
+    async def _go() -> DeviceType:
+        return await async_classify_device(host, port=port)
+
+    try:
+        device_type = asyncio.run(_go())
+    except ValueError as e:
+        _err.print(str(e))
+        raise typer.Exit(code=1) from e
+
+    effective_host = host if port is None else f"{host}:{port}"
+    rows = [{"host": effective_host, "device_type": device_type.value}]
     _print(render_rows(rows, fmt=_fmt(ctx, output_format)))
 
 

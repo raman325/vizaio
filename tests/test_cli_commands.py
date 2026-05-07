@@ -776,6 +776,139 @@ class TestDiscoverCommand:
 
 
 # ---------------------------------------------------------------------------
+# `vizaio probe` — mocked at the async_classify_device boundary
+# ---------------------------------------------------------------------------
+
+
+class TestProbeCommand:
+    def test_probe_returns_classification(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            return DeviceType.TV
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.50:7345",
+            "--format",
+            "tsv",
+        )
+        assert result.exit_code == 0, result.output
+        assert "192.0.2.50:7345" in result.output
+        assert "tv" in result.output
+
+    def test_probe_with_port_kwarg(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        captured: dict = {}
+
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            captured["host"] = host
+            captured["port"] = port
+            return DeviceType.TV
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.50",
+            "--port",
+            "7345",
+            "--format",
+            "tsv",
+        )
+        assert result.exit_code == 0, result.output
+        assert captured["host"] == "192.0.2.50"
+        assert captured["port"] == 7345
+
+    def test_probe_json_output(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        import json as json_mod
+
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            return DeviceType.SOUNDBAR
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.60:9000",
+            "--format",
+            "json",
+        )
+        assert result.exit_code == 0, result.output
+        data = json_mod.loads(result.output)
+        # JSON renders a list of rows.
+        assert isinstance(data, list)
+        row = data[0]
+        assert row["host"] == "192.0.2.60:9000"
+        assert row["device_type"] == "soundbar"
+
+    def test_probe_returns_crave_subtypes(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            return DeviceType.CRAVE360
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.70:9000",
+            "--format",
+            "tsv",
+        )
+        assert result.exit_code == 0, result.output
+        assert "crave360" in result.output
+
+    def test_probe_value_error_exits_1_with_message(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        # ValueError raised by the classifier (e.g., conflicting host+port)
+        # is caught and converted to a clean Exit(1) with the message printed.
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            raise ValueError("host already includes a port")
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(
+            runner,
+            cfg_path,
+            "probe",
+            "192.0.2.50:7345",
+            "--port",
+            "7345",
+        )
+        assert result.exit_code == 1
+        assert "host already includes a port" in result.output
+
+    def test_probe_rejects_bare_host_without_port(
+        self, runner: CliRunner, cfg_path: Path, monkeypatch
+    ) -> None:
+        # vizaio doesn't assume a default port. A bare IP would route to
+        # aiohttp's HTTPS default (443) and silently misclassify as TV.
+        # The CLI rejects this early with a clear message.
+        called = False
+
+        async def fake_classify(host, *, port=None, session=None, timeout=None):
+            nonlocal called
+            called = True
+            return DeviceType.TV
+
+        monkeypatch.setattr(cli_module, "async_classify_device", fake_classify)
+        result = _invoke(runner, cfg_path, "probe", "192.0.2.50")
+        assert result.exit_code == 1
+        assert "no port" in result.output
+        assert called is False, "classifier should not have been invoked"
+
+
+# ---------------------------------------------------------------------------
 # `vizaio pair` — mocked at the HTTP boundary
 # ---------------------------------------------------------------------------
 
