@@ -540,7 +540,10 @@ async def async_classify_device(
     """
     if await async_is_tv(host, port=port, session=session, timeout=timeout):
         return DeviceType.TV
-    if port is not None and ":" not in host:
+    if port is not None:
+        # async_is_tv (called above) raises ValueError if host already
+        # includes a port — by the time we get here, host is guaranteed
+        # bare when port is given.
         host = f"{host}:{port}"
     async with Vizio(
         host,
@@ -548,6 +551,10 @@ async def async_classify_device(
         session=session,
         timeout=timeout,
     ) as device:
+        # Read the raw Response so we can extract SYSTEM_INFO.MODEL_NAME
+        # (the canonical model identifier) — Vizio.get_model_name() returns
+        # the friendly NAME field for non-TV settings roots, which would
+        # break Crave-prefix matching.
         try:
             response = await device._request(Endpoint.DEVICE_INFO)
         except VizioError:

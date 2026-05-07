@@ -20,6 +20,7 @@ Implementation lands in #27. Tests fail until then.
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -551,6 +552,39 @@ class TestAsyncClassifyDevice:
         ):
             result = await async_classify_device("1.2.3.4:9000")
         assert result is DeviceType.SOUNDBAR
+
+    async def test_port_kwarg_forwards_to_layers(self) -> None:
+        # Verify port=N is incorporated into the host both when probing
+        # (layer 1) and when fetching deviceinfo (layer 2). The
+        # observable: ping_auth sees host="1.2.3.4:9000", _request sees
+        # host="1.2.3.4:9000".
+        captured: list[str] = []
+
+        async def capture_ping(self: Vizio) -> None:
+            captured.append(self.host)
+
+        async def capture_request(self: Vizio, endpoint: Any) -> Response:
+            captured.append(self.host)
+            return Response.from_json(
+                {
+                    "ITEMS": [
+                        {
+                            "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP30-E0"}},
+                            "CNAME": "deviceinfo",
+                        }
+                    ],
+                    "STATUS": {"RESULT": "SUCCESS"},
+                }
+            )
+
+        with (
+            patch.object(Vizio, "ping_auth", new=capture_ping),
+            patch.object(Vizio, "_request", new=capture_request),
+        ):
+            result = await async_classify_device("1.2.3.4", port=9000)
+
+        assert result is DeviceType.CRAVE_GO
+        assert captured == ["1.2.3.4:9000", "1.2.3.4:9000"]
 
 
 # ---------------------------------------------------------------------------
