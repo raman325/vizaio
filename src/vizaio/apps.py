@@ -144,6 +144,7 @@ def _parse_catalog(raw: Any) -> tuple[AppRecord, ...]:
 
 
 def _parse_country(raw: Any) -> tuple[str, ...]:
+    """Coerce a catalog ``country`` value to a tuple; default ``("*",)`` worldwide."""
     if isinstance(raw, list):
         return tuple(str(c) for c in raw)
     return ("*",)
@@ -277,6 +278,7 @@ def _parse_payload(raw: Any) -> ChipsetPayload | None:
 
 
 def _load_bundled_json(filename: str) -> Any:
+    """Load a JSON file from ``vizaio/data/``; ``None`` if missing or unparseable."""
     data_path = Path(__file__).parent / "data" / filename
     if not data_path.exists():
         _LOGGER.debug("No bundled %s at %s", filename, data_path)
@@ -520,6 +522,7 @@ def _availability_id_for_config(
 
 
 def _config_matches(a: AppConfig, b: AppConfig) -> bool:
+    """Compare :class:`AppConfig` for catalog identity (NAME_SPACE 2/4 equivalent)."""
     if a.app_id != b.app_id:
         return False
     if a.name_space == b.name_space:
@@ -592,6 +595,7 @@ async def _fetch_json(
     timeout: float,
     label: str,
 ) -> Any:
+    """GET ``url`` and parse JSON; swallow errors to ``None`` (bundled fallback)."""
     own_session = session is None
     s = session or aiohttp.ClientSession()
     try:

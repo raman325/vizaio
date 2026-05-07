@@ -141,6 +141,7 @@ class Vizio:
         apps: tuple[AppRecord, ...] | None = None,
         availability: tuple[AppAvailability, ...] | None = None,
     ) -> None:
+        """Configure the client; pass exactly one of ``device_type`` or ``profile``."""
         if profile is not None and device_type is not None:
             raise ValueError("specify exactly one of device_type or profile")
         if profile is None:
@@ -190,9 +191,11 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def __aenter__(self) -> Self:
+        """Enter the async context manager (no-op; HTTP session is lazy)."""
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
+        """Close the underlying HTTP client on exit."""
         await self.aclose()
 
     async def aclose(self) -> None:
@@ -204,10 +207,12 @@ class Vizio:
 
     @property
     def host(self) -> str:
+        """The host string (``IP`` or ``IP:PORT``) this client targets."""
         return self._host
 
     @property
     def profile(self) -> DeviceProfile:
+        """The :class:`DeviceProfile` driving capability + keymap behavior."""
         return self._profile
 
     @property
@@ -239,14 +244,17 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def get_power_state(self) -> bool:
+        """Return ``True`` if the device's screen/output is on."""
         response = await self._request(Endpoint.POWER_MODE)
         item = response.require_item("power_mode")
         return bool(item.value)
 
     async def power_on(self) -> None:
+        """Send the power-on key."""
         await self.send_key("POW_ON")
 
     async def power_off(self) -> None:
+        """Send the power-off key."""
         await self.send_key("POW_OFF")
 
     async def power_toggle(self) -> None:
@@ -265,16 +273,20 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def get_volume(self) -> int:
+        """Return the device's current raw volume (range depends on profile)."""
         info = await self.get_setting("audio", "volume")
         return int(info.value)
 
     async def volume_up(self, steps: int = 1) -> None:
+        """Send ``steps`` volume-up keypresses in one PUT (default 1)."""
         await self._send_repeated_key("VOL_UP", steps)
 
     async def volume_down(self, steps: int = 1) -> None:
+        """Send ``steps`` volume-down keypresses in one PUT (default 1)."""
         await self._send_repeated_key("VOL_DOWN", steps)
 
     async def is_muted(self) -> bool:
+        """Return ``True`` if the device's mute setting is on."""
         info = await self.get_setting("audio", "mute")
         return str(info.value).lower() == "on"
 
@@ -321,6 +333,7 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def get_inputs(self) -> list[InputInfo]:
+        """List all inputs on the device with ``is_current`` populated."""
         if not self._profile.has_inputs:
             raise VizioUnsupportedError(
                 f"{self._profile.name} does not expose individual inputs"
@@ -342,6 +355,7 @@ class Vizio:
         return parse_inputs(inputs_response, current_input_name=current_meta_name)
 
     async def get_current_input(self) -> str:
+        """Return the meta_name of the active input (e.g., ``"SMARTCAST"``)."""
         response = await self._request(Endpoint.CURRENT_INPUT)
         return parse_current_input(response)
 
@@ -424,6 +438,7 @@ class Vizio:
         await self._client.request_spec(spec_with_put, body=body)
 
     async def next_input(self) -> None:
+        """Cycle to the next input (sends the ``INPUT_NEXT`` remote key)."""
         await self.send_key("INPUT_NEXT")
 
     # ------------------------------------------------------------------
@@ -444,10 +459,12 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def get_setting_types(self) -> list[str]:
+        """Return the top-level setting categories (e.g., audio, picture)."""
         response = await self._request(Endpoint.SETTINGS)
         return parse_setting_types(response)
 
     async def get_settings(self, setting_type: str) -> dict[str, SettingInfo]:
+        """Return all settings under ``setting_type``, keyed by name, with options."""
         # Fetch values + options in parallel-ish (sequentially, through
         # the semaphore — but two GETs is the unavoidable shape).
         values_response = await self._request(
@@ -543,6 +560,7 @@ class Vizio:
     async def _put_setting(
         self, setting_type: str, name: str, value: int | str, hashval: int
     ) -> None:
+        """Issue the raw MODIFY PUT for one setting leaf (no GET, no validation)."""
         body = _payloads.write_setting(value=value, hashval=hashval)
         spec = resolve(Endpoint.SETTINGS, self._profile)
         spec_with_put = replace(spec, method="PUT")
@@ -614,6 +632,7 @@ class Vizio:
         return parse_state_extended(payload)
 
     async def get_current_app_config(self) -> AppConfig | None:
+        """Return the active app's launch config, or ``None`` when no app is running."""
         if not self._profile.has_apps:
             raise VizioUnsupportedError(
                 f"{self._profile.name} does not support SmartCast apps"
@@ -805,6 +824,7 @@ class Vizio:
         return await self._get_firmware()
 
     async def launch_app_config(self, config: AppConfig) -> None:
+        """Launch a specific :class:`AppConfig` (low-level; see :meth:`launch_app`)."""
         if not self._profile.has_apps:
             raise VizioUnsupportedError(
                 f"{self._profile.name} does not support SmartCast apps"
@@ -842,18 +862,22 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def get_model_name(self) -> str:
+        """Return the display model (TV ``MODEL_NAME``; non-TV friendly ``NAME``)."""
         response = await self._request(Endpoint.DEVICE_INFO)
         return parse_model_name(
             response, settings_root=self._profile.settings_root.value
         )
 
     async def get_esn(self) -> str:
+        """Return the device's ESN; empty string if not exposed."""
         return await self._identity_field("esn")
 
     async def get_serial_number(self) -> str:
+        """Return the device's hardware serial number; empty string if not exposed."""
         return await self._identity_field("serial_number")
 
     async def get_version(self) -> str:
+        """Return the device's firmware/version string; empty if not exposed."""
         # Modern firmware (~3.7+) exposes the version under cname='firmware'
         # in the aggregate; older firmware exposes it under cname='version'
         # at a per-field child path. _identity_field tries both forms.
@@ -927,6 +951,7 @@ class Vizio:
         """
 
         async def _safe(coro: Any, default: Any) -> Any:
+            """Await ``coro``, returning ``default`` on any :class:`VizioError`."""
             try:
                 return await coro
             except VizioError:
@@ -955,12 +980,14 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def get_battery_level(self) -> int:
+        """Return the device's battery level percentage (Crave only)."""
         if not self._profile.has_battery:
             raise VizioUnsupportedError(f"{self._profile.name} does not have a battery")
         response = await self._request(Endpoint.BATTERY_LEVEL)
         return int(response.require_item("battery_level").value)
 
     async def get_charging_status(self) -> ChargingStatus:
+        """Return the device's :class:`ChargingStatus` (Crave only)."""
         if not self._profile.has_battery:
             raise VizioUnsupportedError(f"{self._profile.name} does not have a battery")
         response = await self._request(Endpoint.CHARGING_STATUS)
@@ -1084,6 +1111,7 @@ class Vizio:
     # ------------------------------------------------------------------
 
     async def _request(self, endpoint: Endpoint, *, path_suffix: str = "") -> Response:
+        """Resolve ``endpoint`` against this profile, check auth, issue the GET."""
         spec = resolve(endpoint, self._profile)
         self._check_auth(spec.auth)
         return await self._client.request_spec(spec, path_suffix=path_suffix)
@@ -1124,6 +1152,7 @@ class Vizio:
             remaining -= chunk_size
 
     async def _send_key_codes(self, codes: Sequence[tuple[int, int]]) -> None:
+        """PUT one ``KEYLIST`` payload of ``(codeset, code)`` pairs."""
         body = _payloads.key_press(codes)
         await self._client.request_spec(
             resolve(Endpoint.KEY_PRESS, self._profile),
@@ -1317,6 +1346,7 @@ class PairSession:
         device_id: str,
         device_name: str,
     ) -> None:
+        """Stash the pairing identity; the handshake fires on ``__aenter__``."""
         self._vizio = vizio
         self._device_id = device_id
         self._device_name = device_name
@@ -1325,11 +1355,13 @@ class PairSession:
 
     @property
     def challenge(self) -> PairChallenge:
+        """Return the :class:`PairChallenge`; raises before context entry."""
         if self._challenge is None:
             raise RuntimeError("PairSession not entered yet — use 'async with'")
         return self._challenge
 
     async def __aenter__(self) -> Self:
+        """Begin the pairing handshake; auto-cancels if the begin call itself raises."""
         try:
             self._challenge = await self._vizio.begin_pair(
                 device_id=self._device_id, device_name=self._device_name
@@ -1342,6 +1374,7 @@ class PairSession:
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
+        """Cancel the pairing on exit unless ``complete()`` already finalized it."""
         if self._completed:
             return
         # cancel_pair is best-effort — it swallows VizioError internally

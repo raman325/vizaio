@@ -419,6 +419,13 @@ def _is_input_visible(item: Item) -> bool:
 
 
 def _bool_or_default(value: Any, *, default: bool) -> bool:
+    """
+    Coerce a wire-string or numeric value to bool, falling back to ``default``.
+
+    Recognized truthy strings: ``"true"``, ``"yes"``, ``"on"``, ``"1"``
+    (case-insensitive). ``None`` or any unrecognized type returns
+    ``default``.
+    """
     if value is None:
         return default
     if isinstance(value, bool):

@@ -212,6 +212,7 @@ def _item_from_dict(raw: Mapping[str, Any]) -> Item:
 
 
 def _optional_int(value: Any) -> int | None:
+    """Coerce ``value`` to ``int``, returning ``None`` on missing or unparseable."""
     if value is None:
         return None
     try:
@@ -221,6 +222,7 @@ def _optional_int(value: Any) -> int | None:
 
 
 def _optional_str(value: Any) -> str | None:
+    """Coerce ``value`` to ``str``; ``None`` only when ``value`` is ``None``."""
     if value is None:
         return None
     return str(value)
