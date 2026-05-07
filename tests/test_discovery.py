@@ -32,6 +32,7 @@ from vizaio import (
     VizioConnectionError,
 )
 from vizaio.discovery import (
+    async_classify_device,
     async_is_tv,
     classify_crave_model,
     discover,
@@ -39,6 +40,7 @@ from vizaio.discovery import (
     discover_zeroconf,
     is_crave_model,
 )
+from vizaio.wire import Response
 
 # ---------------------------------------------------------------------------
 # Zeroconf
@@ -423,6 +425,132 @@ class TestClassifyCraveModel:
     def test_empty_string_raises_value_error(self) -> None:
         with pytest.raises(ValueError, match=r"not a Crave"):
             classify_crave_model("")
+
+
+class TestAsyncClassifyDevice:
+    """Composer that walks the three classification layers. Returns
+    ``DeviceType.TV`` when the auth probe says TV. Otherwise fetches
+    deviceinfo unauthenticated and reads ``SYSTEM_INFO.MODEL_NAME``
+    to refine into SOUNDBAR vs CRAVE_*."""
+
+    async def test_tv_short_circuits_at_layer_1(self) -> None:
+        # async_is_tv → True means we don't hit deviceinfo at all.
+        with patch.object(
+            Vizio,
+            "ping_auth",
+            new=AsyncMock(side_effect=VizioAuthError("REQUIRES_PAIRING")),
+        ):
+            result = await async_classify_device("1.2.3.4:7345")
+        assert result is DeviceType.TV
+
+    async def test_soundbar_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SB36514-G6"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.SOUNDBAR
+
+    async def test_crave_go_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP30-E0"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.CRAVE_GO
+
+    async def test_crave_360_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP50-D5"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.CRAVE360
+
+    async def test_crave_pro_path(self) -> None:
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [
+                    {
+                        "VALUE": {"SYSTEM_INFO": {"MODEL_NAME": "SP70-D5"}},
+                        "CNAME": "deviceinfo",
+                    }
+                ],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.CRAVE_PRO
+
+    async def test_deviceinfo_fetch_failure_falls_back_to_soundbar(
+        self,
+    ) -> None:
+        # async_is_tv → False, but the deviceinfo fetch raises.
+        # Lenient default: SOUNDBAR (we know it's not a TV from layer 1).
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(
+                Vizio,
+                "_request",
+                new=AsyncMock(side_effect=VizioConnectionError("dropped")),
+            ),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.SOUNDBAR
+
+    async def test_deviceinfo_with_empty_model_falls_back_to_soundbar(
+        self,
+    ) -> None:
+        # async_is_tv → False, deviceinfo returns but SYSTEM_INFO is missing.
+        deviceinfo = Response.from_json(
+            {
+                "ITEMS": [{"VALUE": {}, "CNAME": "deviceinfo"}],
+                "STATUS": {"RESULT": "SUCCESS"},
+            }
+        )
+        with (
+            patch.object(Vizio, "ping_auth", new=AsyncMock(return_value=None)),
+            patch.object(Vizio, "_request", new=AsyncMock(return_value=deviceinfo)),
+        ):
+            result = await async_classify_device("1.2.3.4:9000")
+        assert result is DeviceType.SOUNDBAR
 
 
 # ---------------------------------------------------------------------------
