@@ -95,7 +95,7 @@ vizaio app launch Netflix
 Use the alias explicitly when you have more than one device:
 
 ```bash
-vizaio --device kitchen-bar volume mute
+vizaio --device kitchen-bar mute on
 ```
 
 ---
