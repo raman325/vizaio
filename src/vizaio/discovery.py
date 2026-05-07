@@ -28,8 +28,8 @@ import aiohttp
 
 from ._device import Vizio
 from .endpoints import Endpoint
-from .errors import VizioError
-from .parse import parse_system_info_model_name
+from .errors import VizioError, VizioResponseError
+from .parse import parse_device_info, parse_system_info_model_name
 from .types import DeviceType, DiscoveredDevice
 
 if TYPE_CHECKING:
@@ -523,43 +523,53 @@ async def async_classify_device(
     """
     Classify ``host`` into one of the five :class:`DeviceType` values.
 
-    Walks the three classification layers:
+    Issues a single unauthenticated GET to ``Endpoint.DEVICE_INFO`` and
+    classifies based on:
 
-    1. :func:`async_is_tv` — TV vs audio via auth-asymmetry probe.
-    2. :func:`is_crave_model` — soundbar vs Crave family by
-       ``MODEL_NAME`` prefix.
-    3. :func:`classify_crave_model` — specific Crave variant.
+    - ``SETTINGS_ROOT == "tv_settings"`` → :attr:`DeviceType.TV`.
+    - ``SETTINGS_ROOT == "audio_settings"`` → refines via
+      ``SYSTEM_INFO.MODEL_NAME`` and the SP-prefix mapping in
+      :func:`classify_crave_model`; falls through to
+      :attr:`DeviceType.SOUNDBAR` when the model isn't a Crave.
 
-    Lenient on failure: an unreachable host returns ``DeviceType.TV``
-    (matching :func:`async_is_tv`); a reachable audio host whose
-    deviceinfo fetch fails returns ``DeviceType.SOUNDBAR`` (we already
-    established it's not a TV at step 1).
+    **Strict on failure:** raises :class:`VizioError` (typically
+    :class:`VizioConnectionError`) if the host is unreachable, and
+    :class:`VizioResponseError` if the device responds but the payload
+    is missing ``SETTINGS_ROOT``. This is deliberate contrast to
+    :func:`async_is_tv`, which is lenient by design (matches HA pyvizio
+    drop-in semantics). Callers that want a lenient binary answer
+    should use :func:`async_is_tv` instead.
 
     ``host`` may include a port (``"1.2.3.4:7345"``) or accept one via
     the ``port`` kwarg — same shape as :func:`async_is_tv`.
     """
-    if await async_is_tv(host, port=port, session=session, timeout=timeout):
-        return DeviceType.TV
     if port is not None:
-        # async_is_tv (called above) raises ValueError if host already
-        # includes a port — by the time we get here, host is guaranteed
-        # bare when port is given.
+        if ":" in host:
+            raise ValueError(
+                "host already includes a port; pass `port` only when host is bare"
+            )
         host = f"{host}:{port}"
+    # SOUNDBAR profile lets us hit DEVICE_INFO without auth — the endpoint
+    # is unauthenticated for every profile, but the constructor needs a
+    # device_type and SOUNDBAR's profile has no auth requirement.
     async with Vizio(
         host,
         device_type=DeviceType.SOUNDBAR,
         session=session,
         timeout=timeout,
     ) as device:
-        # Read the raw Response so we can extract SYSTEM_INFO.MODEL_NAME
-        # (the canonical model identifier) — Vizio.get_model_name() returns
-        # the friendly NAME field for non-TV settings roots, which would
-        # break Crave-prefix matching.
-        try:
-            response = await device._request(Endpoint.DEVICE_INFO)
-        except VizioError:
-            return DeviceType.SOUNDBAR
-        model = parse_system_info_model_name(response)
+        response = await device._request(Endpoint.DEVICE_INFO)
+    info = parse_device_info(response)
+    settings_root = info.get("settings_root", "")
+    if not settings_root:
+        raise VizioResponseError(
+            "deviceinfo response missing SETTINGS_ROOT — cannot classify"
+        )
+    if settings_root == "tv_settings":
+        return DeviceType.TV
+    # Audio device — refine to the specific Crave variant if MODEL_NAME
+    # matches the SP-prefix; otherwise fall through to SOUNDBAR.
+    model = parse_system_info_model_name(response)
     if is_crave_model(model):
         return classify_crave_model(model)
     return DeviceType.SOUNDBAR
