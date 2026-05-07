@@ -141,7 +141,12 @@ class Vizio:
         apps: tuple[AppRecord, ...] | None = None,
         availability: tuple[AppAvailability, ...] | None = None,
     ) -> None:
-        """Configure the client; pass at most one of ``device_type`` or ``profile``; defaults to ``DeviceType.TV`` when both are omitted."""
+        """
+        Configure the client.
+
+        Pass at most one of ``device_type`` or ``profile``. When both are
+        omitted, defaults to ``DeviceType.TV.profile``.
+        """
         if profile is not None and device_type is not None:
             raise ValueError("specify at most one of device_type or profile")
         if profile is None:
