@@ -656,11 +656,45 @@ def power_off(ctx: typer.Context) -> None:
     _exec(ctx, lambda v: v.power_off())
 
 
+@power_app.command("toggle")
+def power_toggle(ctx: typer.Context) -> None:
+    """Press the power button. Flips state regardless of what it was."""
+    _exec(ctx, lambda v: v.power_toggle())
+
+
+# ---------------------------------------------------------------------------
+# `vizaio mute ...`
+# ---------------------------------------------------------------------------
+
+mute_app = typer.Typer(name="mute", help="Mute control.")
+app.add_typer(mute_app)
+
+
+@mute_app.command("on")
+def mute_on(ctx: typer.Context) -> None:
+    """Mute the device. Idempotent — reads state first, no-op if already muted."""
+    _exec(ctx, lambda v: v.mute())
+
+
+@mute_app.command("off")
+def mute_off(ctx: typer.Context) -> None:
+    """Unmute the device. Idempotent — reads state first, no-op if already unmuted."""
+    _exec(ctx, lambda v: v.unmute())
+
+
+@mute_app.command("toggle")
+def mute_toggle(ctx: typer.Context) -> None:
+    """Press the mute button. One round trip vs. on/off (which read state first)."""
+    _exec(ctx, lambda v: v.mute_toggle())
+
+
 # ---------------------------------------------------------------------------
 # `vizaio volume ...`
 # ---------------------------------------------------------------------------
 
-volume_app = typer.Typer(name="volume", help="Volume + mute control.")
+volume_app = typer.Typer(
+    name="volume", help="Volume control. (For mute, see ``vizaio mute``.)"
+)
 app.add_typer(volume_app)
 
 
@@ -682,16 +716,6 @@ def volume_down(
     ctx: typer.Context, steps: Annotated[int, typer.Option("--steps")] = 1
 ) -> None:
     _exec(ctx, lambda v: v.volume_down(steps=steps))
-
-
-@volume_app.command("mute")
-def volume_mute(ctx: typer.Context) -> None:
-    _exec(ctx, lambda v: v.mute())
-
-
-@volume_app.command("unmute")
-def volume_unmute(ctx: typer.Context) -> None:
-    _exec(ctx, lambda v: v.unmute())
 
 
 @volume_app.command("max")

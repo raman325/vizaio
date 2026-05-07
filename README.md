@@ -312,6 +312,15 @@ except `--pin`, making it trivially scriptable.
 vizaio power state           # 'on' or 'off'
 vizaio power on
 vizaio power off
+vizaio power toggle          # press the power button — flips whatever state
+```
+
+### `vizaio mute`
+
+```bash
+vizaio mute on               # idempotent — reads state, no-op if already muted
+vizaio mute off              # idempotent — reads state, no-op if already unmuted
+vizaio mute toggle           # one round trip — presses MUTE_TOGGLE blindly
 ```
 
 ### `vizaio volume`
@@ -321,8 +330,6 @@ vizaio volume level          # current value (0..max)
 vizaio volume max            # the device's max-volume scale
 vizaio volume up --steps 3
 vizaio volume down
-vizaio volume mute
-vizaio volume unmute
 ```
 
 ### `vizaio input` (TV-only)
@@ -632,6 +639,7 @@ These are the same primitives the CLI's `pair begin` / `pair complete` /
 state: bool = await v.get_power_state()
 await v.power_on()
 await v.power_off()
+await v.power_toggle()                  # press the power button (flips state)
 ```
 
 ### Volume and mute
@@ -642,9 +650,13 @@ await v.volume_up(steps=3)              # send 3 KEYPRESSes in one PUT
 await v.volume_down(steps=1)
 
 muted: bool = await v.is_muted()
-await v.mute()
-await v.unmute()
+await v.mute()                          # idempotent: reads state, sends toggle on mismatch
+await v.unmute()                        # idempotent: same pattern
+await v.mute_toggle()                   # one round trip: press MUTE_TOGGLE blindly
 ```
+
+`mute()` and `unmute()` are idempotent at the cost of an extra read. `mute_toggle()`
+is half the round trips and matches the device's actual remote-button semantics.
 
 `get_volume()` returns the device's raw value. The volume scale **differs by
 device family** — see [Device-type quirks](#device-type-quirks). Divide by

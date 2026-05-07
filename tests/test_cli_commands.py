@@ -245,6 +245,14 @@ class TestPowerCommands:
         result = _invoke(runner, saved_tv, "power", "off")
         assert result.exit_code == 0
 
+    def test_toggle(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        # ``power toggle`` sends POW_TOGGLE — single PUT, no state read.
+        mock_aio.put(_tv_url(Endpoint.KEY_PRESS), payload=make_key_press_response())
+        result = _invoke(runner, saved_tv, "power", "toggle")
+        assert result.exit_code == 0, result.output
+
 
 # ---------------------------------------------------------------------------
 # Volume / mute
@@ -285,7 +293,22 @@ class TestVolumeCommands:
         result = _invoke(runner, saved_tv, "volume", "down")
         assert result.exit_code == 0
 
-    def test_mute_when_already_muted(
+    def test_max_uses_profile_no_http(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        # ``volume max`` is a static profile lookup — must not hit HTTP.
+        result = _invoke(runner, saved_tv, "volume", "max", "--format", "plain")
+        assert result.exit_code == 0
+        assert int(result.output.strip()) > 0
+
+
+# ---------------------------------------------------------------------------
+# Mute (its own sub-typer; parallel to ``power``)
+# ---------------------------------------------------------------------------
+
+
+class TestMuteCommands:
+    def test_on_when_already_muted(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
         # mute() probes audio.mute first; if already 'On', it no-ops.
@@ -295,10 +318,10 @@ class TestVolumeCommands:
                 [("mute", "On", "T_LIST_V1", 1)],
             ),
         )
-        result = _invoke(runner, saved_tv, "volume", "mute")
-        assert result.exit_code == 0
+        result = _invoke(runner, saved_tv, "mute", "on")
+        assert result.exit_code == 0, result.output
 
-    def test_unmute_when_already_unmuted(
+    def test_off_when_already_unmuted(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
         mock_aio.get(
@@ -307,16 +330,17 @@ class TestVolumeCommands:
                 [("mute", "Off", "T_LIST_V1", 1)],
             ),
         )
-        result = _invoke(runner, saved_tv, "volume", "unmute")
-        assert result.exit_code == 0
+        result = _invoke(runner, saved_tv, "mute", "off")
+        assert result.exit_code == 0, result.output
 
-    def test_max_uses_profile_no_http(
+    def test_toggle(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
-        # ``volume max`` is a static profile lookup — must not hit HTTP.
-        result = _invoke(runner, saved_tv, "volume", "max", "--format", "plain")
-        assert result.exit_code == 0
-        assert int(result.output.strip()) > 0
+        # ``mute toggle`` sends MUTE_TOGGLE — single PUT, no state read
+        # (cheaper than on/off, which read is_muted first).
+        mock_aio.put(_tv_url(Endpoint.KEY_PRESS), payload=make_key_press_response())
+        result = _invoke(runner, saved_tv, "mute", "toggle")
+        assert result.exit_code == 0, result.output
 
 
 # ---------------------------------------------------------------------------
