@@ -187,6 +187,7 @@ def _decode_int_property(value: Any) -> int | None:
 
 
 def _decode_property(value: Any) -> str:
+    """Decode a TXT-record property as UTF-8; fall back to hex on decode failure."""
     if isinstance(value, bytes):
         try:
             return value.decode("utf-8")
@@ -250,6 +251,7 @@ class _SsdpResponse:
     __slots__ = ("location",)
 
     def __init__(self, location: str | None) -> None:
+        """Store the response's ``LOCATION`` header (the device's XML-desc URL)."""
         self.location = location
 
 
@@ -286,9 +288,11 @@ class _SsdpProtocol(asyncio.DatagramProtocol):
     """Collects ``LOCATION`` headers from M-SEARCH responses."""
 
     def __init__(self) -> None:
+        """Initialize the empty list of collected ``LOCATION`` header values."""
         self.locations: list[str] = []
 
     def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
+        """Parse one M-SEARCH datagram; append its ``LOCATION`` (if any) to the list."""
         for line in data.decode(errors="replace").splitlines():
             if line.lower().startswith("location:"):
                 self.locations.append(line.split(":", 1)[1].strip())
@@ -357,6 +361,7 @@ def _find_first(root: ElementTree.Element, tag: str) -> ElementTree.Element | No
 
 
 def _find_text(parent: ElementTree.Element, tag: str) -> str:
+    """Return the first child element's text (stripped), empty string if absent."""
     el = _find_first(parent, tag)
     return (el.text or "").strip() if el is not None else ""
 
@@ -390,6 +395,7 @@ async def discover(
     """
 
     async def _safe_zeroconf() -> list[DiscoveredDevice]:
+        """Wrap :func:`discover_zeroconf`; ``[]`` if the extra isn't installed."""
         try:
             return await discover_zeroconf(timeout=timeout)
         except ImportError as e:
@@ -397,6 +403,7 @@ async def discover(
             return []
 
     async def _safe_ssdp() -> list[DiscoveredDevice]:
+        """Wrap :func:`discover_ssdp`; returns ``[]`` when disabled or on any error."""
         if not include_ssdp:
             return []
         try:

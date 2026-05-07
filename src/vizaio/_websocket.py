@@ -162,6 +162,7 @@ class EventStream:
         options: SubscribeOptions,
         session: aiohttp.ClientSession | None = None,
     ) -> None:
+        """Stash params; the WebSocket open is deferred until iteration."""
         self._client = client
         self._host = host
         self._auth_token = auth_token
@@ -176,12 +177,15 @@ class EventStream:
     # ------------------------------------------------------------------
 
     async def __aenter__(self) -> Self:
+        """Enter the context manager (no-op; connection is lazy)."""
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
+        """Close the WebSocket and the owned aiohttp session, if any."""
         await self.aclose()
 
     def __aiter__(self) -> AsyncIterator[StateEvent]:
+        """Return the async iterator over reconnecting :class:`StateEvent`s."""
         return self._iterate()
 
     async def aclose(self) -> None:
@@ -199,6 +203,7 @@ class EventStream:
     # ------------------------------------------------------------------
 
     async def _iterate(self) -> AsyncIterator[StateEvent]:
+        """Yield :class:`StateEvent`s; reconnect on drops, stop on auth fail."""
         first_attempt = True
         while not self._closed:
             try:
@@ -322,6 +327,7 @@ class EventStream:
     # ------------------------------------------------------------------
 
     async def _ensure_session(self) -> aiohttp.ClientSession:
+        """Lazily create the owned aiohttp session on first connect."""
         if self._session is None:
             self._session = aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(ssl=False),
@@ -329,12 +335,14 @@ class EventStream:
         return self._session
 
     def _build_ws_url(self) -> str:
+        """Build the ``wss://host:port/?TOKEN=…`` URL for the WebSocket upgrade."""
         host = self._strip_port(self._host)
         port = self._options.ws_port or self._port_from_host() or WS_DEFAULT_PORT
         suffix = f"?TOKEN={self._auth_token}" if self._auth_token else ""
         return f"wss://{host}:{port}/{suffix}"
 
     def _build_ws_headers(self) -> dict[str, str]:
+        """Build WS upgrade headers (WS uses ``Authorization``, not REST's ``AUTH``)."""
         headers = {"VIZIO-SmartCast-Source": "vizaio"}
         if self._auth_token:
             # Note: WS upgrade uses ``Authorization`` (capital-A,
@@ -343,9 +351,11 @@ class EventStream:
         return headers
 
     def _strip_port(self, host: str) -> str:
+        """Return ``host`` with any ``:port`` suffix removed."""
         return host.split(":", 1)[0] if ":" in host else host
 
     def _port_from_host(self) -> int | None:
+        """Extract the port number from ``self._host`` if present, else ``None``."""
         if ":" not in self._host:
             return None
         try:

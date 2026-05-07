@@ -60,7 +60,7 @@ def _tv_settings_url(category: str, name: str = "") -> str:
 
 class TestConstructor:
     def test_profile_and_device_type_conflict(self) -> None:
-        with pytest.raises(ValueError, match="exactly one"):
+        with pytest.raises(ValueError, match=r"device_type.*profile"):
             Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV, profile=TV_PROFILE)
 
     def test_default_to_tv_profile_when_neither_given(self) -> None:

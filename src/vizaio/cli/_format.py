@@ -81,6 +81,7 @@ def render_message(message: str, *, fmt: OutputFormat | None = None) -> str:
 
 
 def _render_json(rows: list[Mapping[str, Any]]) -> str:
+    """Render rows as JSON; pretty-printed when stdout is a TTY, compact otherwise."""
     # Pretty JSON for TTY (caller may also pass --format json directly).
     if sys.stdout.isatty():
         return json.dumps(rows, indent=2, default=_json_default)
@@ -88,12 +89,14 @@ def _render_json(rows: list[Mapping[str, Any]]) -> str:
 
 
 def _json_default(obj: Any) -> Any:
+    """JSON encoder fallback: unwrap ``.value`` (enums) or ``str(obj)``."""
     if hasattr(obj, "value"):
         return obj.value
     return str(obj)
 
 
 def _render_tsv(rows: Sequence[Mapping[str, Any]], cols: list[str]) -> str:
+    """Render rows as tab-separated values, one row per line."""
     lines = []
     for row in rows:
         cells = [_str_cell(row.get(c, "")) for c in cols]
@@ -102,6 +105,7 @@ def _render_tsv(rows: Sequence[Mapping[str, Any]], cols: list[str]) -> str:
 
 
 def _render_plain(rows: Sequence[Mapping[str, Any]], cols: list[str]) -> str:
+    """Render rows as space-separated values, one row per line (script-friendly)."""
     lines = []
     for row in rows:
         cells = [_str_cell(row.get(c, "")) for c in cols]
@@ -110,6 +114,7 @@ def _render_plain(rows: Sequence[Mapping[str, Any]], cols: list[str]) -> str:
 
 
 def _render_table(rows: Sequence[Mapping[str, Any]], cols: list[str]) -> str:
+    """Render rows as a Rich-styled table for TTY output."""
     # ``record=True`` captures rendered output for export_text(); the
     # file=io.StringIO() avoids writing the rendered table to stdout
     # twice (we want export_text(), not the live print).
@@ -122,6 +127,7 @@ def _render_table(rows: Sequence[Mapping[str, Any]], cols: list[str]) -> str:
 
 
 def _str_cell(value: Any) -> str:
+    """Coerce a cell to a display string (``*`` True, blank False/None, enum value)."""
     if value is True:
         return "*"
     if value is False or value is None:

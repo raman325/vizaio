@@ -195,12 +195,14 @@ class SmartCastClient:
     # ------------------------------------------------------------------
 
     def _check_auth(self, requirement: AuthRequirement) -> None:
+        """Raise :class:`VizioAuthError` early if REQUIRED and no token is set."""
         if requirement is AuthRequirement.REQUIRED and not self._auth_token:
             raise VizioAuthError(
                 "auth token required for this endpoint but none configured"
             )
 
     async def _ensure_session(self) -> ClientSession:
+        """Lazily create the owned aiohttp session on first request."""
         if self._session is None:
             self._session = ClientSession(
                 connector=TCPConnector(ssl=False),
@@ -209,6 +211,7 @@ class SmartCastClient:
         return self._session
 
     def _build_headers(self, spec: EndpointSpec) -> dict[str, str]:
+        """Build headers: source identifier always; AUTH when needed + available."""
         headers = {HEADER_SOURCE: SOURCE_IDENTIFIER}
         if spec.auth is not AuthRequirement.NONE and self._auth_token:
             headers[HEADER_AUTH] = self._auth_token
@@ -222,6 +225,7 @@ class SmartCastClient:
         body: Mapping[str, Any] | None,
         spec: EndpointSpec,
     ) -> Response:
+        """Issue the HTTP call for one resolved path; wraps transport errors."""
         session = await self._ensure_session()
         url = f"https://{self._host}{path}"
         headers = self._build_headers(spec)
@@ -267,6 +271,7 @@ class SmartCastClient:
 def _coerce_timeout(
     timeout: float | ClientTimeout | None,
 ) -> ClientTimeout:
+    """Coerce a read-timeout float or ``None`` into a configured ``ClientTimeout``."""
     if isinstance(timeout, ClientTimeout):
         return timeout
     read = float(timeout) if timeout is not None else DEFAULT_READ_TIMEOUT
@@ -279,6 +284,7 @@ def _coerce_timeout(
 
 
 def _redact(headers: Mapping[str, str]) -> dict[str, str]:
+    """Return a copy of ``headers`` with the AUTH value masked for debug logs."""
     return {k: ("<redacted>" if k == HEADER_AUTH else v) for k, v in headers.items()}
 
 
@@ -296,6 +302,7 @@ async def _read_raw_json(resp: ClientResponse) -> Mapping[str, Any]:
 
 
 async def _parse_response(resp: ClientResponse, spec: EndpointSpec) -> Response:
+    """Parse + envelope-validate a SmartCast response; raise typed errors per code."""
     _check_http_status(resp)
     try:
         text = await resp.text()

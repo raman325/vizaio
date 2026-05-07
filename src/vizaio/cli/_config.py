@@ -64,6 +64,7 @@ class Config:
     _devices: dict[str, DeviceRecord] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
+        """Initialize the empty devices dict when one wasn't supplied."""
         if self._devices is None:
             self._devices = {}
 
@@ -126,32 +127,39 @@ class Config:
             self.path.chmod(0o600)
 
     def add_device(self, record: DeviceRecord) -> None:
+        """Insert or overwrite a device alias. Does not persist; call :meth:`save`."""
         self._devices[record.name] = record
 
     def remove_device(self, name: str) -> None:
+        """Remove an alias (no-op if absent); clears default if it pointed there."""
         self._devices.pop(name, None)
         if self.default_device == name:
             self.default_device = None
 
     def get_device(self, name: str) -> DeviceRecord:
+        """Return the alias's :class:`DeviceRecord`; raises ``KeyError`` if absent."""
         if name not in self._devices:
             raise KeyError(name)
         return self._devices[name]
 
     def list_devices(self) -> list[DeviceRecord]:
+        """Return all device records sorted by alias name."""
         return sorted(self._devices.values(), key=lambda r: r.name)
 
     def __contains__(self, name: object) -> bool:
+        """``name in config`` membership test against the alias keys."""
         return name in self._devices
 
     # Used by tests to build up a Config in-memory.
     def with_device(self, record: DeviceRecord) -> Self:
+        """Add ``record`` and return ``self`` for fluent in-memory test setup."""
         self.add_device(record)
         return self
 
     # ---- updates -----------------------------------------------------
 
     def update_device(self, name: str, **fields: object) -> DeviceRecord:
+        """Replace fields on an existing alias; raises ``KeyError`` if absent."""
         existing = self.get_device(name)
         new = replace(existing, **fields)  # type: ignore[arg-type]
         self._devices[name] = new

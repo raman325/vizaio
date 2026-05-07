@@ -47,6 +47,7 @@ SOUNDBAR_PROFILE = DeviceProfile(
 # Hardware testing may reveal per-model max_volume divergence; if so, the
 # table below is where the difference becomes visible.
 def _crave(name: str, max_volume: int = 24) -> DeviceProfile:
+    """Build a Crave-family profile with shared keymap + audio settings root."""
     return DeviceProfile(
         name=name,
         settings_root=SettingsRoot.AUDIO,

@@ -339,6 +339,7 @@ def resolve(endpoint: Endpoint, profile: DeviceProfile) -> EndpointSpec:
 def _check_capabilities(
     endpoint: Endpoint, needs: Need, profile: DeviceProfile
 ) -> None:
+    """Raise :class:`VizioUnsupportedError` if ``profile`` lacks any capability ``endpoint`` requires."""
     if needs is Need.NONE:
         return
     have: Need = Need.NONE
@@ -366,6 +367,7 @@ def _render_path(template: str, profile: DeviceProfile) -> str:
 
 
 def _resolve_auth(mode: AuthMode, profile: DeviceProfile) -> AuthRequirement:
+    """Translate an :class:`AuthMode` into the concrete :class:`AuthRequirement` for ``profile``."""
     if mode is AuthMode.NONE:
         return AuthRequirement.NONE
     if mode is AuthMode.REQUIRED:

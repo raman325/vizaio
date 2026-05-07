@@ -63,6 +63,7 @@ class CLIState:
     output_format: OutputFormat | None
 
     def resolve(self) -> ResolvedDevice:
+        """Resolve the effective device target for this CLI invocation."""
         return resolve_device(
             host=self.host_override,
             device_alias=self.device_alias,
@@ -121,6 +122,7 @@ def _main(
         bool, typer.Option("-v", "--verbose", help="Enable debug logging.")
     ] = False,
 ) -> None:
+    """Top-level callback: parses global flags, stashes :class:`CLIState` on ctx."""
     if verbose:
         logging.basicConfig(level=logging.DEBUG)
     ctx.obj = CLIState(
@@ -141,10 +143,12 @@ _err = Console(stderr=True, style="red")
 
 
 def _state(ctx: typer.Context) -> CLIState:
+    """Extract the :class:`CLIState` stashed on the typer context by ``_main``."""
     return ctx.obj  # type: ignore[no-any-return]
 
 
 def _print(value: str) -> None:
+    """Print ``value`` to stdout; suppress empty output to avoid blank lines."""
     if value:
         print(value)
 
@@ -184,6 +188,7 @@ def _exec[T](ctx: typer.Context, fn: Callable[[Vizio], Awaitable[T]]) -> T:
         raise typer.Exit(code=2) from e
 
     async def _go() -> T:
+        """Open a Vizio session against the resolved target and run ``fn(v)``."""
         async with Vizio(
             host=target.host,
             device_type=target.device_type,
@@ -239,6 +244,7 @@ def device_remove(
     name: Annotated[str, typer.Argument(help="Alias to remove.")],
     output_format: FormatOption = None,
 ) -> None:
+    """Remove a saved device alias."""
     state = _state(ctx)
     state.config.remove_device(name)
     state.config.save()
@@ -247,6 +253,7 @@ def device_remove(
 
 @device_app.command("list")
 def device_list(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """List saved device aliases (with default and auth-status indicators)."""
     state = _state(ctx)
     rows = [
         {
@@ -267,6 +274,7 @@ def device_set_default(
     name: Annotated[str, typer.Argument(help="Alias to set as default.")],
     output_format: FormatOption = None,
 ) -> None:
+    """Mark an alias as the default device for subsequent commands."""
     state = _state(ctx)
     if name not in state.config:
         _err.print(f"No alias {name!r}")
@@ -282,6 +290,7 @@ def device_show(
     name: Annotated[str | None, typer.Argument()] = None,
     output_format: FormatOption = None,
 ) -> None:
+    """Show one device alias's details (defaults to the configured default)."""
     state = _state(ctx)
     target = name or state.config.default_device
     if target is None:
@@ -324,6 +333,7 @@ def discover_cmd(
     """Discover Vizio devices on the local network."""
 
     async def _go() -> list[dict[str, Any]]:
+        """Run the unified discover and reshape results into renderable rows."""
         devices = await discover(timeout=timeout, include_ssdp=not no_ssdp)
         return [
             {"name": d.name, "host": d.host, "model": d.model, "id": d.id}
@@ -369,6 +379,7 @@ def probe_cmd(
         raise typer.Exit(code=1)
 
     async def _go() -> DeviceType:
+        """Classify the host (strict; raises on unreachable/malformed)."""
         return await async_classify_device(host, port=port)
 
     try:
@@ -416,6 +427,7 @@ def pair_begin(
     fmt = _fmt(ctx, output_format)
 
     async def _go() -> PairChallenge:
+        """Open a Vizio session and call ``begin_pair`` to fetch the challenge."""
         async with Vizio(host=host, device_type=device_type) as v:
             return await v.begin_pair(device_id=device_id, device_name=device_name)
 
@@ -498,6 +510,7 @@ def pair_complete(
     fmt = _fmt(ctx, output_format)
 
     async def _go() -> str:
+        """Open a transient Vizio session and call ``finish_pair`` with the PIN."""
         async with Vizio(host=host, device_type=device_type) as v:
             return await v.finish_pair(
                 device_id=device_id,
@@ -557,6 +570,7 @@ def pair_cancel(
     fmt = _fmt(ctx, output_format)
 
     async def _go() -> None:
+        """Open a transient Vizio session and call ``cancel_pair``."""
         async with Vizio(host=host, device_type=device_type) as v:
             await v.cancel_pair(device_id=device_id, device_name=device_name)
 
@@ -597,6 +611,7 @@ def pair_interactive(
     fmt = _fmt(ctx, output_format)
 
     async def _go() -> str:
+        """Drive the full pair_session lifecycle, prompting for the PIN mid-flow."""
         async with (
             Vizio(host=host, device_type=device_type) as v,
             v.pair_session(device_id=device_id, device_name=device_name) as session,
@@ -641,6 +656,7 @@ app.add_typer(power_app)
 
 @power_app.command("state")
 def power_state(ctx: typer.Context) -> None:
+    """Print ``on`` or ``off`` for the device's current power state."""
     state = _state(ctx)
     on = _exec(ctx, lambda v: v.get_power_state())
     _print(render_value("on" if on else "off", fmt=state.output_format))
@@ -648,11 +664,13 @@ def power_state(ctx: typer.Context) -> None:
 
 @power_app.command("on")
 def power_on(ctx: typer.Context) -> None:
+    """Power the device on."""
     _exec(ctx, lambda v: v.power_on())
 
 
 @power_app.command("off")
 def power_off(ctx: typer.Context) -> None:
+    """Power the device off."""
     _exec(ctx, lambda v: v.power_off())
 
 
@@ -700,6 +718,7 @@ app.add_typer(volume_app)
 
 @volume_app.command("level")
 def volume_level(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's current raw volume value."""
     level = _exec(ctx, lambda v: v.get_volume())
     _print(render_value(level, fmt=_fmt(ctx, output_format)))
 
@@ -708,6 +727,7 @@ def volume_level(ctx: typer.Context, output_format: FormatOption = None) -> None
 def volume_up(
     ctx: typer.Context, steps: Annotated[int, typer.Option("--steps")] = 1
 ) -> None:
+    """Increase the volume by ``--steps`` keypresses (default 1)."""
     _exec(ctx, lambda v: v.volume_up(steps=steps))
 
 
@@ -715,11 +735,13 @@ def volume_up(
 def volume_down(
     ctx: typer.Context, steps: Annotated[int, typer.Option("--steps")] = 1
 ) -> None:
+    """Decrease the volume by ``--steps`` keypresses (default 1)."""
     _exec(ctx, lambda v: v.volume_down(steps=steps))
 
 
 @volume_app.command("max")
 def volume_max(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's max-volume scale (from the profile, no HTTP call)."""
     target = _state(ctx).resolve()
     _print(
         render_value(
@@ -738,6 +760,7 @@ app.add_typer(input_app)
 
 @input_app.command("list")
 def input_list(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """List all inputs with their meta-names and current-selection marker."""
     inputs = _exec(ctx, lambda v: v.get_inputs())
     rows = [
         {"name": i.name, "meta_name": i.meta_name, "current": i.is_current}
@@ -748,6 +771,7 @@ def input_list(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 @input_app.command("current")
 def input_current(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the meta-name of the currently active input."""
     current = _exec(ctx, lambda v: v.get_current_input())
     _print(render_value(current, fmt=_fmt(ctx, output_format)))
 
@@ -757,11 +781,13 @@ def input_set(
     ctx: typer.Context,
     name: Annotated[str, typer.Argument(help="Input name (e.g., HDMI-1).")],
 ) -> None:
+    """Switch to the named input (accepts cname, display name, or meta-name)."""
     _exec(ctx, lambda v: v.set_input(name))
 
 
 @input_app.command("next")
 def input_next(ctx: typer.Context) -> None:
+    """Cycle to the next input (sends ``INPUT_NEXT``)."""
     _exec(ctx, lambda v: v.next_input())
 
 
@@ -778,11 +804,13 @@ def remote_send(
     ctx: typer.Context,
     key: Annotated[str, typer.Argument(help="Remote key name (e.g., MENU).")],
 ) -> None:
+    """Send a single remote-key press to the device."""
     _exec(ctx, lambda v: v.send_key(key))
 
 
 @remote_app.command("keys")
 def remote_keys(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """List all remote keys this device's profile supports."""
     target = _state(ctx).resolve()
     keys = sorted(target.device_type.profile.keymap.keys())
     _print(render_rows([{"key": k} for k in keys], fmt=_fmt(ctx, output_format)))
@@ -798,6 +826,7 @@ app.add_typer(settings_app)
 
 @settings_app.command("types")
 def settings_types(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """List the top-level setting categories this device exposes."""
     types = _exec(ctx, lambda v: v.get_setting_types())
     _print(render_rows([{"type": t} for t in types], fmt=_fmt(ctx, output_format)))
 
@@ -808,6 +837,7 @@ def settings_list(
     setting_type: Annotated[str, typer.Argument(help="Category, e.g. 'audio'.")],
     output_format: FormatOption = None,
 ) -> None:
+    """List all settings under a category with current values + options."""
     settings = _exec(ctx, lambda v: v.get_settings(setting_type))
     rows = [
         {
@@ -830,6 +860,7 @@ def settings_get(
     name: Annotated[str, typer.Argument()],
     output_format: FormatOption = None,
 ) -> None:
+    """Print the current value of a single setting."""
     info = _exec(ctx, lambda v: v.get_setting(setting_type, name))
     _print(render_value(info.value, fmt=_fmt(ctx, output_format)))
 
@@ -844,6 +875,7 @@ def settings_set(
         typer.Argument(help="New value (numeric strings are coerced to int)."),
     ],
 ) -> None:
+    """Write a new value to a setting (auto-fetches hashval; numeric→int)."""
     typed_value: int | str
     try:
         typed_value = int(value)
@@ -862,6 +894,7 @@ app.add_typer(apps_app)
 
 @apps_app.command("current")
 def app_current(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the name of the currently running SmartCast app (or a no-app marker)."""
     name = _exec(ctx, lambda v: v.get_current_app())
     _print(render_value(name or "(no app running)", fmt=_fmt(ctx, output_format)))
 
@@ -885,6 +918,7 @@ def app_launch(
         ),
     ] = None,
 ) -> None:
+    """Launch a SmartCast app by name (chipset/firmware-aware lookup)."""
     _exec(
         ctx,
         lambda v: v.launch_app(name, chipset=chipset, firmware=firmware),
@@ -960,6 +994,7 @@ def app_launch_config(
     name_space: Annotated[int, typer.Argument()],
     message: Annotated[str | None, typer.Argument()] = None,
 ) -> None:
+    """Launch by raw (app_id, name_space[, message]) — bypasses catalog lookup."""
     _exec(
         ctx,
         lambda v: v.launch_app_config(
@@ -978,6 +1013,7 @@ app.add_typer(info_app)
 
 @info_app.command("model")
 def info_model(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's model name."""
     _print(
         render_value(
             _exec(ctx, lambda v: v.get_model_name()), fmt=_fmt(ctx, output_format)
@@ -987,6 +1023,7 @@ def info_model(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 @info_app.command("serial")
 def info_serial(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's hardware serial number."""
     _print(
         render_value(
             _exec(ctx, lambda v: v.get_serial_number()), fmt=_fmt(ctx, output_format)
@@ -996,6 +1033,7 @@ def info_serial(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 @info_app.command("esn")
 def info_esn(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's ESN (electronic serial number)."""
     _print(
         render_value(_exec(ctx, lambda v: v.get_esn()), fmt=_fmt(ctx, output_format))
     )
@@ -1003,6 +1041,7 @@ def info_esn(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 @info_app.command("version")
 def info_version(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's firmware version string."""
     _print(
         render_value(
             _exec(ctx, lambda v: v.get_version()), fmt=_fmt(ctx, output_format)
@@ -1012,6 +1051,7 @@ def info_version(ctx: typer.Context, output_format: FormatOption = None) -> None
 
 @info_app.command("all")
 def info_all(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print all device-identity fields in one call."""
     info = _exec(ctx, lambda v: v.get_device_info())
     _print(
         render_rows(
@@ -1039,6 +1079,7 @@ app.add_typer(battery_app)
 
 @battery_app.command("level")
 def battery_level(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the device's battery level percentage (Crave only)."""
     _print(
         render_value(
             _exec(ctx, lambda v: v.get_battery_level()), fmt=_fmt(ctx, output_format)
@@ -1048,6 +1089,7 @@ def battery_level(ctx: typer.Context, output_format: FormatOption = None) -> Non
 
 @battery_app.command("charging")
 def battery_charging(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Print the charging status (``not_charging``/``charging``/``fully_charged``)."""
     status = _exec(ctx, lambda v: v.get_charging_status())
     _print(render_value(status.name.lower(), fmt=_fmt(ctx, output_format)))
 
