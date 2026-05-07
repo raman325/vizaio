@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from vizaio import AppConfig
+from vizaio import AppConfig, PairChallenge
 from vizaio._payloads import (
     begin_pair,
     cancel_pair,
@@ -103,7 +103,9 @@ class TestPairing:
 
     def test_finish_pair(self) -> None:
         body = finish_pair(
-            device_id="ha-coord", challenge_type=1, token=54321, pin="1234"
+            device_id="ha-coord",
+            challenge=PairChallenge(challenge_type=1, token=54321),
+            pin="1234",
         )
         assert body == {
             "DEVICE_ID": "ha-coord",
@@ -114,7 +116,11 @@ class TestPairing:
 
     def test_finish_pair_empty_pin(self) -> None:
         # Some device families don't show a PIN — empty string is valid.
-        body = finish_pair(device_id="x", challenge_type=1, token=1, pin="")
+        body = finish_pair(
+            device_id="x",
+            challenge=PairChallenge(challenge_type=1, token=1),
+            pin="",
+        )
         assert body["RESPONSE_VALUE"] == ""
 
     def test_cancel_pair(self) -> None:

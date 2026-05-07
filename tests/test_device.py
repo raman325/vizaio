@@ -50,6 +50,7 @@ from vizaio import (
     ChargingStatus,
     DeviceType,
     InputInfo,
+    PairChallenge,
     RemoteKey,
     SettingInfo,
     Vizio,
@@ -1376,7 +1377,9 @@ class TestFinishPair:
         v = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV)
         mock_client.side_effect = [_resp(make_pair_finish_response("TOK-123"))]
         token = await v.finish_pair(
-            device_id="test", challenge_type=1, token=54321, pin="1234"
+            device_id="test",
+            challenge=PairChallenge(challenge_type=1, token=54321),
+            pin="1234",
         )
         assert token == "TOK-123"
 
@@ -1385,7 +1388,9 @@ class TestFinishPair:
         mock_client.side_effect = [VizioAuthError("PAIRING_DENIED")]
         with pytest.raises(VizioAuthError):
             await v.finish_pair(
-                device_id="test", challenge_type=1, token=54321, pin="0000"
+                device_id="test",
+                challenge=PairChallenge(challenge_type=1, token=54321),
+                pin="0000",
             )
 
 

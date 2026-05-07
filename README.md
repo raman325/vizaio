@@ -613,14 +613,10 @@ async with Vizio(host="192.168.1.50", device_type=DeviceType.TV) as v:
     challenge: PairChallenge = await v.begin_pair(
         device_id="my-app", device_name="My App"
     )
-    # challenge.challenge_type and challenge.token are needed for step 2
 
-    # Step 2: complete — submit the PIN
+    # Step 2: complete — pass the challenge back along with the PIN
     auth_token: str = await v.finish_pair(
-        device_id="my-app",
-        challenge_type=challenge.challenge_type,
-        token=challenge.token,
-        pin="1234",
+        device_id="my-app", challenge=challenge, pin="1234"
     )
 
     # Optional: cancel a pairing session early (best-effort, swallows errors)

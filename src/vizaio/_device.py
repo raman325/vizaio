@@ -1016,19 +1016,15 @@ class Vizio:
         return parse_pair_challenge(response)
 
     async def finish_pair(
-        self, *, device_id: str, challenge_type: int, token: int, pin: str
+        self, *, device_id: str, challenge: PairChallenge, pin: str
     ) -> str:
         """
         Complete a pairing handshake with the user-provided PIN.
 
-        Returns the auth token on success.
+        ``challenge`` is the :class:`PairChallenge` returned by
+        :meth:`begin_pair`. Returns the auth token on success.
         """
-        body = _payloads.finish_pair(
-            device_id=device_id,
-            challenge_type=challenge_type,
-            token=token,
-            pin=pin,
-        )
+        body = _payloads.finish_pair(device_id=device_id, challenge=challenge, pin=pin)
         response = await self._client.request_spec(
             resolve(Endpoint.FINISH_PAIR, self._profile), body=body
         )
@@ -1343,8 +1339,7 @@ class PairSession:
             raise RuntimeError("PairSession not entered yet")
         token = await self._vizio.finish_pair(
             device_id=self._device_id,
-            challenge_type=self._challenge.challenge_type,
-            token=self._challenge.token,
+            challenge=self._challenge,
             pin=pin,
         )
         self._completed = True
