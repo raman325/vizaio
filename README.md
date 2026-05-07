@@ -434,9 +434,12 @@ unexpected response) returns `True` / `DeviceType.TV`. This matches HA
 config-flow semantics — TV is the dominant case, and a wrong default is
 corrected when the user confirms the device type.
 
-If you already have a model string (from a prior `get_model_name()` call,
-`DiscoveredDevice.model`, or persisted config) and want to classify without
-a network round trip, use the pure sync helpers:
+If you already have a model string from `DiscoveredDevice.model` (returned by
+the `discover_*` functions) or persisted config, you can classify without a
+network round trip using the pure sync helpers. **Note:** `Vizio.get_model_name()`
+is *not* a suitable source — for non-TV settings roots it returns the friendly
+`NAME` field (e.g., `"Crave Go"`) rather than the canonical `SYSTEM_INFO.MODEL_NAME`
+(`"SP30-E0"`) the SP-prefix matching needs.
 
 ```python
 from vizaio.discovery import classify_crave_model, is_crave_model
@@ -745,9 +748,12 @@ await v.ping()        # unauthenticated; cheapest "is the device reachable" chec
 await v.ping_auth()   # validates the configured token actually works
 ```
 
-For a pre-construction reachability check (before you have a `Vizio` instance),
-use `async_is_tv` from `vizaio.discovery` — it probes without auth and doesn't
-require pairing to have completed.
+For a pre-construction *device-type probe* (before you have a `Vizio` instance),
+use `async_is_tv` from `vizaio.discovery` — it doesn't require pairing. Note
+that it is **not** a reachability check: lenient semantics mean an unreachable
+host returns `True` (TV default). For genuine reachability, construct a `Vizio`
+and call `ping()` — that surfaces transport failures as exceptions instead of
+silently defaulting.
 
 ### App catalog injection
 
@@ -772,9 +778,10 @@ v.set_app_catalog(catalog)
 v.set_app_availability(availability)
 ```
 
-Once `set_app_catalog` or `set_app_availability` is called, the library treats
-that data as authoritative and skips its own auto-fetch for the lifetime of the
-instance.
+Each setter independently flips its own caller-owned flag. Calling
+`set_app_catalog` skips auto-fetch for the catalog only; the availability
+side keeps its own auto-fetch + TTL behavior unless you also call
+`set_app_availability`. Same in reverse.
 
 Pass `url=` to point at a regional mirror, internal proxy, or test fixture:
 
