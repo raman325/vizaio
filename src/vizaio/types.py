@@ -371,7 +371,10 @@ class StateExtended:
     """e.g., ``"Full screen"``, ``"PIP"``."""
 
     media_state: str
-    """Session-level playback indicator. Two values observed empirically:
+    """Session-level playback indicator. Raw wire values are
+    ``MediaState::``-prefixed (Vizio uses C++-style namespace prefixes);
+    callers usually want ``.split("::", 1)[1]`` to get the bare value.
+    Two values observed empirically (shown here in raw form):
 
     - ``"MediaState::Playing"`` — a media session is loaded.
     - ``"MediaState::Stopped"`` — no media session (SmartCast Home,
@@ -379,18 +382,15 @@ class StateExtended:
 
     **This is session state, not transport state.** Pause, seek, ad
     interstitials, and seek-to-unloaded buffering all stay on
-    ``Playing`` — the field flips on "is a session loaded" not "are
-    bytes advancing right now." Empirically verified against YouTube
-    on a V-series TV; firmware 3.720.x. The official Vizio Android app
-    doesn't deserialize this field at all (its ``ExtendedStateResponse``
-    model only carries ``POWER_STATUS``, ``APP_CURRENT``,
-    ``CURRENT_INPUT``, ``DEVICE_NAME``, ``URI``, ``ERRORS``), so there
-    is no canonical client-side enum to consult — the device's C++
-    enum may have additional values that no observed app surface
-    triggers.
-
-    Vizio uses C++-style namespace prefixes — caller usually wants
-    ``.split("::", 1)[1]`` to drop the ``MediaState::`` prefix."""
+    ``MediaState::Playing`` — the field flips on "is a session
+    loaded" not "are bytes advancing right now." Empirically verified
+    against YouTube on a V-series TV; firmware 3.720.x. The official
+    Vizio Android app doesn't deserialize this field at all (its
+    ``ExtendedStateResponse`` model only carries ``POWER_STATUS``,
+    ``APP_CURRENT``, ``CURRENT_INPUT``, ``DEVICE_NAME``, ``URI``,
+    ``ERRORS``), so there is no canonical client-side enum to consult —
+    the device's C++ enum may have additional values that no observed
+    app surface triggers."""
 
     device_name: str
     """User-set TV name (e.g., ``"Test Living Room"``)."""

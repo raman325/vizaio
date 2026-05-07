@@ -693,23 +693,23 @@ device load (relevant given saturation concerns from issue #175) and
 HA scan-interval pressure.
 
 **Device-vs-app field divergence:** real devices return a superset of
-what the official app deserializes. Live capture (V-series TV, fw
-3.720.x) carries `MEDIA_STATE`, `SCREEN_MODE`, `POWER_MODE`, and
-`URI` alongside the app's six known fields (`POWER_STATUS`, `APP_CURRENT`,
-`CURRENT_INPUT`, `DEVICE_NAME`, `URI`, `ERRORS`). The Android app's
-`ExtendedStateResponse` model silently drops the extras. We capture
-them anyway and expose `media_state` and `screen_mode` in
-`StateExtended`.
+what the official app deserializes. The Android app's
+`ExtendedStateResponse` model carries six fields: `POWER_STATUS`,
+`APP_CURRENT`, `CURRENT_INPUT`, `DEVICE_NAME`, `URI`, `ERRORS`. Live
+capture (V-series TV, fw 3.720.x) returns three additional fields the
+app silently drops: `MEDIA_STATE`, `SCREEN_MODE`, and `POWER_MODE`. We
+capture all three and expose them as `media_state`, `screen_mode`, and
+`power_mode` on `StateExtended`.
 
 `MEDIA_STATE` is **session state, not transport state** — empirically
 verified against YouTube, only two values surface: `MediaState::Playing`
 (any media session loaded) and `MediaState::Stopped` (no session,
 including SmartCast Home and any app's home screen). Pause, seek,
 ad interstitials, and seek-to-unloaded buffering all stay on
-`Playing`. Pyvizio's docstring claims the same two values empirically
-but doesn't document the pause/seek behavior. The C++ enum on the
-device probably has more values (`Buffering` is the obvious candidate)
-that no observed app surface triggers.
+`MediaState::Playing`. Pyvizio's docstring claims the same two values
+empirically but doesn't document the pause/seek behavior. The C++ enum
+on the device probably has more values (`MediaState::Buffering` is the
+obvious candidate) that no observed app surface triggers.
 
 ---
 
