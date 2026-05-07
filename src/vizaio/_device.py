@@ -249,6 +249,17 @@ class Vizio:
     async def power_off(self) -> None:
         await self.send_key("POW_OFF")
 
+    async def power_toggle(self) -> None:
+        """
+        Send the power-toggle key. Flips whatever state the device is in.
+
+        Distinct from :meth:`power_on` / :meth:`power_off`, which always
+        send the same key regardless of state. Use ``power_toggle`` when
+        you want "press the power button" semantics — e.g., a single
+        button in a UI — and don't need to guarantee the resulting state.
+        """
+        await self.send_key("POW_TOGGLE")
+
     # ------------------------------------------------------------------
     # Volume / mute
     # ------------------------------------------------------------------
@@ -292,6 +303,18 @@ class Vizio:
         """
         if await self.is_muted():
             await self.send_key("MUTE_TOGGLE")
+
+    async def mute_toggle(self) -> None:
+        """
+        Send the mute-toggle key. Flips whatever state the device is in.
+
+        Cheaper than :meth:`mute` / :meth:`unmute` (one round trip vs.
+        two — those methods read :meth:`is_muted` first to be
+        idempotent). Use ``mute_toggle`` when you don't need to
+        guarantee the resulting state and just want "press the mute
+        button" semantics.
+        """
+        await self.send_key("MUTE_TOGGLE")
 
     # ------------------------------------------------------------------
     # Inputs

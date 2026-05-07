@@ -209,7 +209,7 @@ class TestPower:
     - get_power_state() -> bool (was bool|None, raised on error vs returning None)
     - power_on() -> None (was pow_on() -> bool|None)
     - power_off() -> None (was pow_off() -> bool|None)
-    - pow_toggle() removed — caller composes from get_power_state + power_on/off
+    - power_toggle() -> None (renamed from pyvizio's pow_toggle())
     """
 
     @pytest.mark.parametrize("value,expected", [(1, True), (0, False)])
@@ -245,6 +245,18 @@ class TestPower:
         # Regression test for pyvizio open issue #163 ("Power On command
         # turns power Off"): POW_OFF must be code 0, not code 1.
         assert body == {"KEYLIST": [{"CODESET": 11, "CODE": 0, "ACTION": "KEYPRESS"}]}
+
+    async def test_power_toggle(self, vizio_tv: Vizio, mock_client: AsyncMock) -> None:
+        # power_toggle sends POW_TOGGLE (codeset 11, code 2) in a single
+        # round trip — distinct from power_on/off, which always send the
+        # same key regardless of state.
+        mock_client.return_value = _resp(make_key_press_response())
+        await vizio_tv.power_toggle()
+        assert _last_call_paths(mock_client) == ("/key_command/",)
+        body = _last_call_body(mock_client)
+        assert body == {"KEYLIST": [{"CODESET": 11, "CODE": 2, "ACTION": "KEYPRESS"}]}
+        # And exactly one call — no state query first.
+        assert mock_client.await_count == 1
 
 
 # ===========================================================================
@@ -393,6 +405,19 @@ class TestMute:
         )
         await vizio_tv.unmute()
         assert mock_client.call_count == 2
+
+    async def test_mute_toggle_sends_key_without_state_query(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        # mute_toggle sends MUTE_TOGGLE (codeset 5, code 3) in one round
+        # trip — half the cost of mute()/unmute(), which read is_muted()
+        # first to be idempotent. Caller doesn't learn the resulting state.
+        mock_client.return_value = _resp(make_key_press_response())
+        await vizio_tv.mute_toggle()
+        assert _last_call_paths(mock_client) == ("/key_command/",)
+        body = _last_call_body(mock_client)
+        assert body == {"KEYLIST": [{"CODESET": 5, "CODE": 3, "ACTION": "KEYPRESS"}]}
+        assert mock_client.await_count == 1
 
 
 # ===========================================================================
