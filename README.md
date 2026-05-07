@@ -429,10 +429,19 @@ dt = await async_classify_device("192.168.1.50:7345")
 is_tv = await async_is_tv("192.168.1.50")
 ```
 
-Both functions are lenient: any probe failure (connection error, timeout,
-unexpected response) returns `True` / `DeviceType.TV`. This matches HA
-config-flow semantics — TV is the dominant case, and a wrong default is
-corrected when the user confirms the device type.
+The two functions have **different failure contracts**:
+
+- `async_is_tv` is **lenient** — any probe failure (connection error, timeout,
+  unexpected response) returns `True` (TV). This matches HA config-flow
+  semantics where TV is the dominant case and a wrong default is corrected
+  when the user confirms the device type. Use this when you want a binary
+  answer no matter what.
+- `async_classify_device` is **strict** — issues a single unauthenticated
+  GET to `/state/device/deviceinfo` and raises `VizioConnectionError` if
+  the host is unreachable, or `VizioResponseError` if the response is
+  malformed. The function's job is to classify; if it can't, raising is
+  more honest than returning a lenient default. Wrap in `try`/`except`
+  (or use `async_is_tv` instead) if you want to handle failure as TV.
 
 If you already have a model string from `DiscoveredDevice.model` (returned by
 the `discover_*` functions) or persisted config, you can classify without a
