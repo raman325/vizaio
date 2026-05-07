@@ -39,6 +39,11 @@ junit.xml
 *.swp
 *.swo
 
+# Brainstorming workflow artifacts (specs and plans are local-only,
+# the merge commit is the durable record)
+docs/specs/
+docs/plans/
+
 # OS
 .DS_Store
 Thumbs.db
