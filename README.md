@@ -12,7 +12,6 @@ work happens here.
   entry fails.
 - Hashval-aware setting writes that survive the
   [pyvizio #135 / #140](https://github.com/raman325/pyvizio/issues/135) race.
-- WebSocket event subscription (push-based state updates on supported TVs).
 - Async-only Python library underneath, type-checked under `mypy --strict`,
   Python 3.12+.
 
@@ -37,7 +36,7 @@ work happens here.
 Requires **Python 3.12 or newer**.
 
 ```bash
-# core (REST + WebSocket events + CLI)
+# core (REST + CLI)
 uv add vizaio
 # or: pip install vizaio
 
@@ -104,9 +103,7 @@ vizaio --device kitchen-bar mute on
 
 Pairing is the same HTTP handshake on every device family — TVs, soundbars,
 and Crave speakers all use `PUT /pairing/start`, `/pairing/pair`,
-`/pairing/cancel`. There is no separate "V3 / WebSocket" pairing flow; the
-WebSocket in this library is for event subscription **after** you already have
-a token.
+`/pairing/cancel`.
 
 The `pair complete` and `pair interactive` subcommands return an
 **auth token** — an opaque string sent on every authenticated REST call as a
@@ -501,7 +498,6 @@ always guard with `is_crave_model` first.
 | `vizaio input list` / `set` | yes | no | no |
 | `vizaio app ...` | yes | no | no |
 | `vizaio battery ...` | no | no | yes |
-| WebSocket events | yes (probe-and-fall-back) | rejected by device | rejected by device |
 | Remote keymap | full (channels, nav, numerics, …) | power, volume, mute, play/pause, input-next | same as soundbar |
 
 A few non-obvious consequences:
@@ -849,33 +845,13 @@ s = await v.get_state_extended()
 Older firmware that doesn't expose the endpoint raises
 `VizioNotFoundError` (URI_NOT_FOUND); fall back to individual getters.
 
-### Event subscription (WebSocket)
-
-For supported TVs, the library can subscribe to push events instead of
-polling. After `PUT /event/register`, the device opens a WebSocket and
-streams JSON envelopes whenever a tracked property changes.
-
-```python
-async with Vizio(host="192.168.1.50", auth_token="...") as v:
-    async with v.subscribe_events() as events:
-        async for ev in events:
-            # StateEvent(uri='audio/volume/level', value=15, cname='volume',
-            #            hashval=12345, raw={...})
-            print(ev.uri, ev.value)
-```
-
-Per APK reverse-engineering the device explicitly demultiplexes five URIs:
-`state/device/power_mode`, `app/current`, `system/context_change`,
-`audio/volume/level`, `audio/volume/mute`. Other URIs may also fire — the
-library does not filter, so unknown URIs reach your iterator with
-`value=None` and the full envelope on `ev.raw`.
-
-`subscribe_events(auto_reconnect=True, reconnect_delay=15.0)` reconnects
-silently after a drop. Pass `auto_reconnect=False` to end the iterator on
-the first disconnect. The Android app gates this feature on TV-only and
-non-Marvell-SoC chipsets; this library does not — it probes by attempting
-`PUT /event/register` and surfaces errors. Soundbars typically reject the
-register and will raise.
+> **Note on push events:** vizaio is a REST control-plane client and does
+> not implement WebSocket/push state updates. On real hardware the SmartCast
+> event socket turned out to be part of the device's **Google Cast** control
+> plane (a `ws://<ip>:8005` socket the app only opens for Cast-discovered
+> devices), not a general mDNS/REST feature. For push/real-time updates,
+> discover the TV through its Chromecast-built-in interface (e.g. Home
+> Assistant's Google Cast integration) and poll vizaio for SmartCast state.
 
 ### Custom device profiles
 

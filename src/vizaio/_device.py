@@ -33,11 +33,6 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Final, Self
 
 from . import _payloads
-from ._websocket import (
-    WS_RECONNECT_DELAY,
-    EventStream,
-    SubscribeOptions,
-)
 from .apps import (
     APP_HOME,
     BUNDLED_APPS,
@@ -997,61 +992,6 @@ class Vizio:
             raise VizioUnsupportedError(f"{self._profile.name} does not have a battery")
         response = await self._request(Endpoint.CHARGING_STATUS)
         return ChargingStatus(int(response.require_item("charging_status").value))
-
-    # ------------------------------------------------------------------
-    # Event subscription (WebSocket)
-    # ------------------------------------------------------------------
-
-    def subscribe_events(
-        self,
-        *,
-        ws_port: int | None = None,
-        auto_reconnect: bool = True,
-        reconnect_delay: float | None = None,
-    ) -> EventStream:
-        """
-        Subscribe to state-change events pushed by the device.
-
-        Returns an :class:`EventStream` async context manager that yields
-        :class:`StateEvent` records. Typical usage::
-
-            async with vizio.subscribe_events() as events:
-                async for event in events:
-                    print(event.uri, event.value)
-
-        Implementation notes:
-
-        - Sends ``PUT /event/register`` first (REST), then opens a
-          WebSocket. Both must succeed.
-        - On disconnect, re-registers and re-opens silently (default).
-          Set ``auto_reconnect=False`` to end the iterator on first
-          drop.
-        - Per APK findings, subscribable URIs are ``state/device/power_mode``,
-          ``app/current``, ``system/context_change``, ``audio/volume/level``,
-          ``audio/volume/mute``. The TV may emit others — they reach
-          your iterator regardless; filter on ``StateEvent.uri``.
-
-        See :data:`vizaio._websocket.KNOWN_URIS` for the
-        documented set, and ``docs/websocket-protocol-notes.md`` for
-        protocol details.
-        """
-        options = SubscribeOptions(
-            ws_port=ws_port,
-            auto_reconnect=auto_reconnect,
-            reconnect_delay=(
-                WS_RECONNECT_DELAY if reconnect_delay is None else reconnect_delay
-            ),
-        )
-        return EventStream(
-            client=self._client,
-            host=self._host,
-            auth_token=self._auth_token,
-            options=options,
-        )
-
-    # ------------------------------------------------------------------
-    # Pairing
-    # ------------------------------------------------------------------
 
     # ------------------------------------------------------------------
     # Pairing — stateless one-shot methods

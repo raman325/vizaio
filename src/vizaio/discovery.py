@@ -156,13 +156,6 @@ def _zeroconf_to_device(info: Any) -> DiscoveredDevice | None:
     properties = info.properties or {}
     model = _decode_property(properties.get(b"name", b""))
     id_value = _decode_id_property(properties.get(b"id"))
-    # Vizio TXT records advertise WebSocket ports under abbreviated keys
-    # ``wp`` (insecure) and ``wsp`` (secure). The ``info.port`` is the
-    # HTTPS REST port; the WS server runs on a separate port (when it
-    # runs at all — see protocol-notes #28; on some firmware the ports
-    # are advertised but no WS server is actually listening).
-    ws_port = _decode_int_property(properties.get(b"wp"))
-    wss_port = _decode_int_property(properties.get(b"wsp"))
 
     return DiscoveredDevice(
         name=name,
@@ -170,20 +163,7 @@ def _zeroconf_to_device(info: Any) -> DiscoveredDevice | None:
         port=info.port or 0,
         model=model,
         id=id_value,
-        ws_port=ws_port,
-        wss_port=wss_port,
     )
-
-
-def _decode_int_property(value: Any) -> int | None:
-    """Decode a TXT record property as an integer, or ``None`` on failure."""
-    if value is None:
-        return None
-    try:
-        text = value.decode("utf-8") if isinstance(value, bytes) else str(value)
-        return int(text)
-    except (UnicodeDecodeError, ValueError):
-        return None
 
 
 def _decode_property(value: Any) -> str:

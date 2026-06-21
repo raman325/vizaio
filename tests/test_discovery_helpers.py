@@ -13,7 +13,6 @@ from xml.etree import ElementTree
 
 from vizaio.discovery import (
     _decode_id_property,
-    _decode_int_property,
     _decode_property,
     _find_first,
     _find_text,
@@ -25,29 +24,6 @@ from vizaio.discovery import (
     _zeroconf_to_device,
 )
 from vizaio.types import DiscoveredDevice
-
-# ---------------------------------------------------------------------------
-# _decode_int_property
-# ---------------------------------------------------------------------------
-
-
-class TestDecodeIntProperty:
-    def test_bytes_digits(self) -> None:
-        assert _decode_int_property(b"7345") == 7345
-
-    def test_str_digits(self) -> None:
-        assert _decode_int_property("9000") == 9000
-
-    def test_none(self) -> None:
-        assert _decode_int_property(None) is None
-
-    def test_non_digit_bytes_returns_none(self) -> None:
-        assert _decode_int_property(b"not-a-port") is None
-
-    def test_invalid_utf8_returns_none(self) -> None:
-        # Truncated UTF-8 byte sequence → UnicodeDecodeError → None.
-        assert _decode_int_property(b"\xff\xfe") is None
-
 
 # ---------------------------------------------------------------------------
 # _decode_property (TXT record string field)
@@ -133,8 +109,6 @@ class TestZeroconfToDevice:
                 properties={
                     b"name": b"VHD24M-0810",
                     b"id": b"abc123",
-                    b"wp": b"7000",
-                    b"wsp": b"7001",
                 },
             )
         )
@@ -143,8 +117,6 @@ class TestZeroconfToDevice:
         assert device.port == 7345
         assert device.model == "VHD24M-0810"
         assert device.id == "abc123"
-        assert device.ws_port == 7000
-        assert device.wss_port == 7001
 
     def test_strips_service_type_suffix(self) -> None:
         device = _zeroconf_to_device(_info(name="My TV._viziocast._tcp.local."))

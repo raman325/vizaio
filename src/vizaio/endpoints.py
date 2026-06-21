@@ -166,7 +166,7 @@ class EndpointSpec:
 
     Produced by :func:`resolve`. Callers don't construct these directly
     — except where they need to send ad-hoc one-off requests not in the
-    table (e.g. ``_websocket.py`` for ``/event/register``).
+    table.
     """
 
     paths: tuple[str, ...]

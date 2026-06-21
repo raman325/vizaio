@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from ._device import PairSession, Vizio
 from ._keys import RemoteKey
-from ._websocket import EventStream, SubscribeOptions
 from .apps import fetch_app_availability, fetch_app_catalog
 from .discovery import (
     async_classify_device,
@@ -46,7 +45,6 @@ from .types import (
     ResponseStatus,
     SettingInfo,
     SettingType,
-    StateEvent,
     StateExtended,
 )
 
@@ -68,7 +66,6 @@ __all__ = [
     "DeviceProfile",
     "DeviceType",
     "DiscoveredDevice",
-    "EventStream",
     "InputInfo",
     "PairChallenge",
     "PairSession",
@@ -76,9 +73,7 @@ __all__ = [
     "ResponseStatus",
     "SettingInfo",
     "SettingType",
-    "StateEvent",
     "StateExtended",
-    "SubscribeOptions",
     "Vizio",
     "VizioAuthError",
     "VizioBusyError",
