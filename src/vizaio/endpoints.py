@@ -95,6 +95,9 @@ class Endpoint(StrEnum):
     URI_NOT_FOUND. Used as a one-round-trip identity fetcher; the
     per-field endpoints stay as fallbacks for older firmware."""
 
+    # Parental / purchase PIN
+    PIN_IS_DEFAULT = "pin_is_default"
+
     # Pairing (always unauthed)
     BEGIN_PAIR = "begin_pair"
     FINISH_PAIR = "finish_pair"
@@ -275,6 +278,7 @@ ENDPOINTS: dict[Endpoint, _Row] = {
         "GET", f"{_TV_INFO}/version", f"{_TV_INFO_LEGACY}/version", item="version"
     ),
     Endpoint.TV_INFORMATION: row("GET", _TV_INFO, _TV_INFO_LEGACY),
+    Endpoint.PIN_IS_DEFAULT: row("GET", "/pin/is_pin_default", auth=REQ),
     # Pairing —————————————————————————————————————————————————————————
     Endpoint.BEGIN_PAIR: row("PUT", "/pairing/start", auth=NONE),
     Endpoint.FINISH_PAIR: row("PUT", "/pairing/pair", auth=NONE),

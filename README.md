@@ -358,6 +358,16 @@ vizaio settings get audio volume          # single value
 vizaio settings set audio volume 30       # write (uses one-shot retry on race)
 ```
 
+### `vizaio pin`
+
+```bash
+vizaio pin status            # is the parental/purchase PIN still factory-default? (true/false)
+```
+
+Read-only. vizaio does not expose PIN *setters* (`set_pin`/`confirm_pin` are a
+lockout-risky write with under-specified semantics) or `pairing/unpair` (a route
+constant the official app never actually calls).
+
 ### `vizaio app` (TV-only)
 
 ```bash
@@ -798,6 +808,15 @@ versions.raw["SC CONFIG"]                            # full device-cased map
 version map (SCPL, ACR, AppleTV, …) in **one** round trip — a cleaner source
 than the per-field identity getters above, and a natural companion to
 `get_state_extended()` for one-shot device snapshots.
+
+```python
+default: bool = await v.is_pin_default()   # GET /pin/is_pin_default
+# True  -> parental/purchase PIN is still factory-default (unprotected)
+# False -> a custom PIN has been set
+```
+
+A read-only status check. vizaio intentionally omits PIN *setters* and
+`pairing/unpair` (see the [`vizaio pin`](#vizaio-pin) CLI note).
 
 ### Battery (Crave only)
 

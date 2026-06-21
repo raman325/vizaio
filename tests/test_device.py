@@ -1339,6 +1339,31 @@ class TestDeviceInfo:
         assert v.firmware == ""
         assert v.raw == {}
 
+    async def test_is_pin_default_true(self, vizio_tv: Vizio) -> None:
+        """GET /pin/is_pin_default -> {ITEM:{VALUE: true}} (captured live)."""
+        from unittest.mock import AsyncMock
+
+        vizio_tv._client.request_raw_json = AsyncMock(  # type: ignore[method-assign]
+            return_value={"STATUS": {"RESULT": "SUCCESS"}, "ITEM": {"VALUE": True}}
+        )
+        assert await vizio_tv.is_pin_default() is True
+
+    async def test_is_pin_default_false(self, vizio_tv: Vizio) -> None:
+        from unittest.mock import AsyncMock
+
+        vizio_tv._client.request_raw_json = AsyncMock(  # type: ignore[method-assign]
+            return_value={"STATUS": {"RESULT": "SUCCESS"}, "ITEM": {"VALUE": False}}
+        )
+        assert await vizio_tv.is_pin_default() is False
+
+    async def test_is_pin_default_missing_item(self, vizio_tv: Vizio) -> None:
+        from unittest.mock import AsyncMock
+
+        vizio_tv._client.request_raw_json = AsyncMock(  # type: ignore[method-assign]
+            return_value={"STATUS": {"RESULT": "SUCCESS"}}
+        )
+        assert await vizio_tv.is_pin_default() is False
+
 
 # ===========================================================================
 # Battery (Crave 360 only)
