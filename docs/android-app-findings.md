@@ -69,6 +69,46 @@ The enum `com/vizio/connectivity/data/network/models/ResponseResult.java` line 3
 
 **Implication for vizaio:** existing implementation (always GET-then-PUT) is exactly what the official app does. Document HASHVAL as "opaque, server-assigned, mandatory echo on MODIFY for menu items, returns HASHVAL_ERROR if stale" with full confidence — no algorithm to mine. There is no HASHVAL on `pairing/*`, `key_command/`, `app/launch`, `state/device/*` — only on settings under `menu_native/...`.
 
+#### Hardware verification (VHD24M-0810, fw 3.720.9.1-1)
+
+Live probing the TV confirmed and sharpened the above. HASHVAL is a
+**deterministic, per-item content tag** the device mints **locally** (it is the
+LAN HTTP server — `lighttpd/1.4.67`; no internet involved), used as an
+`If-Match`/ETag-style optimistic-concurrency precondition:
+
+- **Deterministic & stable.** Repeated reads of an unchanged item return the
+  identical HASHVAL; live `name_input` values matched fixtures captured months
+  earlier. Not a per-request nonce.
+- **A pure, reversible function of the item's content.** Holding the `volume`
+  item's identity fixed and sweeping only `VALUE`: `7↔2904664803`,
+  `10↔1731828541`, `15↔545576040` — every time; setting the value back restores
+  the exact prior HASHVAL.
+- **Identity-dependent, not value-only.** The same value string yields different
+  HASHVALs in different items (`"SMARTCAST"` → `2023834057` as `current_input`
+  vs `1541296275` as the `cast` input), so item identity (cname/name/type/path)
+  is folded in alongside the value.
+- **Not reproducible from the API surface, and not linear in the value.** No
+  match across CRC32 (4 polynomials), Adler32, FNV-1/1a-32, Java `hashCode`, or
+  md5/sha truncations over 15k+ serializations of the visible fields (±URI); a
+  GF(2) affine test (measuring the `H(0), H(2^i)` basis) ruled out CRC32 over a
+  fixed-offset binary value field. So it hashes the device's internal
+  representation (hidden bytes), with the value mixed in as decimal-ASCII and/or
+  via a non-linear hash. Effectively opaque, as the APK search already implied.
+
+**On a write you echo the *current* state's HASHVAL, not the target's** —
+verified directly on `volume` (current value 7 → `H7`, target 10 → `H10`):
+
+| HASHVAL sent on `PUT VALUE=10` | Result |
+| --- | --- |
+| `H7` (current/previous state) | `SUCCESS` → value becomes 10 |
+| `H10` (the target value's hash) | `HASHVAL_ERROR` → unchanged |
+| garbage (`999999`) | `HASHVAL_ERROR` |
+| omitted | `INVALID_PARAMETER` |
+
+This is the deep reason the GET cannot be skipped: the write must prove it has
+seen current state by echoing *its* tag. There is no offline limitation and no
+client-side calculation worth adding — GET → echo → PUT is correct.
+
 ### 2. Auth token semantics
 
 **Verdict:** **CONFIRMED — opaque random string assigned at pairing, no expiry, no refresh, no JWT, simple plain header.**
