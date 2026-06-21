@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
 from ._device import PairSession, Vizio
 from ._keys import RemoteKey
 from .apps import fetch_app_availability, fetch_app_catalog
@@ -49,7 +51,15 @@ from .types import (
     SystemVersions,
 )
 
-__version__ = "0.1.0"
+# Derived from the installed distribution metadata so it always matches the
+# real release version. The release workflow stamps the version from the git
+# tag into the built distribution, so a hardcoded string here would ship stale
+# (e.g. the 0.2.0 wheel previously reported "0.1.0"). Falls back for an
+# uninstalled source tree.
+try:
+    __version__ = _pkg_version("vizaio")
+except PackageNotFoundError:  # pragma: no cover - running from a source tree
+    __version__ = "0.0.0+unknown"
 
 __all__ = [
     "CRAVE360_PROFILE",
