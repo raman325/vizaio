@@ -37,7 +37,7 @@ dev = [
   # which aioresponses 0.7.8 (latest) does not pass. Cap the *test* env until a
   # compatible aioresponses ships; the library itself works with aiohttp 3.14.
   # https://github.com/pnuckowski/aioresponses/issues/289
-  "aiohttp<3.14",
+  "aiohttp<3.15",
   "mypy>=1.20",
   "pytest>=9.0",
   "pytest-asyncio>=0.23",
