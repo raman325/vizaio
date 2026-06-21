@@ -348,6 +348,7 @@ vizaio remote keys                        # all valid key names for this device
 vizaio remote send MENU
 vizaio remote send GUIDE
 vizaio remote send NUM_5
+vizaio remote text "stranger things"      # type ASCII into a search/keyboard field
 ```
 
 ### `vizaio settings`
@@ -742,6 +743,8 @@ from vizaio import RemoteKey
 await v.send_key("MENU")                # raw string
 await v.send_key(RemoteKey.GUIDE)       # or the StrEnum
 
+await v.send_text("stranger things")    # type ASCII into a search / keyboard field
+
 valid: frozenset[str] = v.available_keys
 # {'POW_ON', 'POW_OFF', 'VOL_UP', 'VOL_DOWN', 'MUTE_ON', ..., 'MENU', 'GUIDE', ...}
 ```
@@ -749,6 +752,12 @@ valid: frozenset[str] = v.available_keys
 The keymap differs by profile. Soundbars omit channel / navigation / numeric
 keys; Crave speakers share the soundbar map. Calling `send_key("CH_UP")` on
 a soundbar raises `VizioUnsupportedError` synchronously.
+
+`send_text()` sends each character as its ASCII code point (`CODESET 0`,
+`CODE = ord(c)`) in one batched `KEYLIST` — the official app's on-screen
+keyboard encoding. Non-ASCII raises `VizioInvalidInputError`. This is also the
+reliable way to enter digits (`'0'`–`'9'` = ASCII 48–57; the `RemoteKey.NUM_*`
+codeset-0 codes 0–9 are ASCII control characters, not digits).
 
 ### Device identity
 
