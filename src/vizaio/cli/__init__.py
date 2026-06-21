@@ -808,6 +808,17 @@ def remote_send(
     _exec(ctx, lambda v: v.send_key(key))
 
 
+@remote_app.command("text")
+def remote_text(
+    ctx: typer.Context,
+    text: Annotated[
+        str, typer.Argument(help="ASCII text to type, e.g. into a search field.")
+    ],
+) -> None:
+    """Type an ASCII string (on-screen keyboard / search entry)."""
+    _exec(ctx, lambda v: v.send_text(text))
+
+
 @remote_app.command("keys")
 def remote_keys(ctx: typer.Context, output_format: FormatOption = None) -> None:
     """List all remote keys this device's profile supports."""

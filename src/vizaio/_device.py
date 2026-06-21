@@ -454,6 +454,38 @@ class Vizio:
             )
         await self._send_key_codes([code])
 
+    async def send_text(self, text: str) -> None:
+        """
+        Type an ASCII string, e.g. into an on-screen search field.
+
+        Each character is sent as a key in ``CODESET`` 0 whose ``CODE`` is
+        the character's ASCII code point — the same encoding the official
+        app's ``KeyCommandItem.ASCII_*`` keys use (``'A'`` → code 65,
+        ``'5'`` → code 53, space → 32). The whole string goes out as one
+        batched ``KEYLIST`` (chunked above :data:`_KEYLIST_CHUNK_SIZE`),
+        so it lands in keystroke order.
+
+        Raises :class:`VizioInvalidInputError` if any character is outside
+        7-bit ASCII (code point > 127) — the device keymap has no codes for
+        those. Empty ``text`` is a no-op.
+
+        Note: this is the correct way to enter digits (e.g. for channel or
+        PIN fields); ``'0'``-``'9'`` map to ASCII codes 48-57, *not* the
+        ``RemoteKey.NUM_*`` codeset-0 codes 0-9 (which are ASCII control
+        characters).
+        """
+        codes: list[tuple[int, int]] = []
+        for ch in text:
+            cp = ord(ch)
+            if cp > 127:
+                raise VizioInvalidInputError(
+                    f"send_text supports ASCII only; {ch!r} (U+{cp:04X}) "
+                    "has no key code"
+                )
+            codes.append((0, cp))
+        for start in range(0, len(codes), _KEYLIST_CHUNK_SIZE):
+            await self._send_key_codes(codes[start : start + _KEYLIST_CHUNK_SIZE])
+
     # ------------------------------------------------------------------
     # Settings
     # ------------------------------------------------------------------

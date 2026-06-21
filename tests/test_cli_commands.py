@@ -433,6 +433,13 @@ class TestRemoteCommands:
         result = _invoke(runner, saved_tv, "remote", "send", "MENU")
         assert result.exit_code == 0
 
+    def test_text(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.put(_tv_url(Endpoint.KEY_PRESS), payload=make_key_press_response())
+        result = _invoke(runner, saved_tv, "remote", "text", "hi 5")
+        assert result.exit_code == 0
+
     def test_keys_lists_profile_no_http(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
