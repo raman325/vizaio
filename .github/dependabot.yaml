@@ -14,6 +14,13 @@ updates:
         patterns:
           - aiohttp
           - aioresponses
+    ignore:
+      # Hold the dev cap at aiohttp<3.14: aioresponses 0.7.8 (latest) breaks on
+      # aiohttp 3.14 (ClientResponse stream_writer; pnuckowski/aioresponses#289
+      # still open). Remove this ignore and raise the cap together with the
+      # grouped aioresponses bump once a 3.14-compatible aioresponses ships.
+      - dependency-name: aiohttp
+        versions: [">=3.14"]
 
   - package-ecosystem: github-actions
     directory: /
