@@ -324,6 +324,7 @@ vizaio mute toggle           # one round trip — presses MUTE_TOGGLE blindly
 
 ```bash
 vizaio volume level          # current value (0..max)
+vizaio volume set 30         # absolute set (flat endpoint, no hashval, 1 round trip)
 vizaio volume max            # the device's max-volume scale
 vizaio volume up --steps 3
 vizaio volume down
@@ -375,6 +376,17 @@ vizaio info esn
 vizaio info version
 vizaio info all                           # one row, all fields
 ```
+
+### `vizaio versions`
+
+```bash
+vizaio versions              # firmware, serial, ESN + per-component versions (SCPL, ACR, …)
+vizaio versions --format json
+```
+
+One `GET /system/versions` round trip — a cleaner source for firmware /
+serial / ESN than the per-field `vizaio info` scrapes, and a good companion
+to `get_state_extended()` for one-shot device snapshots.
 
 ### `vizaio battery` (Crave only)
 
@@ -643,6 +655,8 @@ await v.power_toggle()                  # press the power button (flips state)
 
 ```python
 level: int = await v.get_volume()       # raw value, 0..profile.max_volume
+await v.set_volume(30)                  # absolute set; flat /audio/volume/level,
+                                        # no hashval, one round trip
 await v.volume_up(steps=3)              # send 3 KEYPRESSes in one PUT
 await v.volume_down(steps=1)
 
@@ -772,6 +786,18 @@ info: DeviceInfo = await v.get_device_info()
 `""` / `()` on individual failure — useful when one field is unsupported on
 older firmware. Each individual getter still raises on failure if you call
 it directly.
+
+```python
+versions: SystemVersions = await v.get_versions()   # GET /system/versions
+# SystemVersions(firmware='3.720.9.1-1', serial_number='...', esn='...',
+#                scpl='3.4.3-2614.0002', raw={'FIRMWARE': ..., 'acr': ..., ...})
+versions.raw["SC CONFIG"]                            # full device-cased map
+```
+
+`get_versions()` returns firmware / serial / ESN plus the per-component
+version map (SCPL, ACR, AppleTV, …) in **one** round trip — a cleaner source
+than the per-field identity getters above, and a natural companion to
+`get_state_extended()` for one-shot device snapshots.
 
 ### Battery (Crave only)
 

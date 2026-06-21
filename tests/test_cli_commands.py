@@ -293,6 +293,20 @@ class TestVolumeCommands:
         result = _invoke(runner, saved_tv, "volume", "down")
         assert result.exit_code == 0
 
+    def test_set(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        # Flat /audio/volume/level PUT — one call, no GET.
+        mock_aio.put(_tv_url(Endpoint.VOLUME_LEVEL), payload=make_success_response())
+        result = _invoke(runner, saved_tv, "volume", "set", "12")
+        assert result.exit_code == 0, result.output
+
+    def test_set_out_of_range_exits_1(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        result = _invoke(runner, saved_tv, "volume", "set", "500")
+        assert result.exit_code == 1
+
     def test_max_uses_profile_no_http(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
@@ -300,6 +314,31 @@ class TestVolumeCommands:
         result = _invoke(runner, saved_tv, "volume", "max", "--format", "plain")
         assert result.exit_code == 0
         assert int(result.output.strip()) > 0
+
+
+# ---------------------------------------------------------------------------
+# `vizaio versions`
+# ---------------------------------------------------------------------------
+
+
+class TestVersionsCommand:
+    def test_versions(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.get(
+            _tv_url(Endpoint.SYSTEM_VERSIONS),
+            payload={
+                "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+                "ITEM": {
+                    "TYPE": "T_JSON_OBJECT_V1",
+                    "VALUE": {"FIRMWARE": "3.720.9.1-1", "SCPL": "3.4.3"},
+                },
+                "URI": "/system/versions",
+            },
+        )
+        result = _invoke(runner, saved_tv, "versions", "--format", "tsv")
+        assert result.exit_code == 0, result.output
+        assert "3.720.9.1-1" in result.output
 
 
 # ---------------------------------------------------------------------------

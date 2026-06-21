@@ -279,6 +279,30 @@ class TestVolume:
         )
         assert await vizio_tv.get_volume() == 25
 
+    async def test_set_volume_flat_no_hashval(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Flat /audio/volume/level PUT: one call, body {LEVEL:n}, no GET."""
+        mock_client.return_value = _resp(make_success_response())
+        await vizio_tv.set_volume(12)
+        assert mock_client.call_count == 1
+        assert _last_call_paths(mock_client) == ("/audio/volume/level",)
+        assert _last_call_body(mock_client) == {"LEVEL": 12}
+
+    async def test_set_volume_out_of_range_raises(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        with pytest.raises(VizioInvalidInputError, match="0-100"):
+            await vizio_tv.set_volume(101)
+        mock_client.assert_not_called()
+
+    async def test_set_volume_soundbar_range(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Range is the profile's max_volume (soundbar = 31)."""
+        with pytest.raises(VizioInvalidInputError, match="0-31"):
+            await vizio_soundbar.set_volume(50)
+
     async def test_volume_up(self, vizio_tv: Vizio, mock_client: AsyncMock) -> None:
         mock_client.return_value = _resp(make_key_press_response())
         await vizio_tv.volume_up()
@@ -1270,6 +1294,50 @@ class TestDeviceInfo:
         assert isinstance(info, DeviceInfo)
         assert info.model == "V505-G9"
         assert info.serial_number == "SN"
+
+    async def test_get_versions(self, vizio_tv: Vizio) -> None:
+        """
+        GET /system/versions: {STATUS, ITEM:{VALUE:{<version map>}}}.
+        Shape captured live from VHD24M-0810 fw 3.720.9.1-1 (keys verbatim,
+        incl. spaces). Common fields typed; everything on .raw.
+        """
+        from unittest.mock import AsyncMock
+
+        from vizaio import SystemVersions
+
+        raw = {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEM": {
+                "TYPE": "T_JSON_OBJECT_V1",
+                "VALUE": {
+                    "ESN": "LMV5U2RB2405077",
+                    "FIRMWARE": "3.720.9.1-1",
+                    "SCPL": "3.4.3-2614.0002",
+                    "SERIAL NUMBER": "24LMV5U2RB05077",
+                    "acr": "3.5.1106",
+                },
+            },
+            "URI": "/system/versions",
+        }
+        vizio_tv._client.request_raw_json = AsyncMock(return_value=raw)  # type: ignore[method-assign]
+        v = await vizio_tv.get_versions()
+        assert isinstance(v, SystemVersions)
+        assert v.firmware == "3.720.9.1-1"
+        assert v.serial_number == "24LMV5U2RB05077"
+        assert v.esn == "LMV5U2RB2405077"
+        assert v.scpl == "3.4.3-2614.0002"
+        # Full device-cased map preserved.
+        assert v.raw["acr"] == "3.5.1106"
+
+    async def test_get_versions_tolerates_missing(self, vizio_tv: Vizio) -> None:
+        from unittest.mock import AsyncMock
+
+        vizio_tv._client.request_raw_json = AsyncMock(  # type: ignore[method-assign]
+            return_value={"STATUS": {"RESULT": "SUCCESS"}, "URI": "/system/versions"}
+        )
+        v = await vizio_tv.get_versions()
+        assert v.firmware == ""
+        assert v.raw == {}
 
 
 # ===========================================================================

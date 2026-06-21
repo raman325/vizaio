@@ -46,6 +46,7 @@ from .types import (
     SettingInfo,
     SettingType,
     StateExtended,
+    SystemVersions,
 )
 
 __version__ = "0.1.0"
@@ -74,6 +75,7 @@ __all__ = [
     "SettingInfo",
     "SettingType",
     "StateExtended",
+    "SystemVersions",
     "Vizio",
     "VizioAuthError",
     "VizioBusyError",

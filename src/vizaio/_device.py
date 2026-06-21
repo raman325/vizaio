@@ -73,6 +73,7 @@ from .parse import (
     parse_setting_types,
     parse_settings,
     parse_state_extended,
+    parse_system_versions,
     parse_vizios_binary,
 )
 from .types import (
@@ -89,6 +90,7 @@ from .types import (
     SettingInfo,
     SettingType,
     StateExtended,
+    SystemVersions,
 )
 from .wire import Response
 
@@ -276,6 +278,25 @@ class Vizio:
         """Return the device's current raw volume (range depends on profile)."""
         info = await self.get_setting("audio", "volume")
         return int(info.value)
+
+    async def set_volume(self, level: int) -> None:
+        """
+        Set the absolute volume level.
+
+        Uses the flat ``PUT /audio/volume/level`` endpoint with body
+        ``{"LEVEL": n}`` — a single round trip with **no HASHVAL** dance
+        (verified live on VHD24M-0810), unlike the ``menu_native`` audio
+        path that ``set_setting`` would take. ``level`` is validated
+        against the profile's ``max_volume``; out-of-range raises
+        :class:`VizioInvalidInputError`.
+        """
+        max_volume = self._profile.max_volume
+        if not 0 <= level <= max_volume:
+            raise VizioInvalidInputError(f"volume {level} out of range 0-{max_volume}")
+        await self._client.request_spec(
+            resolve(Endpoint.VOLUME_LEVEL, self._profile),
+            body=_payloads.volume_level(level),
+        )
 
     async def volume_up(self, steps: int = 1) -> None:
         """Send ``steps`` volume-up keypresses in one PUT (default 1)."""
@@ -662,6 +683,26 @@ class Vizio:
         # snapshot (errors live on ``StateExtended.errors`` for caller
         # inspection).
         return parse_state_extended(payload)
+
+    async def get_versions(self) -> SystemVersions:
+        """
+        Fetch firmware/identity/component versions in one round trip.
+
+        ``GET /system/versions`` returns firmware, serial number, ESN and
+        a per-component version map (SCPL, ACR, AppleTV, …) — a cleaner,
+        single-call source than the per-field ``menu_native``
+        ``system_information`` scrapes (:meth:`get_device_info`,
+        ``ESN``/``serial``/``version`` endpoints). Pairs well with
+        :meth:`get_state_extended` for one-shot device snapshots.
+
+        The wire envelope nests the data under ``ITEM.VALUE`` with
+        device-cased keys (some with spaces); this method parses the raw
+        JSON directly. Common fields are typed on :class:`SystemVersions`;
+        the full map is on ``.raw``.
+        """
+        spec = resolve(Endpoint.SYSTEM_VERSIONS, self._profile)
+        payload = await self._client.request_raw_json(spec)
+        return parse_system_versions(payload)
 
     async def get_current_app_config(self) -> AppConfig | None:
         """Return the active app's launch config, or ``None`` when no app is running."""

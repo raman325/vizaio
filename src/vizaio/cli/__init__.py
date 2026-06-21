@@ -393,6 +393,14 @@ def probe_cmd(
     _print(render_rows(rows, fmt=_fmt(ctx, output_format)))
 
 
+@app.command("versions")
+def versions_cmd(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Show firmware, serial, ESN and component versions (GET /system/versions)."""
+    versions = _exec(ctx, lambda v: v.get_versions())
+    rows = [{"key": str(k), "value": str(val)} for k, val in versions.raw.items()]
+    _print(render_rows(rows, fmt=_fmt(ctx, output_format)))
+
+
 # ---------------------------------------------------------------------------
 # `vizaio pair`
 # ---------------------------------------------------------------------------
@@ -737,6 +745,15 @@ def volume_down(
 ) -> None:
     """Decrease the volume by ``--steps`` keypresses (default 1)."""
     _exec(ctx, lambda v: v.volume_down(steps=steps))
+
+
+@volume_app.command("set")
+def volume_set(
+    ctx: typer.Context,
+    level: Annotated[int, typer.Argument(help="Absolute volume level (0..max).")],
+) -> None:
+    """Set the absolute volume level (single round trip, no hashval)."""
+    _exec(ctx, lambda v: v.set_volume(level))
 
 
 @volume_app.command("max")
