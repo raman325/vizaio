@@ -383,6 +383,24 @@ class TestMuteCommands:
 
 
 # ---------------------------------------------------------------------------
+# `vizaio pin`
+# ---------------------------------------------------------------------------
+
+
+class TestPinCommand:
+    def test_status(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        mock_aio.get(
+            _tv_url(Endpoint.PIN_IS_DEFAULT),
+            payload={"STATUS": {"RESULT": "SUCCESS"}, "ITEM": {"VALUE": True}},
+        )
+        result = _invoke(runner, saved_tv, "--format", "plain", "pin", "status")
+        assert result.exit_code == 0, result.output
+        assert result.output.strip().lower() == "true"
+
+
+# ---------------------------------------------------------------------------
 # Inputs / remote keys
 # ---------------------------------------------------------------------------
 

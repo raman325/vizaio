@@ -845,6 +845,21 @@ def remote_keys(ctx: typer.Context, output_format: FormatOption = None) -> None:
 
 
 # ---------------------------------------------------------------------------
+# `vizaio pin ...`
+# ---------------------------------------------------------------------------
+
+pin_app = typer.Typer(name="pin", help="Parental / purchase PIN status.")
+app.add_typer(pin_app)
+
+
+@pin_app.command("status")
+def pin_status(ctx: typer.Context, output_format: FormatOption = None) -> None:
+    """Show whether the parental/purchase PIN is still factory-default."""
+    is_default = _exec(ctx, lambda v: v.is_pin_default())
+    _print(render_value(is_default, fmt=_fmt(ctx, output_format)))
+
+
+# ---------------------------------------------------------------------------
 # `vizaio settings ...`
 # ---------------------------------------------------------------------------
 

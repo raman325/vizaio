@@ -704,6 +704,31 @@ class Vizio:
         payload = await self._client.request_raw_json(spec)
         return parse_system_versions(payload)
 
+    async def is_pin_default(self) -> bool:
+        """
+        Return whether the parental/purchase PIN is still factory-default.
+
+        ``GET /pin/is_pin_default`` — ``True`` means no custom PIN has been
+        set (purchases / parental-control screens are unprotected); ``False``
+        means the user has set one. Verified live on VHD24M-0810: the device
+        returns ``{"ITEM": {"VALUE": true}}`` (a JSON boolean).
+
+        Read-only status check. vizaio deliberately does not expose
+        ``set_pin`` / ``confirm_pin`` — setting a parental PIN is a
+        lockout-risky write whose body semantics aren't pinned down from the
+        APK — nor ``pairing/unpair`` (a vestigial route the official app
+        never calls).
+        """
+        spec = resolve(Endpoint.PIN_IS_DEFAULT, self._profile)
+        payload = await self._client.request_raw_json(spec)
+        item = next((v for k, v in payload.items() if str(k).lower() == "item"), None)
+        if isinstance(item, Mapping):
+            value = next(
+                (v for k, v in item.items() if str(k).lower() == "value"), None
+            )
+            return bool(value)
+        return False
+
     async def get_current_app_config(self) -> AppConfig | None:
         """Return the active app's launch config, or ``None`` when no app is running."""
         if not self._profile.has_apps:
