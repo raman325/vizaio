@@ -291,14 +291,6 @@ class DiscoveredDevice:
 
     model: str
     id: str = ""
-    ws_port: int | None = None
-    """Insecure WebSocket port (mDNS ``wp`` field). ``None`` when not
-    advertised. Note: this port may be advertised but not actually open
-    on every firmware — see protocol-notes #28."""
-
-    wss_port: int | None = None
-    """Secure WebSocket port (mDNS ``wsp`` field). ``None`` when not
-    advertised. Same caveat as ``ws_port``."""
 
     @property
     def host(self) -> str:
@@ -330,10 +322,9 @@ class StateExtended:
     """
     Aggregate state snapshot from ``GET /state_extended``.
 
-    Bulk poll alternative to the WebSocket event stream. Returns power,
-    current app, current input, screen mode, and media state in **one**
-    HTTP round trip — meaningfully cheaper than five individual GETs for
-    HA-style polling integrations.
+    Returns power, current app, current input, screen mode, and media
+    state in **one** HTTP round trip — meaningfully cheaper than five
+    individual GETs for HA-style polling integrations.
 
     Capability is advertised by the device under
     ``deviceinfo.scpl_capabilities.state_extended``. Older firmware
@@ -402,48 +393,3 @@ class StateExtended:
     raw: Mapping[str, Any] = field(default_factory=dict)
     """Original parsed JSON payload (case-preserved). Escape hatch for
     fields we don't model (firmware-specific extensions)."""
-
-
-@dataclass(frozen=True, slots=True)
-class StateEvent:
-    """
-    An asynchronous state change pushed by the device over WebSocket.
-
-    Per APK findings (``docs/websocket-protocol-notes.md``), the official
-    Vizio app demultiplexes only five URIs and ignores everything else.
-    We expose the raw URI plus a typed value when we recognize one of
-    those five — anything else surfaces with ``value=None`` and the full
-    ``raw`` envelope so callers can experiment on hardware where the
-    Android app is silent.
-
-    Inferred shape (FLAGGED — verify on a real device):
-
-    .. code-block:: json
-
-        {
-          "URI":     "state/device/power_mode",
-          "STATUS":  {"RESULT": "SUCCESS", "DETAIL": "..."},
-          "ITEMS":   [{"CNAME": "...", "VALUE": <new value>, ...}]
-        }
-    """
-
-    uri: str
-    """``state/device/power_mode``, ``audio/volume/level``, etc.
-    Raw string from the device — no normalization beyond strip."""
-
-    value: Any = None
-    """Best-effort typed value extracted from ``ITEMS[0].VALUE``.
-    ``None`` when we couldn't determine a value (unknown URI shape, no
-    items, or the inferred envelope didn't match)."""
-
-    cname: str = ""
-    """The first item's ``cname`` if the envelope matches our inferred
-    shape. Empty string otherwise."""
-
-    hashval: int | None = None
-    """The first item's hashval, when present. Lets event-driven
-    coordinators write back to the same setting without a fresh GET."""
-
-    raw: Mapping[str, Any] = field(default_factory=dict)
-    """Original parsed JSON, lowercased per the wire boundary
-    convention. The escape hatch when the inferred shape doesn't fit."""

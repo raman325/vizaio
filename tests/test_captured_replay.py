@@ -63,13 +63,6 @@ class TestEnvelopeStatusParsing:
         response = Response.from_json(_load("tv_information_legacy_404"))
         assert response.status is ResponseStatus.URI_NOT_FOUND
 
-    def test_event_register_invalid_parameter(self) -> None:
-        """The originally-documented EVENT_REGISTER_BODY of {REQUEST: MODIFY}
-        returns INVALID_PARAMETER on this firmware. Captured to lock in
-        the call shape that proves we need VALUE: TRUE."""
-        response = Response.from_json(_load("event_register_unsup"))
-        assert response.status is ResponseStatus.INVALID_PARAMETER
-
     def test_success_responses_round_trip(self) -> None:
         """Every other captured fixture is a SUCCESS response."""
         for name in [
@@ -345,9 +338,11 @@ class TestStatusToExceptionMapping:
         from vizaio.endpoints import EndpointSpec
         from vizaio.types import AuthRequirement
 
-        response = Response.from_json(_load("event_register_unsup"))
+        response = Response.from_json(
+            {"STATUS": {"DETAIL": "Invalid parameter", "RESULT": "INVALID_PARAMETER"}}
+        )
         spec = EndpointSpec(
-            paths=("/event/register",),
+            paths=("menu_native/dynamic/tv_settings/audio/volume",),
             method="PUT",
             auth=AuthRequirement.REQUIRED,
             item_cname=None,
