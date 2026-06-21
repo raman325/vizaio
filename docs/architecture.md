@@ -14,7 +14,6 @@ modules below have no idea modules above exist.
 │  Vizio class           (_device.py)  — public API; capability    │
 │                                        gating; hashval recovery; │
 │                                        pair_session context mgr  │
-│  EventStream        (_websocket.py)  — WS event subscription     │
 ├──────────────────────────────────────────────────────────────────┤
 │  apps.py                             — catalog + availability    │
 │                                        (bundled + remote refresh)│
@@ -347,206 +346,6 @@ VizioError
 on purpose — code that catches "device said no" can stay broad, code
 that wants to recover specifically from "wrong input name" can narrow.
 
-## WebSocket SCPL — `subscribe_events()` (v0.2-alpha)
-
-The library also speaks the device's WebSocket SCPL protocol for
-push-based state updates. This sits alongside the REST surface — same
-auth token, same host, but a different port (advertised via mDNS as
-`wsPort`/`wssPort`, fallback 7345).
-
-### Why it exists
-
-Polling for power/volume/mute/input/app state via REST has two costs:
-
-- Latency — physical-remote presses don't reflect in HA until the next
-  scan interval (~10s).
-- Device load — each scan cycle is a burst of REST round trips. APK
-  research suggests this saturation pattern explains the "TV stops
-  responding" issue (#175 in pyvizio).
-
-A long-lived WebSocket eliminates both. The TV pushes a frame whenever
-power, volume, mute, current input, or current app changes; HA reacts
-in ~50ms with one connection.
-
-### How the protocol works
-
-**Surprise discovery:** `eventRegister` is **not a WebSocket frame**.
-The official Android app sends `PUT /event/register` over the regular
-REST agent first, then opens the WebSocket. There is no per-cname
-subscription on the wire — just a single global "send me events"
-toggle.
-
-```
-Client                                          Device
-  |  PUT /event/register {"REQUEST": "MODIFY"}   |
-  |  AUTH: <token>                               |
-  |--------------------------------------------->|
-  |                                  200 SUCCESS |
-  |<---------------------------------------------|
-  |                                              |
-  |  WS upgrade GET /?TOKEN=<token>              |
-  |  Authorization: <token>                      |
-  |  VIZIO-SmartCast-Source: vizaio     |
-  |--------------------------------------------->|
-  |                          101 Switching ...   |
-  |<---------------------------------------------|
-  |                                              |
-  |          (TV pushes JSON text frames)        |
-  |<---------------------------------------------|
-  |       {"URI": "audio/volume/level", ...}     |
-  |       {"URI": "state/device/power_mode",...} |
-  |  PING                                        |    every 3s of idle
-  |--------------------------------------------->|
-  |                                         PONG |
-  |<---------------------------------------------|
-  |                                              |
-  |        ... (10s read-idle → close)           |
-```
-
-**Auth quirk:** REST uses an `AUTH` header. WS uses `Authorization`
-(capital-A) PLUS the auth token as a `?TOKEN=` query param on the
-upgrade URL. We send both, matching the Android app exactly.
-
-**Reconnect:** On disconnect, the strategy is identical — send
-`PUT /event/register` again, open a new WS. The TV doesn't remember
-subscriptions across drops. Default backoff is a flat 15s loop (no
-exponential). Events that fire while disconnected are dropped (no
-replay).
-
-### Subscribable URIs
-
-The Android app demultiplexes exactly 5 URIs (`KNOWN_URIS` in
-`_websocket.py`):
-
-```python
-"state/device/power_mode"         # POW_ON / POW_OFF
-"app/current"                     # SmartCast app launches
-"system/context_change"           # input changes (NOT system/input/current_input)
-"audio/volume/level"              # volume setting
-"audio/volume/mute"               # mute toggle
-```
-
-The TV may emit other URIs; the official app silently ignores them.
-We surface them all — `StateEvent.uri` is just whatever the device
-sent. Filter on the caller side.
-
-### Public API
-
-```python
-from vizaio import Vizio, DeviceType
-
-async with Vizio(host=..., device_type=DeviceType.TV, auth_token=...) as v:
-    async with v.subscribe_events() as events:
-        async for event in events:
-            print(f"{event.uri} -> {event.value} (cname={event.cname})")
-```
-
-`StateEvent` carries:
-
-- `uri` — the path the device emitted (raw string)
-- `value` — best-effort typed value (int, str, dict, or None if we
-  couldn't determine one)
-- `cname` — first item's cname, if the inferred shape matched
-- `hashval` — first item's hashval, when present (lets HA cache for
-  efficient writes)
-- `raw` — the lowercased original envelope (escape hatch)
-
-Options:
-
-- `auto_reconnect=True` (default) — keep yielding across disconnects
-- `auto_reconnect=False` — iterator ends on first close
-- `reconnect_delay=15.0` (default) — flat seconds between attempts
-- `ws_port=N` — override the WS port (rarely needed)
-
-### What's verified vs. inferred
-
-This is the part to read carefully if you're building on the WS API.
-
-**Verified from the APK source (high confidence):**
-
-- URL scheme, port discovery, path (`/`)
-- Auth surface (`?TOKEN=` + `Authorization` header)
-- Heartbeat: ping every 3s write-idle, close after 10s read-idle
-- `PUT /event/register` with `{"REQUEST": "MODIFY"}` body
-- Reconnect cycle (re-register every time)
-- The 5 demultiplexed URIs
-- Voice streaming uses the same WS port with binary frames (we ignore
-  binary frames — this library doesn't do voice)
-
-**Inferred from context, NOT directly visible in bytecode:**
-
-- The exact event-payload JSON shape past the `URI` field. The
-  per-processor JSON deserializers were "method dump skipped" blocks
-  in jadx output. The strong inference is the same `STATUS`/`ITEMS`
-  envelope as REST, since the same `Serializer.getGson()` is reused
-  and the processors that handle WS frames are the same ones that
-  handle REST responses. **HW-VERIFY:** if the real device emits a
-  different shape, we adjust `_parse_event_frame` and re-test.
-
-**Unknown until hardware:**
-
-- Whether settings tree (`menu_native/dynamic/...`) emits events at
-  all
-- TV-only vs. soundbar/Crave behavior (the Android app gates this on
-  `device_type == TV`; we don't enforce — we probe and fall back to
-  polling on register failure)
-- Whether the TV has any rate limit on event throughput
-- Behavior under simultaneous WS + REST load (e.g., does a setting
-  PUT trigger an immediate event?)
-
-The test suite (`tests/test_websocket.py`, 27 tests) covers the
-verified parts plus the inferred-shape assumption with synthetic
-frames mirroring our best guess. Look for `# HW-VERIFY` markers when
-revisiting after hardware testing.
-
-### Module structure
-
-```
-_websocket.py
-├── EVENT_REGISTER_PATH / EVENT_REGISTER_BODY  (constants)
-├── KNOWN_URIS                                 (the 5 documented URIs)
-├── SubscribeOptions                           (frozen knobs dataclass)
-├── EventStream                                (async ctx mgr + iterator)
-│   ├── __aenter__ / __aexit__
-│   ├── __aiter__  → _iterate()
-│   ├── _connect()                              (register → ws_connect)
-│   ├── _register_for_events()                  (REST PUT)
-│   ├── _consume_frames()                       (one event per text frame)
-│   ├── _build_ws_url() / _build_ws_headers()
-│   └── aclose()
-└── _parse_event_frame()                       (JSON-in / StateEvent-out)
-```
-
-The `Vizio.subscribe_events()` method is a thin factory — all the
-logic lives in `EventStream`. This keeps `_device.py` clean and makes
-the WS path independently testable.
-
-### Falling back when WS isn't available
-
-The library doesn't auto-detect WS support — it probes by trying. If
-`PUT /event/register` returns an error, the connect attempt raises
-`VizioConnectionError`. Callers wanting a graceful fallback to polling
-should catch:
-
-```python
-async def watch(vizio):
-    try:
-        async with vizio.subscribe_events() as events:
-            async for event in events:
-                ...
-    except VizioConnectionError:
-        # WS unavailable — fall back to polling
-        while True:
-            state = await vizio.get_power_state()
-            ...
-            await asyncio.sleep(10)
-```
-
-A future v0.3 may add `Vizio.has_websocket_support()` after we have
-hardware data on which firmware revisions support it reliably.
-
----
-
 ## Reading order for the codebase
 
 If you want to read your way through the source from the bottom up:
@@ -570,10 +369,7 @@ If you want to read your way through the source from the bottom up:
    firmware-fallback.
 10. **`apps.py`** — bundled JSON + remote refresh + `find_app_name`.
 11. **`discovery.py`** — zeroconf + SSDP.
-12. **`_websocket.py`** — `EventStream` + `_parse_event_frame`. The
-    push-side counterpart to `client.py`. Independent of `_device.py`
-    until you reach `Vizio.subscribe_events()`.
-13. **`_device.py`** — `Vizio` class, the public API. This is the only
+12. **`_device.py`** — `Vizio` class, the public API. This is the only
     file in the package that touches all the others.
 
 ## Reading order for the test suite
@@ -592,8 +388,6 @@ test file pins down the contract for one module:
 - `test_discovery.py` — zeroconf + SSDP
 - `test_device.py` — the `Vizio` class methods, with `SmartCastClient`
   mocked
-- `test_websocket.py` — `EventStream` + `_parse_event_frame`, with
-  aiohttp's `ws_connect` mocked
 
 If a test fails after a refactor, the location pins down what layer
 the bug is in.
@@ -609,7 +403,6 @@ the bug is in.
 | A new public method | `_device.py` (the only place public API lives) |
 | A new exception subclass | `errors.py` |
 | A new fixture for tests | `tests/_fixtures.py` |
-| A new event field discovered on real hardware | `types.py` (extend `StateEvent`) + `_websocket.py::_extract_item` |
 
 ## Summary
 

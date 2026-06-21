@@ -809,59 +809,28 @@ issue history confirms this. The fallback is opt-in via
 
 ---
 
-## 28. WebSocket SCPL — event subscription
+## 28. WebSocket SCPL — out of scope (removed)
 
-**Confidence:** APK CONFIRMED + HARDWARE VERIFIED
+**Confidence:** HARDWARE VERIFIED — not implemented.
 
-**Behavior:** The TV exposes a WebSocket interface alongside REST.
-Subscription is opted into by **HTTP** `PUT /event/register` (not a WS
-frame), then a `wss://<host>:<ws_port>/?TOKEN=<auth>` connection is
-opened with an `Authorization: <token>` header, and the device pushes
-`{"URI": "<uri>", ...}` JSON frames when registered properties change.
-The `URI` field carries a full SCPL path like `state/device/power_mode`
-(not an item `cname`). There is no per-URI subscription envelope on
-the socket — registration is a single global toggle.
+vizaio does **not** support WebSocket/push events. A prototype existed
+(`subscribe_events()` / `EventStream` / `_websocket.py`) but was removed
+after hardware testing showed the SmartCast event socket is part of the
+device's **Google Cast control plane**, not a general mDNS/REST feature:
 
-The `?TOKEN=` query string and the capital-A `Authorization` header
-are both required: the official Android app sends both, and at least
-one firmware revision rejects connections with only one of them.
+- The official app only ever opens `ws://<ip>:8005` (insecure), and only for
+  **Google-Cast-discovered** devices (`CastMediaRouterCallback.java:109`). The
+  mDNS path builds `https` capabilities only and never connects on `wp`/`wsp`.
+- On a real TV (VHD24M-0810, fw 3.720.9.1-1, SoC MTK) the advertised
+  `wp=8005`/`wsp=8006` are connection-refused even powered on; `PUT
+  /event/register` returns `SUCCESS` but no socket appears; a WS upgrade on the
+  REST port (7345 `lighttpd`) returns HTTP 500. Register success ≠ reachable
+  socket.
 
-**Our handling:** `Vizio.subscribe_events()` returns an async-iterable
-`EventStream` (`src/vizaio/_websocket.py`). The implementation:
-
-- Sends `PUT /event/register` with body `{"REQUEST":"MODIFY","VALUE":"TRUE"}`
-  before opening the WS. (Hardware probe: omitting `VALUE` returns
-  `INVALID_PARAMETER`; `VALUE: true` (JSON bool) crashes the device's
-  parser and returns HTTP 500 with HTML body. The string `"TRUE"` is
-  the only form that works on at least one firmware revision —
-  3.720.9.1-1 / VHD24M-0810.)
-- Decodes incoming frames into `StateEvent` typed dataclasses with the
-  raw envelope preserved on `.raw` for unknown URIs.
-- Auto-reconnects on disconnect by default; `auto_reconnect=False`
-  ends the iterator on first drop.
-- Surfaces "device rejected event-register" as
-  `VizioUnsupportedError("device rejected event-register …")` so
-  callers can fall back to polling on firmware that doesn't support
-  the surface.
-
-See `docs/websocket-protocol-notes.md` for the full protocol writeup
-(URL/port discovery, header set, payload shape, reconnect behavior,
-known-URI taxonomy).
-
-**Why it matters:**
-
-- Sub-100ms state updates vs. ~10s polling lag.
-- Eliminates the GET/PUT burst pattern implicated in pyvizio issue #175
-  ("TV stops responding").
-- Lower device load (one long-lived connection vs. dozens of round trips
-  per minute).
-
-**Evidence:**
-
-- APK `V2SCPWebsocketApi` referenced at `DeviceCommandBuilder.java:360`.
-- `eventRegister` operation, body shape captured live.
-- Voice search uses a separate WebSocket (`VoiceSearch.java`) — out of
-  scope for our library.
+For push/real-time state, use the TV's Chromecast-built-in interface (e.g. Home
+Assistant's Google Cast integration) and poll vizaio for SmartCast state. See
+`docs/websocket-protocol-notes.md` for the full evidence writeup. Voice search
+uses yet another WebSocket (`VoiceSearch.java`) — also out of scope.
 
 ---
 
