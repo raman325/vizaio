@@ -26,6 +26,11 @@ def write_setting(value: Any, hashval: int) -> dict[str, Any]:
     return {"VALUE": value, "HASHVAL": hashval, "REQUEST": "MODIFY"}
 
 
+def volume_level(level: int) -> dict[str, Any]:
+    """Body for the flat ``PUT /audio/volume/level`` — no HASHVAL needed."""
+    return {"LEVEL": level}
+
+
 def key_press(codes: Sequence[KeyCode]) -> dict[str, Any]:
     """
     Build a KEYLIST PUT body. ``ACTION`` is always ``KEYPRESS``.

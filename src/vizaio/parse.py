@@ -20,6 +20,7 @@ from .types import (
     SettingInfo,
     SettingType,
     StateExtended,
+    SystemVersions,
 )
 from .wire import Item, Response
 
@@ -258,6 +259,37 @@ def parse_state_extended(payload: Mapping[str, Any]) -> StateExtended:
         device_name=str(ci_payload.get("device_name", "")),
         errors=errors,
         raw=payload,
+    )
+
+
+def parse_system_versions(payload: Mapping[str, Any]) -> SystemVersions:
+    """
+    Parse ``GET /system/versions`` → :class:`SystemVersions`.
+
+    Wire shape: ``{"STATUS": ..., "ITEM": {"VALUE": {<version map>}}}``.
+    The version map keys arrive verbatim (e.g. ``"FIRMWARE"``,
+    ``"SERIAL NUMBER"``, ``"SCPL"``, ``"acr"``); we surface the common
+    ones typed and keep the whole map on ``raw``. Tolerant of missing
+    pieces — degrades to empty strings rather than raising.
+    """
+    item = _ci_get(payload).get("item")
+    value: Mapping[str, Any] = {}
+    if isinstance(item, Mapping):
+        candidate = _ci_get(item).get("value")
+        if isinstance(candidate, Mapping):
+            value = candidate
+    lowered = {str(k).lower(): v for k, v in value.items()}
+
+    def _field(key: str) -> str:
+        found = lowered.get(key)
+        return str(found) if found is not None else ""
+
+    return SystemVersions(
+        firmware=_field("firmware"),
+        serial_number=_field("serial number"),
+        esn=_field("esn"),
+        scpl=_field("scpl"),
+        raw=value,
     )
 
 

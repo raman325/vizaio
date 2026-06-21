@@ -393,3 +393,24 @@ class StateExtended:
     raw: Mapping[str, Any] = field(default_factory=dict)
     """Original parsed JSON payload (case-preserved). Escape hatch for
     fields we don't model (firmware-specific extensions)."""
+
+
+@dataclass(frozen=True, slots=True)
+class SystemVersions:
+    """
+    Version/identity snapshot from ``GET /system/versions``.
+
+    One round trip returns firmware, serial, ESN and the per-component
+    version map (SCPL, ACR, AppleTV, …) — cleaner than the separate
+    ``menu_native`` ``system_information`` scrapes for ESN / serial /
+    version. The common fields are typed; everything the device reports
+    (keys verbatim, e.g. ``"SERIAL NUMBER"``, ``"SC CONFIG"``) is on
+    :attr:`raw`.
+    """
+
+    firmware: str = ""
+    serial_number: str = ""
+    esn: str = ""
+    scpl: str = ""
+    raw: Mapping[str, Any] = field(default_factory=dict)
+    """Every key the device returns under ``ITEM.VALUE``, verbatim."""

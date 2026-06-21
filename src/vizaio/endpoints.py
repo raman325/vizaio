@@ -66,6 +66,7 @@ class Endpoint(StrEnum):
     DEVICE_INFO = "device_info"
     POWER_MODE = "power_mode"
     STATE_EXTENDED = "state_extended"
+    SYSTEM_VERSIONS = "system_versions"
     BATTERY_LEVEL = "battery_level"
     CHARGING_STATUS = "charging_status"
 
@@ -73,6 +74,7 @@ class Endpoint(StrEnum):
     KEY_PRESS = "key_press"
     INPUTS = "inputs"
     CURRENT_INPUT = "current_input"
+    VOLUME_LEVEL = "volume_level"
 
     # Apps (TV only)
     CURRENT_APP = "current_app"
@@ -218,6 +220,7 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     Endpoint.DEVICE_INFO: row("GET", "/state/device/deviceinfo", auth=NONE),
     Endpoint.POWER_MODE: row("GET", "/state/device/power_mode", item="power_mode"),
     Endpoint.STATE_EXTENDED: row("GET", "/state_extended", auth=REQ),
+    Endpoint.SYSTEM_VERSIONS: row("GET", "/system/versions", auth=REQ),
     Endpoint.BATTERY_LEVEL: row(
         "GET", "/state/device/battery_level", item="battery_level", needs=Need.BATTERY
     ),
@@ -229,6 +232,9 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     ),
     # Control —————————————————————————————————————————————————————————
     Endpoint.KEY_PRESS: row("PUT", "/key_command/"),
+    # Flat absolute-volume set — no HASHVAL required (verified live on
+    # VHD24M-0810), unlike the menu_native audio/volume path.
+    Endpoint.VOLUME_LEVEL: row("PUT", "/audio/volume/level", auth=REQ),
     Endpoint.LAUNCH_APP: row("PUT", "/app/launch", auth=REQ, needs=Need.APPS),
     Endpoint.CURRENT_APP: row("GET", "/app/current", auth=REQ, needs=Need.APPS),
     # Inputs ——————————————————————————————————————————————————————————
