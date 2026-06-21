@@ -715,6 +715,47 @@ class TestRemote:
             await vizio_tv.send_key("INVALID_KEY")
         mock_client.assert_not_called()
 
+    async def test_send_text_ascii_codes(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Each char -> codeset 0, code = ASCII code point, in one KEYLIST."""
+        mock_client.return_value = _resp(make_key_press_response())
+        await vizio_tv.send_text("Hi 5")
+        assert mock_client.await_count == 1
+        assert _last_call_paths(mock_client) == ("/key_command/",)
+        body = _last_call_body(mock_client)
+        assert body["KEYLIST"] == [
+            {"CODESET": 0, "CODE": 72, "ACTION": "KEYPRESS"},  # H
+            {"CODESET": 0, "CODE": 105, "ACTION": "KEYPRESS"},  # i
+            {"CODESET": 0, "CODE": 32, "ACTION": "KEYPRESS"},  # space
+            {"CODESET": 0, "CODE": 53, "ACTION": "KEYPRESS"},  # 5
+        ]
+
+    async def test_send_text_empty_is_noop(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        await vizio_tv.send_text("")
+        mock_client.assert_not_called()
+
+    async def test_send_text_non_ascii_raises(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        with pytest.raises(VizioInvalidInputError, match="ASCII"):
+            await vizio_tv.send_text("café")
+        mock_client.assert_not_called()
+
+    async def test_send_text_chunks_above_cap(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Long strings split into multiple PUTs (defensive KEYLIST cap=50)."""
+        mock_client.return_value = _resp(make_key_press_response())
+        await vizio_tv.send_text("a" * 120)
+        assert mock_client.await_count == 3  # 50 + 50 + 20
+        lengths = [
+            len(c.kwargs["body"]["KEYLIST"]) for c in mock_client.await_args_list
+        ]
+        assert lengths == [50, 50, 20]
+
     async def test_available_keys(self, vizio_tv: Vizio) -> None:
         keys = vizio_tv.available_keys
         assert "PLAY" in keys
