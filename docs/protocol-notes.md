@@ -484,6 +484,7 @@ Asserted at the payload level — no possibility of a sign inversion.
 | 25 | Tight default timeouts | APK CONFIRMED | read=10/write=3/connect=2 | n/a |
 | 26 | `AUTH` (not `Authorization`) | APK CONFIRMED | Literal `AUTH` header | yes |
 | 27 | Zeroconf-only discovery | APK CONFIRMED | SSDP optional fallback | yes |
+| 29 | T_ACTION_V1 → `REQUEST: ACTION` | HARDWARE VERIFIED | `trigger_setting_action` / `blank_screen` | yes |
 
 ---
 
@@ -831,6 +832,62 @@ For push/real-time state, use the TV's Chromecast-built-in interface (e.g. Home
 Assistant's Google Cast integration) and poll vizaio for SmartCast state. See
 `docs/websocket-protocol-notes.md` for the full evidence writeup. Voice search
 uses yet another WebSocket (`VoiceSearch.java`) — also out of scope.
+
+---
+
+## 29. T_ACTION_V1 items fire with `REQUEST: "ACTION"`
+
+**Confidence:** HARDWARE VERIFIED (M65Q7-H1, fw 1.720.9.1-1)
+
+**Behavior:** Menu leaves of type `T_ACTION_V1` (e.g.
+`system/timers/blank_screen`, `admin_and_privacy/soft_power_cycle` =
+"Reboot TV") are fire-and-forget actions, not values. They are triggered
+by a PUT whose body uses the request verb `ACTION` — not `MODIFY`,
+which returns `PROXY_ERROR`. No prior client library implements this;
+the verb surfaced in a comment by DanMabee on
+[exiva/Vizio_SmartCast_API#42](https://github.com/exiva/Vizio_SmartCast_API/issues/42).
+
+Body variants probed live against `blank_screen`:
+
+| Body | Result |
+| --- | --- |
+| `{"REQUEST": "ACTION", "VALUE": "T_ACTION_V1", "HASHVAL": <h>}` | `SUCCESS` |
+| `{"REQUEST": "ACTION", "HASHVAL": <h>}` | `SUCCESS` (minimal form) |
+| `{"REQUEST": "ACTION", "VALUE": "T_ACTION_V1"}` | `INVALID_PARAMETER` |
+| `{"REQUEST": "ACTION", "VALUE": "T_ACTION_V1", "HASHVAL": 999999}` | `HASHVAL_ERROR` |
+| `{"REQUEST": "MODIFY", ...}` | `PROXY_ERROR` |
+
+`blank_screen` specifics (what holding the remote's mute button for
+5 s triggers — Vizio support calls it the "mute screen" feature; the
+menu item is "Blank Screen"): panel off, audio and the
+SmartCast platform keep running. One-way — re-firing keeps the panel
+dark. **No observable state change anywhere** (power_mode still 1,
+`state_extended` unchanged, the leaf's HASHVAL unchanged) — treat as
+fire-and-forget. Navigation keys wake the panel (BACK `(4,0)`
+verified); volume/mute keys deliberately do not, so audio stays
+adjustable while dark. Audio-settings trees have no such leaf, so
+soundbars/Crave naturally return `URI_NOT_FOUND`.
+
+**Our handling:** `_payloads.action_setting(hashval)` builds the
+minimal body; `Vizio.trigger_setting_action(type, name)` does the
+GET → type-check (`T_ACTION_V1`, else `VizioInvalidInputError`) →
+ACTION PUT with the #13-style single retry; `Vizio.blank_screen()` and
+`vizaio screen blank` / `vizaio settings action` expose it.
+`SettingType.ACTION` is a first-class setting type (previously unknown
+types coerced to `MENU`).
+
+**Tests:** payload shape, GET→PUT flow + retry + type guard in
+`test_device.py::TestSettingActions`, CLI wiring, and a captured
+fixture (`tests/captured/settings_system_timers_blank_screen.json`) —
+the suite's first fixture from a second hardware family (M65Q7-H1
+alongside VHD24M-0810).
+
+**Related non-findings from the same session:** `KEYDOWN`/`KEYUP`
+actions are documented by exiva and accepted by firmware, but no
+KEYDOWN-hold sequence triggers Blank Screen — the long-press detection
+lives in the remote-input path, not `/key_command/`. The settings tree
+has no "disable SmartCast Home input steal" leaf; `input_at_power_on`
+offers only `SmartCast` / `Last Used TV Input`.
 
 ---
 

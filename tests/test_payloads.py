@@ -18,6 +18,7 @@ import pytest
 
 from vizaio import AppConfig, PairChallenge
 from vizaio._payloads import (
+    action_setting,
     begin_pair,
     cancel_pair,
     finish_pair,
@@ -49,6 +50,22 @@ class TestWriteSetting:
         """Device requires uppercase keys on writes — protocol notes."""
         body = write_setting(value=1, hashval=1)
         for key in body:
+            assert key.isupper(), f"{key!r} is not uppercase"
+
+
+class TestActionSetting:
+    """T_ACTION_V1 trigger: REQUEST=ACTION + HASHVAL, nothing else.
+
+    Minimal body verified on M65Q7-H1 (protocol-notes #29): VALUE is
+    optional and omitted; HASHVAL is mandatory.
+    """
+
+    def test_shape(self) -> None:
+        body = action_setting(hashval=1578429529)
+        assert body == {"REQUEST": "ACTION", "HASHVAL": 1578429529}
+
+    def test_keys_are_uppercase(self) -> None:
+        for key in action_setting(hashval=1):
             assert key.isupper(), f"{key!r} is not uppercase"
 
 

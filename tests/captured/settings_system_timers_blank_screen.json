@@ -1,0 +1,26 @@
+{
+  "HASHLIST": [
+    2140426924,
+    1317381144,
+    2726769688
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "blank_screen",
+      "HASHVAL": 1578429529,
+      "NAME": "Blank Screen",
+      "TYPE": "T_ACTION_V1",
+      "VALUE": "T_ACTION_V1"
+    }
+  ],
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/menu_native/dynamic/tv_settings/system/timers/blank_screen"
+}

@@ -715,6 +715,25 @@ def mute_toggle(ctx: typer.Context) -> None:
 
 
 # ---------------------------------------------------------------------------
+# `vizaio screen ...`
+# ---------------------------------------------------------------------------
+
+screen_app = typer.Typer(name="screen", help="Panel (display) control.")
+app.add_typer(screen_app)
+
+
+@screen_app.command("blank")
+def screen_blank(ctx: typer.Context) -> None:
+    """
+    Turn the panel off, audio keeps playing (the hold-mute "mute screen"). TV only.
+
+    Any navigation keypress wakes it, e.g. `vizaio remote send BACK`
+    (volume/mute keys intentionally don't, so sound stays adjustable).
+    """
+    _exec(ctx, lambda v: v.blank_screen())
+
+
+# ---------------------------------------------------------------------------
 # `vizaio volume ...`
 # ---------------------------------------------------------------------------
 
@@ -925,6 +944,23 @@ def settings_set(
     except ValueError:
         typed_value = value
     _exec(ctx, lambda v: v.set_setting(setting_type, name, typed_value))
+
+
+@settings_app.command("action")
+def settings_action(
+    ctx: typer.Context,
+    setting_type: Annotated[
+        str, typer.Argument(help="Category path, e.g. 'system/timers'.")
+    ],
+    name: Annotated[str, typer.Argument(help="Action item, e.g. 'blank_screen'.")],
+) -> None:
+    """
+    Fire an action-type setting (T_ACTION_V1).
+
+    E.g. system/timers blank_screen, or admin_and_privacy
+    soft_power_cycle (reboot).
+    """
+    _exec(ctx, lambda v: v.trigger_setting_action(setting_type, name))
 
 
 # ---------------------------------------------------------------------------

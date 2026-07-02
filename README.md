@@ -320,6 +320,16 @@ vizaio mute off              # idempotent — reads state, no-op if already unmu
 vizaio mute toggle           # one round trip — presses MUTE_TOGGLE blindly
 ```
 
+### `vizaio screen`
+
+```bash
+vizaio screen blank          # panel off, audio keeps playing (hold-mute "mute screen"; TV only)
+```
+
+Wake the panel with any navigation key, e.g. `vizaio remote send BACK`
+(volume/mute keys intentionally don't wake it, so sound stays adjustable
+while the screen is dark). There is no readable "blanked" state.
+
 ### `vizaio volume`
 
 ```bash
@@ -356,7 +366,13 @@ vizaio settings types                     # top-level categories
 vizaio settings list audio                # all settings under 'audio'
 vizaio settings get audio volume          # single value
 vizaio settings set audio volume 30       # write (uses one-shot retry on race)
+vizaio settings action system/timers blank_screen   # fire a T_ACTION_V1 item
 ```
+
+`settings action` triggers action-type menu items (`T_ACTION_V1`) — things
+like `system/timers blank_screen` (Blank Screen) or `admin_and_privacy
+soft_power_cycle` (reboot). These use the `REQUEST: "ACTION"` verb, not
+`MODIFY`; see `docs/protocol-notes.md` #29.
 
 ### `vizaio pin`
 
@@ -754,6 +770,13 @@ PUT fails with `invalid_parameter` (the hashval changed mid-flight, a
 documented race in pyvizio issues #135 / #140), refetches and retries
 **once** before raising. When you pass `hashval=` explicitly, no retry
 fires — caller is in charge.
+
+```python
+# Action items (T_ACTION_V1) fire, they don't hold values:
+await v.blank_screen()                  # panel off, audio keeps playing
+await v.send_key("BACK")                # any nav key wakes the panel
+await v.trigger_setting_action("admin_and_privacy", "soft_power_cycle")  # reboot
+```
 
 ### Remote keys
 

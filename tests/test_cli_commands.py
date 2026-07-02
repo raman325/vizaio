@@ -594,6 +594,81 @@ class TestSettingsCommands:
         assert body["REQUEST"] == "MODIFY"
         assert body["HASHVAL"] == 42
 
+    def test_action(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        """`settings action` fires REQUEST=ACTION with the fetched hashval."""
+        mock_aio.get(
+            _tv_settings_url("system/timers", "blank_screen"),
+            payload=make_success_response(
+                items=[
+                    make_item(
+                        "blank_screen",
+                        "T_ACTION_V1",
+                        item_type="T_ACTION_V1",
+                        hashval=77,
+                    )
+                ]
+            ),
+        )
+        mock_aio.put(
+            _tv_settings_url("system/timers", "blank_screen"),
+            payload=make_success_response(),
+        )
+        result = _invoke(
+            runner, saved_tv, "settings", "action", "system/timers", "blank_screen"
+        )
+        assert result.exit_code == 0, result.output
+        put_calls = [
+            req
+            for (method, _), reqs in mock_aio.requests.items()
+            if method == "PUT"
+            for req in reqs
+        ]
+        assert put_calls
+        body = json.loads(put_calls[0].kwargs["data"])
+        assert body == {"REQUEST": "ACTION", "HASHVAL": 77}
+
+
+# ---------------------------------------------------------------------------
+# Screen
+# ---------------------------------------------------------------------------
+
+
+class TestScreenCommands:
+    def test_blank(
+        self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
+    ) -> None:
+        """`screen blank` = the blank_screen action under system/timers."""
+        mock_aio.get(
+            _tv_settings_url("system/timers", "blank_screen"),
+            payload=make_success_response(
+                items=[
+                    make_item(
+                        "blank_screen",
+                        "T_ACTION_V1",
+                        item_type="T_ACTION_V1",
+                        hashval=1578429529,
+                    )
+                ]
+            ),
+        )
+        mock_aio.put(
+            _tv_settings_url("system/timers", "blank_screen"),
+            payload=make_success_response(),
+        )
+        result = _invoke(runner, saved_tv, "screen", "blank")
+        assert result.exit_code == 0, result.output
+        put_calls = [
+            req
+            for (method, _), reqs in mock_aio.requests.items()
+            if method == "PUT"
+            for req in reqs
+        ]
+        assert put_calls
+        body = json.loads(put_calls[0].kwargs["data"])
+        assert body == {"REQUEST": "ACTION", "HASHVAL": 1578429529}
+
 
 # ---------------------------------------------------------------------------
 # App

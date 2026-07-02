@@ -100,6 +100,11 @@ class SettingType(StrEnum):
     LIST_X = "T_LIST_X_V1"
     SLIDER = "T_VALUE_ABS_V1"
     MENU = "T_MENU_V1"
+    ACTION = "T_ACTION_V1"
+    """A fire-able action item (e.g. ``system/timers/blank_screen``,
+    ``admin_and_privacy/soft_power_cycle``). Carries no real value —
+    the device reports the literal string ``"T_ACTION_V1"`` as VALUE.
+    Trigger with :meth:`vizaio.Vizio.trigger_setting_action`."""
 
 
 class AuthRequirement(StrEnum):
