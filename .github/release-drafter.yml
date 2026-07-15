@@ -39,6 +39,6 @@ categories:
 
 # yamllint disable rule:line-length
 template: |
-  [![PyPI downloads for this release](https://img.shields.io/pypi/dm/vizaio)](https://pypi.org/project/vizaio/)
+  [![PyPI downloads/month](https://img.shields.io/pypi/dm/vizaio)](https://pypi.org/project/vizaio/)
 
   $CHANGES
