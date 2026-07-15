@@ -168,6 +168,7 @@ class TestKeymaps:
         for profile in CRAVE_PROFILES:
             assert RemoteKey.SEEK_FWD not in profile.keymap
             assert RemoteKey.SEEK_BACK not in profile.keymap
+
     @pytest.mark.parametrize(
         "profile",
         [TV_PROFILE, SOUNDBAR_PROFILE, *CRAVE_PROFILES],
