@@ -390,10 +390,10 @@ class TestMute:
             _resp(make_key_press_response()),
         ]
         await vizio_tv.mute()
-        # MUTE_TOGGLE is codeset 5, code 3.
+        # MUTE_TOGGLE is codeset 5, code 4.
         body = _last_call_body(mock_client)
         assert body["KEYLIST"][0]["CODESET"] == 5
-        assert body["KEYLIST"][0]["CODE"] == 3
+        assert body["KEYLIST"][0]["CODE"] == 4
         assert mock_client.call_count == 3
 
     async def test_mute_when_muted_is_noop(
@@ -418,7 +418,7 @@ class TestMute:
         await vizio_tv.unmute()
         body = _last_call_body(mock_client)
         assert body["KEYLIST"][0]["CODESET"] == 5
-        assert body["KEYLIST"][0]["CODE"] == 3
+        assert body["KEYLIST"][0]["CODE"] == 4
         assert mock_client.call_count == 3
 
     async def test_unmute_when_unmuted_is_noop(
@@ -433,14 +433,14 @@ class TestMute:
     async def test_mute_toggle_sends_key_without_state_query(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
-        # mute_toggle sends MUTE_TOGGLE (codeset 5, code 3) in one round
+        # mute_toggle sends MUTE_TOGGLE (codeset 5, code 4) in one round
         # trip — half the cost of mute()/unmute(), which read is_muted()
         # first to be idempotent. Caller doesn't learn the resulting state.
         mock_client.return_value = _resp(make_key_press_response())
         await vizio_tv.mute_toggle()
         assert _last_call_paths(mock_client) == ("/key_command/",)
         body = _last_call_body(mock_client)
-        assert body == {"KEYLIST": [{"CODESET": 5, "CODE": 3, "ACTION": "KEYPRESS"}]}
+        assert body == {"KEYLIST": [{"CODESET": 5, "CODE": 4, "ACTION": "KEYPRESS"}]}
         assert mock_client.await_count == 1
 
 

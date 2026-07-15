@@ -1062,6 +1062,17 @@ across firmware variants. Power users wanting raw codes can call
 `send_key("MUTE_ON")` directly — the keymap entry remains for
 firmware that does honor it.
 
+**Update:** the keymap's discrete mute assignments were corrected to
+the official app's enum ordering (7 audio keys: vol x2, mute x3,
+MTS x2), which every community table (exiva, pyvizio, openHAB) also
+uses: `MUTE_OFF=(5,2)`, `MUTE_ON=(5,3)`, `MUTE_TOGGLE=(5,4)`. The
+previous assignments had no provenance and mapped `MUTE_OFF` to
+`(5,5)` — the Audio MTS key, and one of the codes observed above
+returning `FAILURE`. Consistent with the observation that
+`(5,2)`/`(5,3)`/`(5,4)` all toggle on this TV firmware, so behavior
+on TVs is unchanged; the discrete semantics matter on
+soundbar/Crave.
+
 ### V7 — INPUT_NEXT no-op observed
 
 `INPUT_NEXT = (7, 1)` returns `SUCCESS` on this firmware but does not
