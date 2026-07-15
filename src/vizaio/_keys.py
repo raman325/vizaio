@@ -39,6 +39,8 @@ class RemoteKey(StrEnum):
     # Media
     PLAY = "PLAY"
     PAUSE = "PAUSE"
+    SEEK_FWD = "SEEK_FWD"
+    SEEK_BACK = "SEEK_BACK"
 
     # Input
     INPUT_NEXT = "INPUT_NEXT"
@@ -78,14 +80,21 @@ TV_KEYS: Final[dict[str, KeyCode]] = {
     RemoteKey.POW_TOGGLE: (11, 2),
     RemoteKey.VOL_UP: (5, 1),
     RemoteKey.VOL_DOWN: (5, 0),
-    RemoteKey.MUTE_ON: (5, 4),
-    RemoteKey.MUTE_OFF: (5, 5),
-    RemoteKey.MUTE_TOGGLE: (5, 3),
+    # Audio codeset per the official app's enum ordering (7 audio keys:
+    # vol x2, mute x3, MTS x2) and every community table (exiva, pyvizio,
+    # openHAB): 2=off, 3=on, 4=toggle. (5,5) is Audio MTS, not mute —
+    # protocol-notes V6 observed it returning FAILURE on TV firmware.
+    RemoteKey.MUTE_OFF: (5, 2),
+    RemoteKey.MUTE_ON: (5, 3),
+    RemoteKey.MUTE_TOGGLE: (5, 4),
     RemoteKey.CH_UP: (8, 1),
     RemoteKey.CH_DOWN: (8, 0),
     RemoteKey.CH_PREV: (8, 2),
     RemoteKey.PLAY: (2, 3),
     RemoteKey.PAUSE: (2, 2),
+    # Transport seek — official app enum: TRANSPORT_FAST_REVERSE = (2, 1)
+    RemoteKey.SEEK_FWD: (2, 0),
+    RemoteKey.SEEK_BACK: (2, 1),
     RemoteKey.INPUT_NEXT: (7, 1),
     RemoteKey.EXIT: (4, 3),
     RemoteKey.BACK: (4, 0),
@@ -121,9 +130,9 @@ SOUNDBAR_KEYS: Final[dict[str, KeyCode]] = {
     RemoteKey.POW_TOGGLE: (11, 2),
     RemoteKey.VOL_UP: (5, 1),
     RemoteKey.VOL_DOWN: (5, 0),
-    RemoteKey.MUTE_ON: (5, 4),
-    RemoteKey.MUTE_OFF: (5, 5),
-    RemoteKey.MUTE_TOGGLE: (5, 3),
+    RemoteKey.MUTE_OFF: (5, 2),
+    RemoteKey.MUTE_ON: (5, 3),
+    RemoteKey.MUTE_TOGGLE: (5, 4),
     RemoteKey.PLAY: (2, 3),
     RemoteKey.PAUSE: (2, 2),
     RemoteKey.INPUT_NEXT: (7, 1),

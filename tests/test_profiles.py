@@ -156,6 +156,30 @@ class TestKeymaps:
             for profile in CRAVE_PROFILES:
                 assert k not in profile.keymap
 
+    def test_seek_keys_tv_only(self) -> None:
+        # Transport seek exists in the official app's key enum
+        # (KeyCommandItem: TRANSPORT_FAST_REVERSE = (2, 1)) and every
+        # community table (exiva, pyvizio, openHAB); TVs only, matching
+        # pyvizio's speaker table which never carried them.
+        assert TV_PROFILE.keymap[RemoteKey.SEEK_FWD] == (2, 0)
+        assert TV_PROFILE.keymap[RemoteKey.SEEK_BACK] == (2, 1)
+        assert RemoteKey.SEEK_FWD not in SOUNDBAR_PROFILE.keymap
+        assert RemoteKey.SEEK_BACK not in SOUNDBAR_PROFILE.keymap
+        for profile in CRAVE_PROFILES:
+            assert RemoteKey.SEEK_FWD not in profile.keymap
+
+    @pytest.mark.parametrize(
+        "profile",
+        [TV_PROFILE, SOUNDBAR_PROFILE, *CRAVE_PROFILES],
+    )
+    def test_mute_codes_match_official_enum(self, profile: DeviceProfile) -> None:
+        # Audio codeset 5 per the official app's enum ordering (7 audio
+        # keys: vol x2, mute x3, MTS x2) and every community table:
+        # 2=off, 3=on, 4=toggle. (5,5) is Audio MTS, not a mute code.
+        assert profile.keymap[RemoteKey.MUTE_OFF] == (5, 2)
+        assert profile.keymap[RemoteKey.MUTE_ON] == (5, 3)
+        assert profile.keymap[RemoteKey.MUTE_TOGGLE] == (5, 4)
+
     def test_keymap_values_are_codeset_code_pairs(self) -> None:
         for code in TV_PROFILE.keymap.values():
             assert isinstance(code, tuple)
