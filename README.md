@@ -36,14 +36,25 @@ work happens here.
 Requires **Python 3.12 or newer**.
 
 ```bash
-# core (REST + CLI)
+# library only (REST client; just aiohttp underneath)
 uv add vizaio
 # or: pip install vizaio
 
-# core + zeroconf network discovery (optional)
+# library + the `vizaio` CLI
+uv add 'vizaio[cli]'
+# or: pip install 'vizaio[cli]'
+
+# + zeroconf network discovery (optional, combinable: 'vizaio[cli,discovery]')
 uv add 'vizaio[discovery]'
 # or: pip install 'vizaio[discovery]'
 ```
+
+The base install is deliberately dependency-light (`aiohttp` only) so
+library consumers — e.g. the Home Assistant integration, whose CI resolves
+every integration's requirements together — don't inherit the CLI's
+dependencies (`typer`, `rich`, `tomlkit`, `platformdirs`). Running the
+`vizaio` command without the `[cli]` extra prints the install hint instead
+of a traceback.
 
 The `[discovery]` extra pulls in
 [`zeroconf`](https://pypi.org/project/zeroconf/). Without the extra,
@@ -58,8 +69,9 @@ cd vizaio
 uv sync --all-extras
 ```
 
-The `vizaio` console script is installed as a project entry point in either
-case.
+The `vizaio` console script is always installed as a project entry point;
+it needs the `[cli]` extra (included by `--all-extras` above) to actually
+run.
 
 ---
 
