@@ -623,6 +623,92 @@ class Vizio:
             path_suffix=f"/{setting_type}/{name}",
         )
 
+    async def trigger_setting_action(
+        self,
+        setting_type: str,
+        name: str,
+        *,
+        hashval: int | None = None,
+    ) -> None:
+        """
+        Fire a ``T_ACTION_V1`` settings item (``REQUEST: "ACTION"``).
+
+        Action items are fire-and-forget menu entries — e.g.
+        ``system/timers/blank_screen`` (see :meth:`blank_screen`) or
+        ``admin_and_privacy/soft_power_cycle`` (reboot). They carry no
+        real value; sending ``MODIFY`` at one returns ``PROXY_ERROR``.
+
+        If ``hashval`` is supplied, sends one PUT — caller takes
+        responsibility on stale-hashval failures. (Power-user path,
+        same contract as :meth:`set_setting`.)
+
+        If not supplied, does GET-then-PUT. The GET also lets us verify
+        the leaf really is an action item — firing ``ACTION`` at a
+        value leaf raises :class:`VizioInvalidInputError` client-side
+        instead of whatever the device would do with it. On
+        :class:`VizioInvalidParameterError` from the PUT (stale hashval
+        race — protocol-notes #13), retries once with a fresh hashval.
+        """
+        if hashval is not None:
+            await self._put_setting_action(setting_type, name, hashval)
+            return
+
+        fresh = await self._get_action_item(setting_type, name)
+        try:
+            await self._put_setting_action(setting_type, name, fresh)
+        except VizioInvalidParameterError:
+            # Hashval race — refetch and retry once.
+            retry = await self._get_action_item(setting_type, name)
+            await self._put_setting_action(setting_type, name, retry)
+
+    async def _get_action_item(self, setting_type: str, name: str) -> int:
+        """GET an action leaf, validate its type, and return its hashval."""
+        response = await self._request(
+            Endpoint.SETTINGS, path_suffix=f"/{setting_type}/{name}"
+        )
+        item = response.require_item(name)
+        if item.type != SettingType.ACTION:
+            raise VizioInvalidInputError(
+                f"{setting_type}/{name} is {item.type!r}, not an action item"
+                f" ({SettingType.ACTION.value}); use set_setting for values"
+            )
+        if item.hashval is None:
+            raise VizioInvalidInputError(
+                f"{setting_type}/{name} returned no HASHVAL to echo"
+            )
+        return item.hashval
+
+    async def _put_setting_action(
+        self, setting_type: str, name: str, hashval: int
+    ) -> None:
+        """Issue the raw ACTION PUT for one action leaf (no GET, no validation)."""
+        spec = resolve(Endpoint.SETTINGS, self._profile)
+        spec_with_put = replace(spec, method="PUT")
+        await self._client.request_spec(
+            spec_with_put,
+            body=_payloads.action_setting(hashval=hashval),
+            path_suffix=f"/{setting_type}/{name}",
+        )
+
+    async def blank_screen(self) -> None:
+        """
+        Turn the panel off while audio and the device keep running.
+
+        Fires the ``system/timers/blank_screen`` action — the same
+        "Blank Screen" the TV menu offers and the 5-second mute-button
+        hold triggers (Vizio support calls it "mute screen"; often
+        called screen/display mute). One-way: firing it again keeps
+        the panel dark, and there is no readable "blanked" state on the
+        API. Any navigation keypress wakes the panel (verified:
+        ``send_key("BACK")``); volume and mute keys intentionally do
+        not, so audio stays adjustable while dark.
+
+        TV-only: audio devices have no such menu leaf and raise
+        :class:`VizioNotFoundError`. Verified live on M65Q7-H1 fw
+        1.720.9.1-1; see protocol-notes #29.
+        """
+        await self.trigger_setting_action("system/timers", "blank_screen")
+
     # ------------------------------------------------------------------
     # Apps
     # ------------------------------------------------------------------

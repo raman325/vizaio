@@ -1008,6 +1008,96 @@ class TestSettings:
         assert put_body["VALUE"] == "Low"
 
 
+class TestSettingActions:
+    """T_ACTION_V1 items fire with REQUEST: ACTION (protocol-notes #29).
+
+    Verified live on M65Q7-H1 fw 1.720.9.1-1 — see
+    ``tests/captured/settings_system_timers_blank_screen.json``.
+    """
+
+    @staticmethod
+    def _action_item(hashval: int = 1578429529) -> dict:
+        return make_item(
+            "blank_screen",
+            "T_ACTION_V1",
+            item_type="T_ACTION_V1",
+            name="Blank Screen",
+            hashval=hashval,
+        )
+
+    async def test_trigger_does_get_then_action_put(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """No hashval supplied: one GET (raw leaf), then the ACTION PUT."""
+        mock_client.side_effect = [
+            _resp(make_success_response(items=[self._action_item()])),
+            _resp(make_success_response()),
+        ]
+        await vizio_tv.trigger_setting_action("system/timers", "blank_screen")
+        assert mock_client.call_count == 2
+        put_body = _last_call_body(mock_client)
+        assert put_body == {"REQUEST": "ACTION", "HASHVAL": 1578429529}
+
+    async def test_trigger_with_hashval_skips_get(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.return_value = _resp(make_success_response())
+        await vizio_tv.trigger_setting_action(
+            "system/timers", "blank_screen", hashval=42
+        )
+        assert mock_client.call_count == 1
+        assert _last_call_body(mock_client) == {"REQUEST": "ACTION", "HASHVAL": 42}
+
+    async def test_trigger_retries_on_stale_hashval(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """HASHVAL_ERROR from the PUT → re-GET, re-PUT once (notes #13)."""
+        mock_client.side_effect = [
+            _resp(make_success_response(items=[self._action_item(hashval=1)])),
+            VizioInvalidParameterError("HASHVAL_ERROR"),
+            _resp(make_success_response(items=[self._action_item(hashval=2)])),
+            _resp(make_success_response()),
+        ]
+        await vizio_tv.trigger_setting_action("system/timers", "blank_screen")
+        assert mock_client.call_count == 4
+        assert _last_call_body(mock_client)["HASHVAL"] == 2
+
+    async def test_trigger_retry_failure_propagates(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _resp(make_success_response(items=[self._action_item(hashval=1)])),
+            VizioInvalidParameterError("stale 1"),
+            _resp(make_success_response(items=[self._action_item(hashval=2)])),
+            VizioInvalidParameterError("stale 2"),
+        ]
+        with pytest.raises(VizioInvalidParameterError):
+            await vizio_tv.trigger_setting_action("system/timers", "blank_screen")
+
+    async def test_trigger_on_value_leaf_raises_without_put(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Firing ACTION at a value leaf is a caller bug — fail client-side."""
+        mock_client.return_value = _resp(
+            make_success_response(items=[make_item("volume", 20, hashval=999)])
+        )
+        with pytest.raises(VizioInvalidInputError, match="not an action item"):
+            await vizio_tv.trigger_setting_action("audio", "volume")
+        assert mock_client.call_count == 1  # the GET only, no PUT
+
+    async def test_blank_screen_targets_timers_leaf(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _resp(make_success_response(items=[self._action_item()])),
+            _resp(make_success_response()),
+        ]
+        await vizio_tv.blank_screen()
+        put_kwargs = mock_client.call_args.kwargs
+        assert put_kwargs["path_suffix"] == "/system/timers/blank_screen"
+        assert _last_call_body(mock_client)["REQUEST"] == "ACTION"
+
+
 # ===========================================================================
 # Apps
 # ===========================================================================

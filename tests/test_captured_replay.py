@@ -236,6 +236,22 @@ class TestCapturedSettingsLeaves:
         assert isinstance(info.value, int)
         assert info.type is SettingType.INT
 
+    def test_blank_screen_action_leaf(self) -> None:
+        """T_ACTION_V1 leaf — the Blank Screen trigger (protocol-notes #29).
+
+        Captured from an M65Q7-H1 (fw 1.720.9.1-1), unlike the other
+        fixtures' VHD24M-0810 — a second hardware-verified firmware
+        family. The item carries the sentinel string as its VALUE and a
+        HASHVAL that must be echoed in the ACTION PUT.
+        """
+        response = Response.from_json(_load("settings_system_timers_blank_screen"))
+        item = response.require_item("blank_screen")
+        assert item.type == SettingType.ACTION
+        assert item.hashval == 1578429529
+        info = parse_setting(item, setting_type="system/timers")
+        assert info.type is SettingType.ACTION
+        assert info.value == "T_ACTION_V1"
+
 
 # ---------------------------------------------------------------------------
 # tv_information aggregate (the modern firmware identity endpoint)

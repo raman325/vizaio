@@ -26,6 +26,19 @@ def write_setting(value: Any, hashval: int) -> dict[str, Any]:
     return {"VALUE": value, "HASHVAL": hashval, "REQUEST": "MODIFY"}
 
 
+def action_setting(hashval: int) -> dict[str, Any]:
+    """
+    Fire a ``T_ACTION_V1`` settings item.
+
+    Action items use ``REQUEST: "ACTION"`` — not ``"MODIFY"``, which the
+    device rejects with ``PROXY_ERROR``. Verified live on M65Q7-H1 fw
+    1.720.9.1-1: the minimal accepted body is ``ACTION`` plus the item's
+    current ``HASHVAL`` (omitting ``HASHVAL`` → ``INVALID_PARAMETER``;
+    a ``VALUE`` echo is accepted but optional). See protocol-notes #29.
+    """
+    return {"REQUEST": "ACTION", "HASHVAL": hashval}
+
+
 def volume_level(level: int) -> dict[str, Any]:
     """Body for the flat ``PUT /audio/volume/level`` — no HASHVAL needed."""
     return {"LEVEL": level}
