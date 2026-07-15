@@ -43,7 +43,7 @@ from typing import Any, Final
 
 import aiohttp
 
-from .errors import VizioConnectionError, VizioResponseError
+from .errors import VizioConnectionError, VizioError, VizioResponseError
 from .types import AppAvailability, AppConfig, AppRecord, ChipsetPayload
 
 _LOGGER = logging.getLogger(__name__)
@@ -647,10 +647,16 @@ async def _fetch_json_strict(
                         f"App {label} fetch returned HTTP {resp.status}"
                     )
                 text = await resp.text()
+        except VizioError:
+            raise
         except aiohttp.ClientError as e:
             raise VizioConnectionError(f"App {label} fetch failed: {e}") from e
         except TimeoutError as e:
             raise VizioConnectionError(f"App {label} fetch timed out") from e
+        except Exception as e:
+            # e.g. UnicodeDecodeError from resp.text() — keep the "raises
+            # VizioError on any failure" contract airtight
+            raise VizioResponseError(f"App {label} fetch failed: {e}") from e
         try:
             return json.loads(text)
         except ValueError as e:

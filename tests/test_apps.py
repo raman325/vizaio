@@ -415,6 +415,14 @@ class TestFetchRemoteAppCatalog:
             with pytest.raises(VizioResponseError):
                 await fetch_remote_app_catalog(session=session)
 
+    async def test_unexpected_error_raises_vizio_error(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, exception=RuntimeError("unexpected"))
+            with pytest.raises(VizioResponseError):
+                await fetch_remote_app_catalog(session=session)
+
     async def test_empty_parse_raises(self, session: aiohttp.ClientSession) -> None:
         with aioresponses() as m:
             m.get(REMOTE_CATALOG_URL, payload=[])
