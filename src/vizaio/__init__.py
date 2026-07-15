@@ -6,7 +6,12 @@ from importlib.metadata import PackageNotFoundError, version as _pkg_version
 
 from ._device import PairSession, Vizio
 from ._keys import RemoteKey
-from .apps import fetch_app_availability, fetch_app_catalog
+from .apps import (
+    fetch_app_availability,
+    fetch_app_catalog,
+    fetch_remote_app_catalog,
+    is_app_input,
+)
 from .discovery import (
     async_classify_device,
     async_is_tv,
@@ -101,5 +106,7 @@ __all__ = [
     "classify_crave_model",
     "fetch_app_availability",
     "fetch_app_catalog",
+    "fetch_remote_app_catalog",
+    "is_app_input",
     "is_crave_model",
 ]
