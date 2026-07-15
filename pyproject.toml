@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizaio"
-version = "0.1.0"
+version = "0.3.0"
 description = "Modern async Python client and CLI for Vizio SmartCast devices"
 readme = "README.md"
 license = { file = "LICENSE" }
