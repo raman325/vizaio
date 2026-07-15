@@ -22,6 +22,9 @@ Public:
   availability
 - :func:`fetch_app_catalog` / :func:`fetch_app_availability` — async fetch
   with bundled fallback
+- :func:`fetch_remote_app_catalog` — strict fetch that raises instead of
+  falling back, for callers that keep their own cache
+- :func:`is_app_input` — whether an input name is the SmartCast app input
 - :func:`extract_chipset` — derive the availability chipset key from the
   device's ``BINARIES.ViziOS`` string
 - :func:`pick_chipset_payload` — choose the right :class:`ChipsetPayload`
@@ -40,6 +43,7 @@ from typing import Any, Final
 
 import aiohttp
 
+from .errors import VizioConnectionError, VizioResponseError
 from .types import AppAvailability, AppConfig, AppRecord, ChipsetPayload
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,6 +66,20 @@ UNKNOWN_APP: Final = "_UNKNOWN_APP"
 APP_CAST: Final = "Cast"
 """Per-protocol-notes quirk #5: NAME_SPACE=0 is always the Cast/Home
 screen, regardless of APP_ID."""
+
+_APP_INPUT_NAMES: Final = frozenset({"CAST", "SMARTCAST"})
+
+
+def is_app_input(name: str) -> bool:
+    """
+    Return whether an input name refers to the SmartCast app input.
+
+    Accepts both forms the device exposes: the display name (``"CAST"``)
+    and the meta-name / current-input string (``"SMARTCAST"``).
+    Case-insensitive.
+    """
+    return name.upper() in _APP_INPUT_NAMES
+
 
 EQUIVALENT_NAME_SPACES: Final = (2, 4)
 """Per-protocol-notes quirk #4: namespaces 2 and 4 are interchangeable.
@@ -563,6 +581,29 @@ async def fetch_app_catalog(
     return parsed
 
 
+async def fetch_remote_app_catalog(
+    session: aiohttp.ClientSession | None = None,
+    *,
+    timeout: float = 10.0,
+    url: str = REMOTE_CATALOG_URL,
+) -> tuple[AppRecord, ...]:
+    """
+    Fetch the catalog from ``url``, raising on failure.
+
+    Unlike :func:`fetch_app_catalog`, no bundled fallback: callers that
+    maintain their own cache (e.g. the Home Assistant apps coordinator)
+    need failure signaled so they keep their newer cached copy instead of
+    silently regressing to the bundled snapshot. Raises
+    :class:`VizioConnectionError` on transport failure and
+    :class:`VizioResponseError` on a bad or empty response.
+    """
+    payload = await _fetch_json_strict(url, session, timeout, "catalog")
+    parsed = _parse_catalog(payload)
+    if not parsed:
+        raise VizioResponseError(f"App catalog from {url} parsed empty")
+    return parsed
+
+
 async def fetch_app_availability(
     session: aiohttp.ClientSession | None = None,
     *,
@@ -589,6 +630,36 @@ async def fetch_app_availability(
     return parsed
 
 
+async def _fetch_json_strict(
+    url: str,
+    session: aiohttp.ClientSession | None,
+    timeout: float,
+    label: str,
+) -> Any:
+    """GET ``url`` and parse JSON; raise :class:`VizioError` on any failure."""
+    own_session = session is None
+    s = session or aiohttp.ClientSession()
+    try:
+        try:
+            async with s.get(url, timeout=aiohttp.ClientTimeout(total=timeout)) as resp:
+                if resp.status != 200:
+                    raise VizioResponseError(
+                        f"App {label} fetch returned HTTP {resp.status}"
+                    )
+                text = await resp.text()
+        except aiohttp.ClientError as e:
+            raise VizioConnectionError(f"App {label} fetch failed: {e}") from e
+        except TimeoutError as e:
+            raise VizioConnectionError(f"App {label} fetch timed out") from e
+        try:
+            return json.loads(text)
+        except ValueError as e:
+            raise VizioResponseError(f"App {label} response is not JSON") from e
+    finally:
+        if own_session:
+            await s.close()
+
+
 async def _fetch_json(
     url: str,
     session: aiohttp.ClientSession | None,
@@ -596,23 +667,11 @@ async def _fetch_json(
     label: str,
 ) -> Any:
     """GET ``url`` and parse JSON; swallow errors to ``None`` (bundled fallback)."""
-    own_session = session is None
-    s = session or aiohttp.ClientSession()
     try:
-        async with s.get(url, timeout=aiohttp.ClientTimeout(total=timeout)) as resp:
-            if resp.status != 200:
-                _LOGGER.debug(
-                    "App %s HTTP %s — using bundled fallback", label, resp.status
-                )
-                return None
-            text = await resp.text()
-            return json.loads(text)
+        return await _fetch_json_strict(url, session, timeout, label)
     except Exception as e:
         _LOGGER.debug("App %s fetch failed (%s) — using bundled", label, e)
         return None
-    finally:
-        if own_session:
-            await s.close()
 
 
 # ---------------------------------------------------------------------------

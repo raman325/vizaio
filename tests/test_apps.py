@@ -18,14 +18,16 @@ import aiohttp
 from aioresponses import aioresponses
 import pytest
 
-from vizaio import AppConfig, AppRecord
+from vizaio import AppConfig, AppRecord, VizioConnectionError, VizioResponseError
 from vizaio.apps import (
     APP_HOME,
     BUNDLED_APPS,
     NO_APP_RUNNING,
     REMOTE_CATALOG_URL,
     fetch_app_catalog,
+    fetch_remote_app_catalog,
     find_app_name,
+    is_app_input,
 )
 
 # ---------------------------------------------------------------------------
@@ -332,3 +334,110 @@ class TestFetchAppCatalogTopLevelExport:
         import vizaio
 
         assert vizaio.fetch_app_catalog is fetch_app_catalog
+
+
+# ---------------------------------------------------------------------------
+# is_app_input
+# ---------------------------------------------------------------------------
+
+
+class TestIsAppInput:
+    """``is_app_input`` identifies the SmartCast app input in both the
+    display-name form (``"CAST"``) and the meta-name / current-input
+    form (``"SMARTCAST"``), case-insensitively."""
+
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            ("CAST", True),
+            ("SMARTCAST", True),
+            ("cast", True),
+            ("SmartCast", True),
+            ("HDMI-1", False),
+            ("", False),
+        ],
+    )
+    def test_is_app_input(self, name: str, expected: bool) -> None:
+        assert is_app_input(name) is expected
+
+    def test_importable_from_vizaio(self) -> None:
+        import vizaio
+
+        assert vizaio.is_app_input is is_app_input
+
+
+# ---------------------------------------------------------------------------
+# fetch_remote_app_catalog (strict variant: no bundled fallback)
+# ---------------------------------------------------------------------------
+
+
+class TestFetchRemoteAppCatalog:
+    """``fetch_remote_app_catalog`` raises instead of falling back so
+    callers that keep their own cache (e.g. the Home Assistant apps
+    coordinator) can distinguish failure from a fresh catalog."""
+
+    async def test_remote_success(self, session: aiohttp.ClientSession) -> None:
+        remote_payload = [
+            {
+                "name": "Future App",
+                "country": ["*"],
+                "config": [{"APP_ID": "999", "NAME_SPACE": 2}],
+            }
+        ]
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, payload=remote_payload)
+            catalog = await fetch_remote_app_catalog(session=session)
+        assert {r.name for r in catalog} == {"Future App"}
+
+    async def test_http_error_raises(self, session: aiohttp.ClientSession) -> None:
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, status=500)
+            with pytest.raises(VizioResponseError):
+                await fetch_remote_app_catalog(session=session)
+
+    async def test_connection_error_raises(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, exception=aiohttp.ClientConnectionError())
+            with pytest.raises(VizioConnectionError):
+                await fetch_remote_app_catalog(session=session)
+
+    async def test_timeout_raises(self, session: aiohttp.ClientSession) -> None:
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, exception=TimeoutError())
+            with pytest.raises(VizioConnectionError):
+                await fetch_remote_app_catalog(session=session)
+
+    async def test_malformed_json_raises(self, session: aiohttp.ClientSession) -> None:
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, body="not json")
+            with pytest.raises(VizioResponseError):
+                await fetch_remote_app_catalog(session=session)
+
+    async def test_empty_parse_raises(self, session: aiohttp.ClientSession) -> None:
+        with aioresponses() as m:
+            m.get(REMOTE_CATALOG_URL, payload=[])
+            with pytest.raises(VizioResponseError):
+                await fetch_remote_app_catalog(session=session)
+
+    async def test_url_override_is_fetched(
+        self, session: aiohttp.ClientSession
+    ) -> None:
+        custom_url = "https://example.invalid/custom_apps.json"
+        remote_payload = [
+            {
+                "name": "Mirror App",
+                "country": ["*"],
+                "config": [{"APP_ID": "1", "NAME_SPACE": 2}],
+            }
+        ]
+        with aioresponses() as m:
+            m.get(custom_url, payload=remote_payload)
+            catalog = await fetch_remote_app_catalog(session=session, url=custom_url)
+        assert {r.name for r in catalog} == {"Mirror App"}
+
+    def test_importable_from_vizaio(self) -> None:
+        import vizaio
+
+        assert vizaio.fetch_remote_app_catalog is fetch_remote_app_catalog
