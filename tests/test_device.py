@@ -1048,6 +1048,37 @@ class TestSettingActions:
         assert mock_client.call_count == 1
         assert _last_call_body(mock_client) == {"REQUEST": "ACTION", "HASHVAL": 42}
 
+    async def test_trigger_with_hashval_does_not_retry(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Explicit hashval = caller owns the race; no auto-retry fires."""
+        mock_client.side_effect = VizioInvalidParameterError("HASHVAL_ERROR")
+        with pytest.raises(VizioInvalidParameterError):
+            await vizio_tv.trigger_setting_action(
+                "system/timers", "blank_screen", hashval=42
+            )
+        assert mock_client.call_count == 1  # the one PUT, no refetch
+
+    async def test_trigger_missing_hashval_raises_response_error(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """An action leaf with no HASHVAL is a malformed device response."""
+        mock_client.return_value = _resp(
+            make_success_response(
+                items=[
+                    make_item(
+                        "blank_screen",
+                        "T_ACTION_V1",
+                        item_type="T_ACTION_V1",
+                        hashval=None,
+                    )
+                ]
+            )
+        )
+        with pytest.raises(VizioResponseError, match="no HASHVAL"):
+            await vizio_tv.trigger_setting_action("system/timers", "blank_screen")
+        assert mock_client.call_count == 1  # the GET only, no PUT
+
     async def test_trigger_retries_on_stale_hashval(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:

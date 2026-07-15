@@ -58,6 +58,7 @@ from .errors import (
     VizioError,
     VizioInvalidInputError,
     VizioInvalidParameterError,
+    VizioResponseError,
     VizioUnsupportedError,
 )
 from .parse import (
@@ -614,7 +615,14 @@ class Vizio:
         self, setting_type: str, name: str, value: int | str, hashval: int
     ) -> None:
         """Issue the raw MODIFY PUT for one setting leaf (no GET, no validation)."""
-        body = _payloads.write_setting(value=value, hashval=hashval)
+        await self._put_settings_body(
+            setting_type, name, _payloads.write_setting(value=value, hashval=hashval)
+        )
+
+    async def _put_settings_body(
+        self, setting_type: str, name: str, body: dict[str, Any]
+    ) -> None:
+        """PUT ``body`` at one settings leaf (the SETTINGS spec defaults to GET)."""
         spec = resolve(Endpoint.SETTINGS, self._profile)
         spec_with_put = replace(spec, method="PUT")
         await self._client.request_spec(
@@ -673,7 +681,10 @@ class Vizio:
                 f" ({SettingType.ACTION.value}); use set_setting for values"
             )
         if item.hashval is None:
-            raise VizioInvalidInputError(
+            # Malformed device response, not caller error — and a sibling
+            # of VizioInvalidParameterError, so it can never be mistaken
+            # for a hashval race by retry logic.
+            raise VizioResponseError(
                 f"{setting_type}/{name} returned no HASHVAL to echo"
             )
         return item.hashval
@@ -682,12 +693,8 @@ class Vizio:
         self, setting_type: str, name: str, hashval: int
     ) -> None:
         """Issue the raw ACTION PUT for one action leaf (no GET, no validation)."""
-        spec = resolve(Endpoint.SETTINGS, self._profile)
-        spec_with_put = replace(spec, method="PUT")
-        await self._client.request_spec(
-            spec_with_put,
-            body=_payloads.action_setting(hashval=hashval),
-            path_suffix=f"/{setting_type}/{name}",
+        await self._put_settings_body(
+            setting_type, name, _payloads.action_setting(hashval=hashval)
         )
 
     async def blank_screen(self) -> None:
