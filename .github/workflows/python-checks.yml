@@ -56,7 +56,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev,discovery]"
+        run: uv pip install --system -e ".[dev,discovery,cli]"
       - name: Run mypy
         run: mypy src/vizaio/
 
@@ -79,7 +79,7 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: |
-          uv pip install --system -e ".[dev,discovery]" \
+          uv pip install --system -e ".[dev,discovery,cli]" \
             pytest-github-actions-annotate-failures
       - name: Run tests + coverage
         run: |

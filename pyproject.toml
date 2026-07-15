@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizaio"
-version = "0.3.0"
+version = "0.3.1"
 description = "Modern async Python client and CLI for Vizio SmartCast devices"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -21,15 +21,14 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Home Automation",
 ]
-dependencies = [
-  "aiohttp>=3.9",
-  "platformdirs>=4.0",
-  "rich>=13.0",
-  "tomlkit>=0.13",
-  "typer>=0.12",
-]
+dependencies = ["aiohttp>=3.9"]
 
 [project.optional-dependencies]
+# CLI-only dependencies live in an extra so library consumers (e.g. the
+# Home Assistant integration, whose CI resolves every integration's
+# requirements together) don't inherit conflicts from CLI conveniences —
+# rich in particular is pinned incompatibly by other packages in that set.
+cli = ["platformdirs>=4.0", "rich>=13.0", "tomlkit>=0.13", "typer>=0.12"]
 discovery = ["zeroconf>=0.131"]
 dev = [
   "aioresponses>=0.7",
@@ -46,7 +45,7 @@ dev = [
 ]
 
 [project.scripts]
-vizaio = "vizaio.cli:app"
+vizaio = "vizaio._entry:main"
 
 [project.urls]
 Homepage = "https://github.com/raman325/vizaio"
