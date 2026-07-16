@@ -1261,30 +1261,89 @@ class TestDeviceInfo:
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
         """
-        Modern firmware (verified on VHD24M-0810 fw 3.720.9.1-1) returns
-        all identity fields as items in one ``tv_information`` response.
-        Per-field child paths return URI_NOT_FOUND. Library should fetch
-        the aggregate first and serve subsequent identity calls from a
-        cache rather than making N additional round trips.
+        When deviceinfo doesn't carry a field (older firmware), the
+        aggregate ``tv_information`` endpoint is the fallback. Modern
+        firmware (verified on VHD24M-0810 fw 3.720.9.1-1) returns all
+        identity fields as items in one response; per-field child paths
+        return URI_NOT_FOUND. The library probes deviceinfo first, then
+        fetches the aggregate once and serves subsequent identity calls
+        from cache rather than making N additional round trips.
         """
-        mock_client.return_value = _resp(
-            make_success_response(
-                items=[
-                    make_item("tv_name", "Test TV"),
-                    make_item("serial_number", "TEST00000000001"),
-                    make_item("model_name", "VHD24M-0810"),
-                    make_item("firmware", "3.720.9.1-1"),
-                ]
-            )
-        )
+        mock_client.side_effect = [
+            # deviceinfo probe: no SYSTEM_INFO, so serial/version fall through.
+            _resp(make_device_info_response({})),
+            _resp(
+                make_success_response(
+                    items=[
+                        make_item("tv_name", "Test TV"),
+                        make_item("serial_number", "TEST00000000001"),
+                        make_item("model_name", "VHD24M-0810"),
+                        make_item("firmware", "3.720.9.1-1"),
+                    ]
+                )
+            ),
+        ]
 
-        # First call hits the aggregate.
+        # deviceinfo probe (miss) + aggregate fetch = 2 calls.
         assert await vizio_tv.get_serial_number() == "TEST00000000001"
-        assert mock_client.call_count == 1
+        assert mock_client.call_count == 2
         # ``firmware`` cname is the modern-firmware alias for ``version``.
+        # Served from the deviceinfo + aggregate caches — no new call.
         assert await vizio_tv.get_version() == "3.720.9.1-1"
-        # Cached — no second HTTP call.
+        assert mock_client.call_count == 2
+
+    async def test_serial_and_version_from_deviceinfo_unauthenticated(
+        self, mock_client: AsyncMock
+    ) -> None:
+        """
+        Serial number and version come from the unauthenticated
+        deviceinfo SYSTEM_INFO block — no auth token, no aggregate /
+        per-field round trip. Verified live on VHD24M-0810 fw
+        3.720.9.1-1: the deviceinfo serial equals the auth-path serial.
+        """
+        # A TV with NO auth token — the auth-gated menu_native identity
+        # paths would raise VizioAuthError, so a returned value proves it
+        # came from deviceinfo.
+        tv = Vizio(host=TV_HOST_PORT, device_type=DeviceType.TV, auth_token=None)
+        try:
+            mock_client.return_value = _resp(
+                make_device_info_response(
+                    {
+                        "MODEL_NAME": "VHD24M-0810",
+                        "SYSTEM_INFO": {
+                            "SERIAL_NUMBER": "24LMV5U2RB05077",
+                            "VERSION": "3.720.9.1-1",
+                        },
+                    }
+                )
+            )
+            assert await tv.get_serial_number() == "24LMV5U2RB05077"
+            assert await tv.get_version() == "3.720.9.1-1"
+            # One deviceinfo GET, shared across both reads; no auth path hit.
+            assert mock_client.call_count == 1
+            assert _last_call_paths(mock_client) == ("/state/device/deviceinfo",)
+        finally:
+            await tv.aclose()
+
+    async def test_esn_never_reads_deviceinfo(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """
+        ESN has no deviceinfo equivalent, so get_esn() must not be served
+        from a deviceinfo probe — it goes straight to the aggregate.
+        """
+        from vizaio.errors import VizioNotFoundError
+
+        mock_client.side_effect = [
+            # Aggregate carries the ESN directly — reached without any
+            # preceding deviceinfo probe.
+            _resp(make_success_response(items=[make_item("esn", "VIZIO-ESN-123")])),
+            VizioNotFoundError("per-field not needed"),
+        ]
+        assert await vizio_tv.get_esn() == "VIZIO-ESN-123"
+        # Exactly one call (the aggregate) — no deviceinfo probe up front.
         assert mock_client.call_count == 1
+        assert _last_call_paths(mock_client)[0].endswith("/tv_information")
 
     async def test_identity_falls_back_to_per_field_when_aggregate_missing(
         self, vizio_tv: Vizio, mock_client: AsyncMock
@@ -1297,7 +1356,11 @@ class TestDeviceInfo:
         from vizaio.errors import VizioNotFoundError
 
         mock_client.side_effect = [
+            # deviceinfo probe misses (no SERIAL_NUMBER on old firmware)...
+            VizioNotFoundError("deviceinfo unavailable"),
+            # ...aggregate not exposed...
             VizioNotFoundError("aggregate not exposed"),
+            # ...per-field endpoint succeeds.
             _resp(make_success_response(items=[make_item("serial_number", "OLD-SN")])),
         ]
         result = await vizio_tv.get_serial_number()

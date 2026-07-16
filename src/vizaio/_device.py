@@ -74,6 +74,7 @@ from .parse import (
     parse_setting_types,
     parse_settings,
     parse_state_extended,
+    parse_system_info,
     parse_system_versions,
     parse_vizios_binary,
 )
@@ -121,6 +122,17 @@ _PER_FIELD_IDENTITY_ENDPOINTS: Final[dict[str, Endpoint]] = {
     "serial_number": Endpoint.SERIAL_NUMBER,
     "version": Endpoint.VERSION,
 }
+
+# Identity fields the unauthenticated deviceinfo payload carries under
+# SYSTEM_INFO, keyed by the cname the identity getters use. These are read
+# from deviceinfo first (no auth token needed, no menu_native round trip)
+# before falling back to the auth-gated aggregate / per-field endpoints.
+# ESN is deliberately absent — deviceinfo's SYSTEM_INFO has no ESN field
+# (verified live on VHD24M-0810 fw 3.720.9.1-1), so get_esn() always uses
+# the menu_native path.
+_DEVICEINFO_IDENTITY_FIELDS: Final[frozenset[str]] = frozenset(
+    {"serial_number", "version"}
+)
 
 
 class Vizio:
@@ -187,6 +199,10 @@ class Vizio:
         # legitimately not expose either field on older firmware.
         self._cached_chipset: str | None = None
         self._cached_firmware: str | None = None
+        # The raw deviceinfo response, cached for the session and shared by
+        # model-name, chipset/firmware, and serial/version identity reads so
+        # one unauthenticated ``state/device/deviceinfo`` GET serves them all.
+        self._cached_deviceinfo: Response | None = None
         self._closed = False
 
     # ------------------------------------------------------------------
@@ -1054,7 +1070,7 @@ class Vizio:
 
     async def get_model_name(self) -> str:
         """Return the display model (TV ``MODEL_NAME``; non-TV friendly ``NAME``)."""
-        response = await self._request(Endpoint.DEVICE_INFO)
+        response = await self._get_deviceinfo()
         return parse_model_name(
             response, settings_root=self._profile.settings_root.value
         )
@@ -1080,14 +1096,26 @@ class Vizio:
         """
         Read one identity field, preferring the aggregate endpoint.
 
-        Modern firmware (verified VHD24M-0810 fw 3.720.9.1-1) doesn't
-        expose per-field child paths for ESN / serial_number / version —
-        ``GET .../tv_information/esn`` returns ``URI_NOT_FOUND``. Instead
-        the parent ``.../tv_information`` returns one envelope with every
-        identity item. We fetch and cache that envelope on the instance,
-        falling back to the per-field endpoints when the aggregate is
-        not exposed (older firmware).
+        Resolution order:
+
+        1. The unauthenticated ``state/device/deviceinfo`` payload, for
+           the fields it carries under SYSTEM_INFO (``serial_number``,
+           ``version``). Reading these here means they work with **no
+           auth token** and skip the auth-gated ``menu_native`` round
+           trip entirely. ESN has no deviceinfo equivalent, so it never
+           takes this path.
+        2. The aggregate ``.../tv_information`` envelope (auth-gated on
+           TVs), which modern firmware (verified VHD24M-0810 fw
+           3.720.9.1-1) returns in one shot — the per-field child paths
+           like ``.../tv_information/esn`` return ``URI_NOT_FOUND``.
+        3. The per-field endpoints, for older firmware that doesn't
+           expose the aggregate at all.
         """
+        if cname in _DEVICEINFO_IDENTITY_FIELDS:
+            value = (await self._get_system_info()).get(cname)
+            if value:
+                return str(value)
+
         info = await self._get_identity_aggregate()
         if info is not None:
             for key in (cname, *aliases):
@@ -1363,7 +1391,7 @@ class Vizio:
         once set, neither field will trigger another fetch.
         """
         try:
-            response = await self._request(Endpoint.DEVICE_INFO)
+            response = await self._get_deviceinfo()
         except VizioError:
             if self._cached_chipset is None:
                 self._cached_chipset = ""
@@ -1375,6 +1403,36 @@ class Vizio:
         keys = {k for entry in availability for k in entry.chipsets}
         self._cached_chipset = extract_chipset(binary, available_keys=keys) or ""
         self._cached_firmware = parse_firmware_version(response)
+
+    async def _get_deviceinfo(self) -> Response:
+        """
+        Fetch (and cache for the session) the deviceinfo response.
+
+        Shared by :meth:`get_model_name`, the chipset/firmware probe, and
+        the serial/version identity reads so a single unauthenticated
+        ``state/device/deviceinfo`` GET serves all of them. deviceinfo is
+        immutable for the device lifetime, so caching the successful
+        response is safe. Failures propagate and are **not** cached — the
+        next call retries — so a transient outage doesn't poison the
+        session (callers that want to swallow errors wrap this).
+        """
+        if self._cached_deviceinfo is None:
+            self._cached_deviceinfo = await self._request(Endpoint.DEVICE_INFO)
+        return self._cached_deviceinfo
+
+    async def _get_system_info(self) -> Mapping[str, Any]:
+        """
+        Return the SYSTEM_INFO block from the shared deviceinfo response.
+
+        Empty mapping when deviceinfo is unreachable or the firmware
+        doesn't expose the block — callers fall back to the auth-gated
+        identity endpoints.
+        """
+        try:
+            response = await self._get_deviceinfo()
+        except VizioError:
+            return {}
+        return parse_system_info(response)
 
 
 def _validate_setting_value(value: int | str, info: SettingInfo) -> int | str:
