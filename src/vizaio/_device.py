@@ -26,6 +26,7 @@ Reliability features:
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import contextlib
 from dataclasses import replace
@@ -202,7 +203,13 @@ class Vizio:
         # The raw deviceinfo response, cached for the session and shared by
         # model-name, chipset/firmware, and serial/version identity reads so
         # one unauthenticated ``state/device/deviceinfo`` GET serves them all.
+        # The outcome is cached either way: a failure is remembered in
+        # ``_cached_deviceinfo_error`` and re-raised rather than re-fetched
+        # (deviceinfo is immutable — one attempt per session). The lock
+        # coalesces concurrent callers so they issue a single GET.
         self._cached_deviceinfo: Response | None = None
+        self._cached_deviceinfo_error: VizioError | None = None
+        self._deviceinfo_lock = asyncio.Lock()
         self._closed = False
 
     # ------------------------------------------------------------------
@@ -1112,9 +1119,15 @@ class Vizio:
            expose the aggregate at all.
         """
         if cname in _DEVICEINFO_IDENTITY_FIELDS:
-            value = (await self._get_system_info()).get(cname)
-            if value:
-                return str(value)
+            system_info = await self._get_system_info()
+            # Walk cname + aliases, same as the aggregate branch below, so
+            # a firmware that keys the value under an alias (e.g. version
+            # under ``firmware``) is still read from deviceinfo instead of
+            # silently falling through to the auth-gated path.
+            for key in (cname, *aliases):
+                value = system_info.get(key)
+                if value:
+                    return str(value)
 
         info = await self._get_identity_aggregate()
         if info is not None:
@@ -1411,14 +1424,29 @@ class Vizio:
         Shared by :meth:`get_model_name`, the chipset/firmware probe, and
         the serial/version identity reads so a single unauthenticated
         ``state/device/deviceinfo`` GET serves all of them. deviceinfo is
-        immutable for the device lifetime, so caching the successful
-        response is safe. Failures propagate and are **not** cached — the
-        next call retries — so a transient outage doesn't poison the
-        session (callers that want to swallow errors wrap this).
+        immutable for the device lifetime, so the *outcome* is cached
+        either way: a success is reused, and a failure is remembered in
+        ``_cached_deviceinfo_error`` and re-raised on subsequent calls
+        rather than re-fetched. This matches the one-attempt-per-session
+        negative caching of :meth:`_get_identity_aggregate` and
+        :meth:`_load_deviceinfo_fields`, and stops a single unreachable
+        deviceinfo from turning one :meth:`get_device_info` into three
+        failing GETs (model + serial + version) or a poll loop into a
+        request storm. The lock coalesces concurrent callers (e.g.
+        ``asyncio.gather(get_model_name(), get_version())``) so they
+        issue one GET, not two. Callers that want best-effort behavior
+        wrap this in ``try/except VizioError``.
         """
-        if self._cached_deviceinfo is None:
-            self._cached_deviceinfo = await self._request(Endpoint.DEVICE_INFO)
-        return self._cached_deviceinfo
+        async with self._deviceinfo_lock:
+            if self._cached_deviceinfo_error is not None:
+                raise self._cached_deviceinfo_error
+            if self._cached_deviceinfo is None:
+                try:
+                    self._cached_deviceinfo = await self._request(Endpoint.DEVICE_INFO)
+                except VizioError as err:
+                    self._cached_deviceinfo_error = err
+                    raise
+            return self._cached_deviceinfo
 
     async def _get_system_info(self) -> Mapping[str, Any]:
         """

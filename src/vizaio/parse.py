@@ -335,6 +335,21 @@ def parse_auth_token(response: Response) -> str:
     return token
 
 
+def _deviceinfo_value(response: Response) -> Mapping[str, Any]:
+    """
+    Return the ``ITEMS[0].VALUE`` mapping of a deviceinfo response.
+
+    The single navigation every deviceinfo reader shares: empty mapping
+    when the response has no items or its first item's value isn't a
+    mapping (older firmware, or a non-deviceinfo payload). Sub-blocks
+    like ``SYSTEM_INFO`` / ``BINARIES`` live directly under this value.
+    """
+    if not response.items:
+        return {}
+    value = response.items[0].value
+    return value if isinstance(value, Mapping) else {}
+
+
 def parse_device_info(response: Response) -> dict[str, str]:
     """
     Extract the device info dict (model_name, name, etc.).
@@ -342,12 +357,9 @@ def parse_device_info(response: Response) -> dict[str, str]:
     Returned dict has lowercased keys (already normalized by
     :meth:`Response.from_json`).
     """
-    if not response.items:
-        return {}
-    value = response.items[0].value
-    if not isinstance(value, Mapping):
-        return {}
-    return {str(k): str(v) for k, v in value.items() if v is not None}
+    return {
+        str(k): str(v) for k, v in _deviceinfo_value(response).items() if v is not None
+    }
 
 
 def parse_model_name(response: Response, *, settings_root: str) -> str:
@@ -370,12 +382,7 @@ def parse_vizios_binary(response: Response) -> str:
     can hand it to :func:`apps.extract_chipset`. Empty string when
     absent — older firmware may not expose it.
     """
-    if not response.items:
-        return ""
-    value = response.items[0].value
-    if not isinstance(value, Mapping):
-        return ""
-    binaries = value.get("binaries")
+    binaries = _deviceinfo_value(response).get("binaries")
     if not isinstance(binaries, Mapping):
         return ""
     vizios = binaries.get("vizios")
@@ -398,15 +405,8 @@ def parse_system_info(response: Response) -> dict[str, Any]:
     token. Verified live on VHD24M-0810 fw 3.720.9.1-1. Note it does
     **not** carry ``esn``.
     """
-    if not response.items:
-        return {}
-    value = response.items[0].value
-    if not isinstance(value, Mapping):
-        return {}
-    system_info = value.get("system_info")
-    if not isinstance(system_info, Mapping):
-        return {}
-    return dict(system_info)
+    system_info = _deviceinfo_value(response).get("system_info")
+    return dict(system_info) if isinstance(system_info, Mapping) else {}
 
 
 def parse_system_info_model_name(response: Response) -> str:

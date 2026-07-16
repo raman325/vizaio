@@ -16,6 +16,7 @@ migration row.
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
@@ -1387,6 +1388,89 @@ class TestDeviceInfo:
             VizioNotFoundError("URI not found"),
         ]
         assert await vizio_tv.get_esn() == ""
+
+    async def test_version_from_deviceinfo_honors_firmware_alias(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """
+        The deviceinfo probe walks (cname, *aliases) like the aggregate
+        path: a SYSTEM_INFO that keys the value under ``firmware`` (the
+        alias) rather than ``version`` (the cname) is still read from
+        deviceinfo instead of falling through to the auth-gated path.
+        """
+        mock_client.return_value = _resp(
+            make_device_info_response({"SYSTEM_INFO": {"FIRMWARE": "9.9.9"}})
+        )
+        assert await vizio_tv.get_version() == "9.9.9"
+        # deviceinfo only — the alias matched, so the aggregate is never hit.
+        assert mock_client.call_count == 1
+        assert _last_call_paths(mock_client) == ("/state/device/deviceinfo",)
+
+    async def test_deviceinfo_failure_cached_not_refetched(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """
+        An unreachable deviceinfo is remembered for the session: one
+        ``get_device_info()`` issues a single deviceinfo GET, not one per
+        deviceinfo-backed field (model + serial + version), and the
+        outcome is not re-fetched on later reads.
+        """
+        mock_client.side_effect = VizioConnectionError("device down")
+
+        info = await vizio_tv.get_device_info()
+        # Everything degrades gracefully to empty.
+        assert info.model == "" and info.serial_number == "" and info.version == ""
+
+        deviceinfo_calls = [
+            c
+            for c in mock_client.call_args_list
+            if c.args[0].paths == ("/state/device/deviceinfo",)
+        ]
+        assert len(deviceinfo_calls) == 1, (
+            "deviceinfo failure should be cached, not re-fetched per field"
+        )
+
+        # A later identity read still doesn't re-hit deviceinfo.
+        assert await vizio_tv.get_serial_number() == ""
+        deviceinfo_calls = [
+            c
+            for c in mock_client.call_args_list
+            if c.args[0].paths == ("/state/device/deviceinfo",)
+        ]
+        assert len(deviceinfo_calls) == 1
+
+    async def test_concurrent_deviceinfo_reads_coalesce(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """
+        Concurrent deviceinfo-backed getters issue ONE GET, not one each:
+        the lock coalesces callers that all pass the empty-cache check
+        while the first fetch is in flight.
+        """
+        started = asyncio.Event()
+        release = asyncio.Event()
+        calls = 0
+
+        async def slow_request(spec: object, **_kwargs: object) -> Response:
+            nonlocal calls
+            calls += 1
+            started.set()
+            await release.wait()
+            return _resp(
+                make_device_info_response(
+                    {"MODEL_NAME": "X", "SYSTEM_INFO": {"VERSION": "1.2.3"}}
+                )
+            )
+
+        mock_client.side_effect = slow_request
+        task = asyncio.gather(vizio_tv.get_model_name(), vizio_tv.get_version())
+        await started.wait()  # first fetch is in flight, holding the lock
+        release.set()
+        model, version = await task
+
+        assert model == "X"
+        assert version == "1.2.3"
+        assert calls == 1, "concurrent deviceinfo reads should coalesce to one GET"
 
     async def test_get_state_extended(self, vizio_tv: Vizio) -> None:
         """
