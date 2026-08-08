@@ -529,7 +529,7 @@ is *not* a suitable source — for non-TV settings roots it returns the friendly
 ```python
 from vizaio.discovery import classify_crave_model, is_crave_model
 
-if is_crave_model(model):          # True iff model.upper().startswith("SP")
+if is_crave_model(model):  # True iff model.upper().startswith("SP")
     dt = classify_crave_model(model)
     # SP30* → CRAVE_GO, SP50* → CRAVE360, SP70* → CRAVE_PRO
     # Unknown SP* → CRAVE_GO (lenient default)
@@ -586,7 +586,7 @@ from vizaio import DeviceType, Vizio
 
 async def main() -> None:
     async with Vizio(
-        host="192.168.1.50",            # placeholder — your device IP
+        host="192.168.1.50",  # placeholder — your device IP
         device_type=DeviceType.TV,
         auth_token="Zabc1234DEFG5678",  # placeholder — see "Pairing" above
     ) as v:
@@ -627,12 +627,12 @@ from vizaio import DeviceType, Vizio, VizioError
 
 async def pair() -> None:
     async with Vizio(
-        host="192.168.1.50",            # placeholder
+        host="192.168.1.50",  # placeholder
         device_type=DeviceType.TV,
     ) as v:
         async with v.pair_session(
-            device_id="my-app",         # stable identity for *your* client
-            device_name="My App",       # human-readable; shows on the TV
+            device_id="my-app",  # stable identity for *your* client
+            device_name="My App",  # human-readable; shows on the TV
         ) as session:
             # Device now displays a 4-digit PIN on screen.
             print("Look at the TV and enter the PIN it displays.")
@@ -686,22 +686,22 @@ These are the same primitives the CLI's `pair begin` / `pair complete` /
 state: bool = await v.get_power_state()
 await v.power_on()
 await v.power_off()
-await v.power_toggle()                  # press the power button (flips state)
+await v.power_toggle()  # press the power button (flips state)
 ```
 
 ### Volume and mute
 
 ```python
-level: int = await v.get_volume()       # raw value, 0..profile.max_volume
-await v.set_volume(30)                  # absolute set; flat /audio/volume/level,
-                                        # no hashval, one round trip
-await v.volume_up(steps=3)              # send 3 KEYPRESSes in one PUT
+level: int = await v.get_volume()  # raw value, 0..profile.max_volume
+await v.set_volume(30)  # absolute set; flat /audio/volume/level,
+# no hashval, one round trip
+await v.volume_up(steps=3)  # send 3 KEYPRESSes in one PUT
 await v.volume_down(steps=1)
 
 muted: bool = await v.is_muted()
-await v.mute()                          # idempotent: reads state, sends toggle on mismatch
-await v.unmute()                        # idempotent: same pattern
-await v.mute_toggle()                   # one round trip: press MUTE_TOGGLE blindly
+await v.mute()  # idempotent: reads state, sends toggle on mismatch
+await v.unmute()  # idempotent: same pattern
+await v.mute_toggle()  # one round trip: press MUTE_TOGGLE blindly
 ```
 
 `mute()` and `unmute()` are idempotent at the cost of an extra read. `mute_toggle()`
@@ -722,10 +722,10 @@ current: str = await v.get_current_input()
 # set_input accepts any of the four forms — case-insensitive — and
 # translates internally to the cname (the device's canonical
 # identifier in the PUT body):
-await v.set_input("hdmi2")              # cname (most explicit)
-await v.set_input("HDMI-2")             # display name
-await v.set_input("Mac")                # user-renamed meta_name
-await v.set_input("smartcast")          # works for the cast input too
+await v.set_input("hdmi2")  # cname (most explicit)
+await v.set_input("HDMI-2")  # display name
+await v.set_input("Mac")  # user-renamed meta_name
+await v.set_input("smartcast")  # works for the cast input too
 
 await v.next_input()
 ```
@@ -744,10 +744,11 @@ library treats this as success).
 name: str | None = await v.get_current_app()
 # 'Netflix' / 'YouTube' / None (no app running) / '_UNKNOWN_APP' (catalog miss)
 
-await v.launch_app("Netflix")           # case-insensitive; matches catalog name
+await v.launch_app("Netflix")  # case-insensitive; matches catalog name
 
 # Power-user: launch by raw config (skip catalog lookup)
 from vizaio import AppConfig
+
 await v.launch_app_config(AppConfig(app_id="3", name_space=4, message=None))
 ```
 
@@ -785,8 +786,8 @@ fires — caller is in charge.
 
 ```python
 # Action items (T_ACTION_V1) fire, they don't hold values:
-await v.blank_screen()                  # panel off, audio keeps playing
-await v.send_key("BACK")                # any nav key wakes the panel
+await v.blank_screen()  # panel off, audio keeps playing
+await v.send_key("BACK")  # any nav key wakes the panel
 await v.trigger_setting_action("admin_and_privacy", "soft_power_cycle")  # reboot
 ```
 
@@ -795,10 +796,10 @@ await v.trigger_setting_action("admin_and_privacy", "soft_power_cycle")  # reboo
 ```python
 from vizaio import RemoteKey
 
-await v.send_key("MENU")                # raw string
-await v.send_key(RemoteKey.GUIDE)       # or the StrEnum
+await v.send_key("MENU")  # raw string
+await v.send_key(RemoteKey.GUIDE)  # or the StrEnum
 
-await v.send_text("stranger things")    # type ASCII into a search / keyboard field
+await v.send_text("stranger things")  # type ASCII into a search / keyboard field
 
 valid: frozenset[str] = v.available_keys
 # {'POW_ON', 'POW_OFF', 'VOL_UP', 'VOL_DOWN', 'MUTE_ON', ..., 'MENU', 'GUIDE', ...}
@@ -817,10 +818,10 @@ codeset-0 codes 0–9 are ASCII control characters, not digits).
 ### Device identity
 
 ```python
-model:  str        = await v.get_model_name()
-serial: str        = await v.get_serial_number()
-esn:    str        = await v.get_esn()
-ver:    str        = await v.get_version()
+model: str = await v.get_model_name()
+serial: str = await v.get_serial_number()
+esn: str = await v.get_esn()
+ver: str = await v.get_version()
 
 info: DeviceInfo = await v.get_device_info()
 # DeviceInfo(model='M65Q7-H1', serial_number='...', esn='...', version='...',
@@ -833,10 +834,10 @@ older firmware. Each individual getter still raises on failure if you call
 it directly.
 
 ```python
-versions: SystemVersions = await v.get_versions()   # GET /system/versions
+versions: SystemVersions = await v.get_versions()  # GET /system/versions
 # SystemVersions(firmware='3.720.9.1-1', serial_number='...', esn='...',
 #                scpl='3.4.3-2614.0002', raw={'FIRMWARE': ..., 'acr': ..., ...})
-versions.raw["SC CONFIG"]                            # full device-cased map
+versions.raw["SC CONFIG"]  # full device-cased map
 ```
 
 `get_versions()` returns firmware / serial / ESN plus the per-component
@@ -845,7 +846,7 @@ than the per-field identity getters above, and a natural companion to
 `get_state_extended()` for one-shot device snapshots.
 
 ```python
-default: bool = await v.is_pin_default()   # GET /pin/is_pin_default
+default: bool = await v.is_pin_default()  # GET /pin/is_pin_default
 # True  -> parental/purchase PIN is still factory-default (unprotected)
 # False -> a custom PIN has been set
 ```
@@ -856,7 +857,7 @@ A read-only status check. vizaio intentionally omits PIN *setters* and
 ### Battery (Crave only)
 
 ```python
-level:    int            = await v.get_battery_level()
+level: int = await v.get_battery_level()
 charging: ChargingStatus = await v.get_charging_status()
 # ChargingStatus.NOT_CHARGING / CHARGING / FULLY_CHARGED
 ```
@@ -867,8 +868,8 @@ non-Crave profiles.
 ### Health probes
 
 ```python
-await v.ping()        # unauthenticated; cheapest "is the device reachable" check
-await v.ping_auth()   # validates the configured token actually works
+await v.ping()  # unauthenticated; cheapest "is the device reachable" check
+await v.ping_auth()  # validates the configured token actually works
 ```
 
 For a pre-construction *device-type probe* (before you have a `Vizio` instance),
@@ -889,8 +890,8 @@ from vizaio import Vizio
 from vizaio.apps import fetch_app_catalog, fetch_app_availability
 
 # Fetch once, share across multiple Vizio instances or cache in coordinator
-catalog = await fetch_app_catalog()                  # falls back to bundled on failure
-availability = await fetch_app_availability()        # same fallback semantics
+catalog = await fetch_app_catalog()  # falls back to bundled on failure
+availability = await fetch_app_availability()  # same fallback semantics
 
 # Pass at construction time …
 async with Vizio(host="...", auth_token="...", apps=catalog) as v:
