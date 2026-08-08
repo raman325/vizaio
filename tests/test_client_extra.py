@@ -21,7 +21,7 @@ import contextlib
 import json
 from typing import Any
 
-from aiohttp import ClientSession, InvalidURL
+from aiohttp import ClientSession, ClientTimeout, InvalidURL
 from aioresponses import aioresponses
 import pytest
 
@@ -457,6 +457,16 @@ class TestCommandTimeout:
         client = SmartCastClient(host="1.2.3.4", timeout=4, command_timeout=99)
         assert client._timeout.sock_read == 4
         assert client._command_timeout.sock_read == 99
+
+    def test_explicit_client_timeout_passes_through(self) -> None:
+        """A caller-supplied ClientTimeout is used verbatim, not re-derived."""
+        read_budget = ClientTimeout(total=7)
+        write_budget = ClientTimeout(total=8)
+        client = SmartCastClient(
+            host="1.2.3.4", timeout=read_budget, command_timeout=write_budget
+        )
+        assert client._timeout is read_budget
+        assert client._command_timeout is write_budget
 
     async def test_put_uses_command_timeout_and_get_does_not(self) -> None:
         """The PUT carries an explicit per-request timeout; the GET doesn't."""
