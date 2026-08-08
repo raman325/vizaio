@@ -57,6 +57,14 @@ DEFAULT_CONNECT_TIMEOUT: Final = 2.0
 DEFAULT_WRITE_TIMEOUT: Final = 3.0
 DEFAULT_READ_TIMEOUT: Final = 10.0
 
+# Commands (PUT) get a longer response budget than reads. Sluggish or older
+# hardware can take many seconds to acknowledge a key press, and a timed-out
+# command surfaces to the user as "the button did nothing". Reads stay strict
+# because they run on a polling loop where falling behind is worse than a
+# stale value. Note this is unrelated to DEFAULT_WRITE_TIMEOUT above, which
+# describes time to *send* bytes, not to await the device's reply.
+DEFAULT_COMMAND_TIMEOUT: Final = 30.0
+
 HEADER_AUTH: Final = "AUTH"
 HEADER_SOURCE: Final = "VIZIO-SmartCast-Source"
 SOURCE_IDENTIFIER: Final = "vizaio"
@@ -79,6 +87,7 @@ class SmartCastClient:
         auth_token: str | None = None,
         session: ClientSession | None = None,
         timeout: float | ClientTimeout | None = None,
+        command_timeout: float | ClientTimeout | None = None,
         max_concurrent: int = 1,
     ) -> None:
         """
@@ -92,6 +101,9 @@ class SmartCastClient:
         self._session = session
         self._owns_session = session is None
         self._timeout = _coerce_timeout(timeout)
+        self._command_timeout = _coerce_timeout(
+            command_timeout, default=DEFAULT_COMMAND_TIMEOUT
+        )
         self._semaphore = asyncio.Semaphore(max_concurrent)
         self._closed = False
 
@@ -246,7 +258,11 @@ class SmartCastClient:
                         body,
                     )
                     async with session.put(
-                        url, data=payload, headers=headers, ssl=False
+                        url,
+                        data=payload,
+                        headers=headers,
+                        ssl=False,
+                        timeout=self._command_timeout,
                     ) as resp:
                         return await _parse_response(resp, spec)
         except (
@@ -270,11 +286,13 @@ class SmartCastClient:
 
 def _coerce_timeout(
     timeout: float | ClientTimeout | None,
+    *,
+    default: float = DEFAULT_READ_TIMEOUT,
 ) -> ClientTimeout:
-    """Coerce a read-timeout float or ``None`` into a configured ``ClientTimeout``."""
+    """Coerce a response-timeout float or ``None`` into a ``ClientTimeout``."""
     if isinstance(timeout, ClientTimeout):
         return timeout
-    read = float(timeout) if timeout is not None else DEFAULT_READ_TIMEOUT
+    read = float(timeout) if timeout is not None else default
     return ClientTimeout(
         total=None,
         connect=DEFAULT_CONNECT_TIMEOUT,

@@ -17,22 +17,29 @@ All tests run end-to-end through aiohttp via ``aioresponses``.
 
 from __future__ import annotations
 
+import contextlib
 import json
+from typing import Any
 
-from aiohttp import ClientSession, InvalidURL
+from aiohttp import ClientSession, ClientTimeout, InvalidURL
 from aioresponses import aioresponses
 import pytest
 
-from vizaio.client import SmartCastClient
-from vizaio.endpoints import EndpointSpec
+from vizaio.client import (
+    DEFAULT_COMMAND_TIMEOUT,
+    DEFAULT_READ_TIMEOUT,
+    SmartCastClient,
+)
+from vizaio.endpoints import Endpoint, EndpointSpec, resolve
 from vizaio.errors import (
     VizioAuthError,
     VizioBusyError,
     VizioConnectionError,
+    VizioError,
     VizioNotFoundError,
     VizioResponseError,
 )
-from vizaio.types import AuthRequirement
+from vizaio.types import AuthRequirement, DeviceType
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -428,3 +435,61 @@ class TestClientErrorWrapping:
                     await client.request_raw_json(_spec_get())
             finally:
                 await client.aclose()
+
+
+class TestCommandTimeout:
+    """Writes get a longer response budget than reads.
+
+    pyvizio discarded ``custom_timeout`` on PUT (it reassigned the local to
+    aiohttp's default), so commands tolerated very slow devices while reads
+    used a strict 5s. vizaio applied one timeout to everything, which made
+    sluggish hardware fail key presses that used to work. This restores a
+    generous command budget without loosening the read path.
+    """
+
+    def test_defaults_are_distinct(self) -> None:
+        client = SmartCastClient(host="1.2.3.4")
+        assert client._timeout.sock_read == DEFAULT_READ_TIMEOUT
+        assert client._command_timeout.sock_read == DEFAULT_COMMAND_TIMEOUT
+        assert DEFAULT_COMMAND_TIMEOUT > DEFAULT_READ_TIMEOUT
+
+    def test_command_timeout_is_configurable(self) -> None:
+        client = SmartCastClient(host="1.2.3.4", timeout=4, command_timeout=99)
+        assert client._timeout.sock_read == 4
+        assert client._command_timeout.sock_read == 99
+
+    def test_explicit_client_timeout_passes_through(self) -> None:
+        """A caller-supplied ClientTimeout is used verbatim, not re-derived."""
+        read_budget = ClientTimeout(total=7)
+        write_budget = ClientTimeout(total=8)
+        client = SmartCastClient(
+            host="1.2.3.4", timeout=read_budget, command_timeout=write_budget
+        )
+        assert client._timeout is read_budget
+        assert client._command_timeout is write_budget
+
+    async def test_put_uses_command_timeout_and_get_does_not(self) -> None:
+        """The PUT carries an explicit per-request timeout; the GET doesn't."""
+        captured: dict[str, Any] = {}
+
+        class _FakeSession:
+            def get(self, url: str, **kwargs: Any) -> Any:
+                captured["get"] = kwargs
+                raise VizioConnectionError("stop here")
+
+            def put(self, url: str, **kwargs: Any) -> Any:
+                captured["put"] = kwargs
+                raise VizioConnectionError("stop here")
+
+        client = SmartCastClient(host="1.2.3.4", auth_token="tok")
+        client._session = _FakeSession()  # type: ignore[assignment]
+
+        spec = resolve(Endpoint.POWER_MODE, DeviceType.TV.profile)
+        with contextlib.suppress(VizioError):
+            await client.request_spec(spec)
+        spec = resolve(Endpoint.KEY_PRESS, DeviceType.TV.profile)
+        with contextlib.suppress(VizioError):
+            await client.request_spec(spec, body={"KEYLIST": []})
+
+        assert "timeout" not in captured["get"]
+        assert captured["put"]["timeout"].sock_read == DEFAULT_COMMAND_TIMEOUT
