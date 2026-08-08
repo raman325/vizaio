@@ -148,6 +148,7 @@ class Vizio:
         auth_token: str | None = None,
         session: ClientSession | None = None,
         timeout: float | ClientTimeout | None = None,
+        command_timeout: float | ClientTimeout | None = None,
         max_concurrent_requests: int = 1,
         apps: tuple[AppRecord, ...] | None = None,
         availability: tuple[AppAvailability, ...] | None = None,
@@ -157,6 +158,10 @@ class Vizio:
 
         Pass at most one of ``device_type`` or ``profile``. When both are
         omitted, defaults to ``DeviceType.TV.profile``.
+
+        ``timeout`` bounds how long a read may take; ``command_timeout``
+        does the same for writes and defaults higher, since slow hardware
+        can take many seconds to acknowledge a key press.
         """
         if profile is not None and device_type is not None:
             raise ValueError("specify at most one of device_type or profile")
@@ -172,6 +177,7 @@ class Vizio:
             auth_token=auth_token,
             session=session,
             timeout=timeout,
+            command_timeout=command_timeout,
             max_concurrent=max_concurrent_requests,
         )
 
