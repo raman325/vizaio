@@ -15,6 +15,7 @@ from .apps import (
 from .discovery import (
     async_classify_device,
     async_is_tv,
+    async_resolve_host,
     classify_crave_model,
     is_crave_model,
 )
@@ -103,6 +104,7 @@ __all__ = [
     "VizioUnsupportedError",
     "async_classify_device",
     "async_is_tv",
+    "async_resolve_host",
     "classify_crave_model",
     "fetch_app_availability",
     "fetch_app_catalog",

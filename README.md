@@ -519,6 +519,27 @@ The two functions have **different failure contracts**:
   more honest than returning a lenient default. Wrap in `try`/`except`
   (or use `async_is_tv` instead) if you want to handle failure as TV.
 
+### Resolving a host that has no port
+
+A bare IP has no port, and the client builds URLs literally — so
+`Vizio("192.168.1.50")` targets port 443 and fails. When a host comes from
+user input or persisted config and may lack a port, run it through
+`async_resolve_host` first:
+
+```python
+from vizaio.discovery import async_resolve_host
+
+host = await async_resolve_host("192.168.1.50")  # → "192.168.1.50:7345"
+already = await async_resolve_host("192.168.1.50:9000")  # unchanged, no I/O
+```
+
+It probes `DEFAULT_PORTS` (`7345`, then `9000`) and raises
+`VizioConnectionError` if none respond. Each candidate is validated with a
+real unauthenticated `deviceinfo` fetch rather than a bare TCP connect —
+Vizio devices also listen on Chromecast/DIAL ports (7000/8008/8009/8443) that
+accept connections but don't speak the SmartCast API, so an open socket alone
+proves nothing. Pass `ports=` to override the candidates.
+
 If you already have a model string from `DiscoveredDevice.model` (returned by
 the `discover_*` functions) or persisted config, you can classify without a
 network round trip using the pure sync helpers. **Note:** `Vizio.get_model_name()`

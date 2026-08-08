@@ -29,11 +29,13 @@ from vizaio import (
     Vizio,
     VizioAuthError,
     VizioConnectionError,
+    VizioError,
     VizioResponseError,
 )
 from vizaio.discovery import (
     async_classify_device,
     async_is_tv,
+    async_resolve_host,
     classify_crave_model,
     discover,
     discover_ssdp,
@@ -549,6 +551,89 @@ class TestAsyncClassifyDevice:
     async def test_port_kwarg_conflicts_with_inline_port(self) -> None:
         with pytest.raises(ValueError, match=r"port"):
             await async_classify_device("1.2.3.4:9000", port=9000)
+
+
+class TestAsyncResolveHost:
+    """Repair a portless host by probing the known SmartCast ports.
+
+    pyvizio did this implicitly on every API call (``__add_port``);
+    vizaio makes it an explicit helper. Validation is a real DEVICE_INFO
+    fetch rather than a bare TCP connect, because Vizio TVs also listen
+    on Chromecast/DIAL ports (7000/8008/8009/8443) that are not the
+    SmartCast API.
+    """
+
+    @staticmethod
+    def _responder(
+        good_host: str | None,
+        tried: list[str],
+        *,
+        error: type[VizioError] = VizioConnectionError,
+    ) -> Any:
+        """Fake ``Vizio._request`` that succeeds only for ``good_host``."""
+
+        async def _request(self: Vizio, endpoint: Any) -> Response:
+            tried.append(self.host)
+            if self.host == good_host:
+                return _deviceinfo(settings_root="tv_settings")
+            raise error("no SmartCast API here")
+
+        return _request
+
+    async def test_host_with_port_returned_unchanged(self) -> None:
+        # Idempotent: callers never need to pre-check, and a host that
+        # already carries a port costs zero network round trips.
+        tried: list[str] = []
+        with patch.object(Vizio, "_request", new=self._responder(None, tried)):
+            result = await async_resolve_host("1.2.3.4:9000")
+        assert result == "1.2.3.4:9000"
+        assert tried == []
+
+    async def test_first_candidate_port_wins(self) -> None:
+        tried: list[str] = []
+        with patch.object(
+            Vizio, "_request", new=self._responder("1.2.3.4:7345", tried)
+        ):
+            result = await async_resolve_host("1.2.3.4")
+        assert result == "1.2.3.4:7345"
+        assert tried == ["1.2.3.4:7345"]
+
+    async def test_falls_through_to_next_port(self) -> None:
+        tried: list[str] = []
+        with patch.object(
+            Vizio, "_request", new=self._responder("1.2.3.4:9000", tried)
+        ):
+            result = await async_resolve_host("1.2.3.4")
+        assert result == "1.2.3.4:9000"
+        assert tried == ["1.2.3.4:7345", "1.2.3.4:9000"]
+
+    async def test_non_smartcast_responder_is_rejected(self) -> None:
+        # Regression guard for home-assistant/core#178499: the reporting
+        # user's TV answers on 8443 (DIAL), which a bare TCP probe would
+        # wrongly accept as the SmartCast API.
+        tried: list[str] = []
+        responder = self._responder("1.2.3.4:9000", tried, error=VizioResponseError)
+        with patch.object(Vizio, "_request", new=responder):
+            result = await async_resolve_host("1.2.3.4", ports=(8443, 9000))
+        assert result == "1.2.3.4:9000"
+        assert tried == ["1.2.3.4:8443", "1.2.3.4:9000"]
+
+    async def test_all_candidates_fail_raises_connection_error(self) -> None:
+        tried: list[str] = []
+        with (
+            patch.object(Vizio, "_request", new=self._responder(None, tried)),
+            pytest.raises(VizioConnectionError, match=r"7345"),
+        ):
+            await async_resolve_host("1.2.3.4")
+        assert tried == ["1.2.3.4:7345", "1.2.3.4:9000"]
+
+    def test_exported_from_package_root(self) -> None:
+        # Consumers (notably the Home Assistant integration) import from
+        # the package root, alongside async_is_tv/async_classify_device.
+        import vizaio
+
+        assert vizaio.async_resolve_host is async_resolve_host
+        assert "async_resolve_host" in vizaio.__all__
 
 
 # ---------------------------------------------------------------------------

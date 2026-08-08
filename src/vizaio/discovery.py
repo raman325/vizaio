@@ -28,7 +28,7 @@ import aiohttp
 
 from ._device import Vizio
 from .endpoints import Endpoint
-from .errors import VizioError, VizioResponseError
+from .errors import VizioConnectionError, VizioError, VizioResponseError
 from .parse import parse_device_info, parse_system_info_model_name
 from .types import DeviceType, DiscoveredDevice
 
@@ -50,6 +50,15 @@ in the description XML since DIAL is also used by Chromecasts, Roku, etc."""
 SSDP_GROUP = ("239.255.255.250", 1900)
 
 DEFAULT_TIMEOUT = 5.0
+
+DEFAULT_PORTS = (7345, 9000)
+"""Ports the SmartCast API is served on, in probe order.
+
+7345 on newer TVs, 9000 on older TVs and audio devices. Deliberately
+excludes the Chromecast/DIAL ports Vizio devices also listen on
+(7000/8008/8009/8443) — those answer TCP connects but are not the
+SmartCast API.
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -578,3 +587,52 @@ async def async_classify_device(
     if is_crave_model(model):
         return classify_crave_model(model)
     return DeviceType.SOUNDBAR
+
+
+async def async_resolve_host(
+    host: str,
+    *,
+    ports: Iterable[int] = DEFAULT_PORTS,
+    session: aiohttp.ClientSession | None = None,
+    timeout: float | None = None,
+) -> str:
+    """
+    Return ``host`` with a port, probing ``ports`` when it carries none.
+
+    ``host`` may be ``"1.2.3.4"`` or ``"1.2.3.4:7345"``. A host that
+    already includes a port is returned unchanged and costs no network
+    round trips, so callers never need to pre-check.
+
+    Each candidate is validated with a real unauthenticated
+    ``Endpoint.DEVICE_INFO`` fetch rather than a bare TCP connect. Vizio
+    devices also listen on Chromecast/DIAL ports (7000/8008/8009/8443)
+    that accept connections but do not speak the SmartCast API, so an
+    open socket alone proves nothing.
+
+    Raises :class:`VizioConnectionError` when no candidate responds.
+    """
+    if ":" in host:
+        return host
+    tried: list[int] = []
+    for port in ports:
+        tried.append(port)
+        candidate = f"{host}:{port}"
+        # DEVICE_INFO is auth=NONE on every profile, so the device_type
+        # here doesn't affect the wire request — same reasoning as
+        # ``async_classify_device``.
+        async with Vizio(
+            candidate,
+            device_type=DeviceType.SOUNDBAR,
+            session=session,
+            timeout=timeout,
+        ) as device:
+            try:
+                await device._request(Endpoint.DEVICE_INFO)
+            except VizioError:
+                _LOGGER.debug("No SmartCast API on %s", candidate)
+                continue
+        return candidate
+    raise VizioConnectionError(
+        f"no SmartCast API found on {host} "
+        f"(tried ports: {', '.join(str(port) for port in tried)})"
+    )

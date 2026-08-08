@@ -378,7 +378,8 @@ If you want to read your way through the source from the bottom up:
    aiohttp session, applies auth, walks `EndpointSpec.paths` for
    firmware-fallback.
 10. **`apps.py`** — bundled JSON + remote refresh + `find_app_name`.
-11. **`discovery.py`** — zeroconf + SSDP.
+11. **`discovery.py`** — zeroconf + SSDP, plus host-targeted helpers
+    (`async_classify_device`, `async_is_tv`, `async_resolve_host`).
 12. **`_device.py`** — `Vizio` class, the public API. This is the only
     file in the package that touches all the others.
 
