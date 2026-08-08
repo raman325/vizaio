@@ -51,6 +51,14 @@ from vizaio.types import DeviceType, DiscoveredDevice
 # ---------------------------------------------------------------------------
 
 
+# deviceinfo that parses cleanly but carries no identity fields, so
+# deviceinfo-first getters fall through to the aggregate as intended.
+_EMPTY_DEVICEINFO = {
+    "ITEMS": [{"CNAME": "deviceinfo", "VALUE": {}}],
+    "STATUS": {"RESULT": "SUCCESS", "DETAIL": "ok"},
+}
+
+
 def _tv_url(endpoint: Endpoint, *, suffix: str = "") -> str:
     """Resolve the TV-profile URL for an endpoint (first path)."""
     spec = resolve(endpoint, DeviceType.TV.profile)
@@ -761,6 +769,7 @@ class TestInfoCommands:
     def test_serial(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
+        mock_aio.get(_tv_url(Endpoint.DEVICE_INFO), payload=_EMPTY_DEVICEINFO)
         mock_aio.get(_tv_url(Endpoint.TV_INFORMATION), payload=self._aggregate())
         result = _invoke(runner, saved_tv, "info", "serial", "--format", "plain")
         assert result.exit_code == 0, result.output
@@ -777,6 +786,7 @@ class TestInfoCommands:
     def test_version(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
+        mock_aio.get(_tv_url(Endpoint.DEVICE_INFO), payload=_EMPTY_DEVICEINFO)
         mock_aio.get(_tv_url(Endpoint.TV_INFORMATION), payload=self._aggregate())
         result = _invoke(runner, saved_tv, "info", "version", "--format", "plain")
         assert result.exit_code == 0, result.output
