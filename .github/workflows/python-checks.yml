@@ -38,7 +38,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install dependencies
-        run: uv pip install --system ruff
+        run: uv pip install --system ruff==0.16.0
       - name: Check formatting
         run: ruff format --check .
       - name: Check linting

@@ -23,7 +23,9 @@ the test suite (`tests/test_device.py`).
 v = VizioAsync("ha-coord", "192.168.1.50:7345", "HomeAssistant", "TOKEN", "tv")
 
 # NEW
-async with Vizio(host="192.168.1.50:7345", device_type=DeviceType.TV, auth_token="TOKEN") as v:
+async with Vizio(
+    host="192.168.1.50:7345", device_type=DeviceType.TV, auth_token="TOKEN"
+) as v:
     ...
 ```
 
