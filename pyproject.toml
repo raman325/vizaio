@@ -41,7 +41,13 @@ dev = [
   "pytest>=9.0",
   "pytest-asyncio>=0.23",
   "pytest-cov>=5.0",
-  "ruff>=0.15",
+  # Floor only — package metadata stays `>=` so it can't conflict with the
+  # resolution of a downstream consumer. Tied to the version Home Assistant
+  # pins (requirements_test_pre_commit.txt), so formatting can't diverge
+  # between this library and the vizio integration. The exact version is
+  # pinned in the places that gate merges: .pre-commit-config.yaml and the
+  # Ruff CI job.
+  "ruff>=0.16.0",
 ]
 
 [project.scripts]
@@ -100,6 +106,10 @@ ignore = [
   "PLR0911", # too many return statements
   "PLR0912", # too many branches
   "PLR0913", # too many arguments
+  # Sibling of PLR0913, left preview in ruff 0.16. Typer command functions
+  # declare every CLI flag as a parameter, so the count is driven by the
+  # command's interface, not by the function's complexity.
+  "PLR0917", # too many positional arguments
   "PLR0915", # too many statements
   "PLR2004", # magic value used in comparison
 ]

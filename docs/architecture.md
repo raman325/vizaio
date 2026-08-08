@@ -125,6 +125,7 @@ returns a typed `Item`, and the caller pulls `item.value`.
 import asyncio
 from vizaio import DeviceType, Vizio, VizioError
 
+
 async def main():
     async with Vizio(
         host="192.168.1.50",
@@ -132,7 +133,7 @@ async def main():
         auth_token="Z3pndnpncGV2",
     ) as vizio:
         # Quick connectivity check.
-        await vizio.ping_auth()           # raises VizioAuthError if token rejected
+        await vizio.ping_auth()  # raises VizioAuthError if token rejected
 
         # Read state.
         on = await vizio.get_power_state()
@@ -144,6 +145,7 @@ async def main():
         # Issue a command (returns None on success, raises on failure).
         if on:
             await vizio.power_off()
+
 
 asyncio.run(main())
 ```
@@ -163,6 +165,7 @@ import asyncio
 from vizaio import DeviceType, Vizio
 from vizaio.discovery import discover
 
+
 async def setup():
     devices = await discover(timeout=5.0)
     if not devices:
@@ -172,11 +175,13 @@ async def setup():
     print(f"Found: {target.name} at {target.host} ({target.model})")
 
     # Pair — async context manager guarantees cleanup if anything goes wrong.
-    async with Vizio(host=target.host, device_type=DeviceType.TV) as v, \
-               v.pair_session(
-                   device_id="my-script",
-                   device_name="My Setup Script",
-               ) as session:
+    async with (
+        Vizio(host=target.host, device_type=DeviceType.TV) as v,
+        v.pair_session(
+            device_id="my-script",
+            device_name="My Setup Script",
+        ) as session,
+    ):
         print("PIN should now be visible on the TV screen.")
         pin = input("Enter PIN: ")
         auth_token = await session.complete(pin=pin)
@@ -189,6 +194,7 @@ async def setup():
         auth_token=auth_token,
     ) as v:
         await v.power_on()
+
 
 asyncio.run(setup())
 ```
@@ -207,6 +213,7 @@ Things to notice:
 
 ```python
 from vizaio import RemoteKey
+
 
 async def navigate(vizio):
     # Single press by enum (preferred — type-checked).
@@ -248,18 +255,20 @@ async def adjust(vizio):
     # Read the whole audio category — values + options merged into
     # SettingInfo dataclasses.
     audio = await vizio.get_settings("audio")
-    print(audio["volume"].value)        # 25 (int)
-    print(audio["volume"].min)          # 0
-    print(audio["volume"].max)          # 100
-    print(audio["volume"].hashval)      # opaque server token
+    print(audio["volume"].value)  # 25 (int)
+    print(audio["volume"].min)  # 0
+    print(audio["volume"].max)  # 100
+    print(audio["volume"].hashval)  # opaque server token
 
-    print(audio["eq"].options)          # ("Normal", "Music", "Movie", "Game")
+    print(audio["eq"].options)  # ("Normal", "Music", "Movie", "Game")
 
     # Write efficiently: pass the cached hashval to skip the per-write GET.
     # If the hashval is stale (race), the library does NOT auto-retry —
     # caller has full control.
     await vizio.set_setting(
-        "audio", "volume", 30,
+        "audio",
+        "volume",
+        30,
         hashval=audio["volume"].hashval,
     )
 
@@ -303,6 +312,7 @@ from vizaio import (
     VizioInvalidParameterError,
     VizioUnsupportedError,
 )
+
 
 async def safe(vizio):
     try:
