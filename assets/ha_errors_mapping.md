@@ -33,10 +33,9 @@ from vizaio import (
     VizioResponseError,
 )
 
+
 async def _try_validate(host, auth_token, device_type):
-    async with Vizio(
-        host=host, device_type=device_type, auth_token=auth_token
-    ) as v:
+    async with Vizio(host=host, device_type=device_type, auth_token=auth_token) as v:
         try:
             await v.ping_auth()
         except VizioAuthError as e:
@@ -58,6 +57,7 @@ async def _try_validate(host, auth_token, device_type):
 ```python
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from vizaio import VizioError
+
 
 async def _async_update_data(self):
     try:
@@ -81,6 +81,7 @@ async def _maybe(coro, default=None):
     except VizioError:
         return default
 
+
 async def _async_update_data(self):
     return {
         "power": await _maybe(self._vizio.get_power_state(), default=False),
@@ -94,6 +95,7 @@ async def _async_update_data(self):
 
 ```python
 from homeassistant.exceptions import HomeAssistantError
+
 
 async def async_set_volume(self, level):
     try:
