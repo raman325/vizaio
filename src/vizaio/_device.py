@@ -59,6 +59,7 @@ from .errors import (
     VizioError,
     VizioInvalidInputError,
     VizioInvalidParameterError,
+    VizioNotFoundError,
     VizioResponseError,
     VizioUnsupportedError,
 )
@@ -133,6 +134,16 @@ _PER_FIELD_IDENTITY_ENDPOINTS: Final[dict[str, Endpoint]] = {
 # the menu_native path.
 _DEVICEINFO_IDENTITY_FIELDS: Final[frozenset[str]] = frozenset(
     {"serial_number", "version"}
+)
+
+# Errors that mean "this device or firmware doesn't offer the field on this
+# path", as opposed to "the device is broken or unreachable". Only these may
+# fall through to the next identity source; anything else must surface,
+# otherwise "" conflates a TV with no serial number and a TV that is down.
+_IDENTITY_FALLTHROUGH: Final = (
+    VizioNotFoundError,
+    VizioUnsupportedError,
+    VizioAuthError,
 )
 
 
@@ -1148,7 +1159,7 @@ class Vizio:
             return ""
         try:
             response = await self._request(per_field_endpoint)
-        except VizioError:
+        except _IDENTITY_FALLTHROUGH:
             return ""
         item = response.find_item(cname)
         return str(item.value or "") if item is not None else ""
@@ -1169,7 +1180,7 @@ class Vizio:
         self._cached_identity_loaded = True
         try:
             response = await self._request(Endpoint.TV_INFORMATION)
-        except VizioError:
+        except _IDENTITY_FALLTHROUGH:
             self._cached_identity = None
             return None
         self._cached_identity = {
@@ -1464,7 +1475,7 @@ class Vizio:
         """
         try:
             response = await self._get_deviceinfo()
-        except VizioError:
+        except _IDENTITY_FALLTHROUGH:
             return {}
         return parse_system_info(response)
 

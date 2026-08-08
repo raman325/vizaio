@@ -1326,6 +1326,36 @@ class TestDeviceInfo:
         finally:
             await tv.aclose()
 
+    async def test_identity_propagates_transport_errors(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """
+        An unreachable or malfunctioning device must not read as "this
+        firmware doesn't expose the field". Returning "" for both makes the
+        sentinel ambiguous — callers cannot tell a TV with no serial number
+        from a TV that is down.
+        """
+        mock_client.side_effect = VizioConnectionError("device unreachable")
+        with pytest.raises(VizioConnectionError):
+            await vizio_tv.get_serial_number()
+
+    async def test_identity_propagates_malformed_responses(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """A garbage envelope is an error, not an absent field."""
+        mock_client.side_effect = VizioResponseError("garbage envelope")
+        with pytest.raises(VizioResponseError):
+            await vizio_tv.get_version()
+
+    async def test_identity_empty_when_firmware_lacks_field(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """URI_NOT_FOUND everywhere means the field genuinely isn't exposed."""
+        from vizaio.errors import VizioNotFoundError
+
+        mock_client.side_effect = VizioNotFoundError("no such uri")
+        assert await vizio_tv.get_serial_number() == ""
+
     async def test_esn_never_reads_deviceinfo(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
@@ -1430,8 +1460,10 @@ class TestDeviceInfo:
             "deviceinfo failure should be cached, not re-fetched per field"
         )
 
-        # A later identity read still doesn't re-hit deviceinfo.
-        assert await vizio_tv.get_serial_number() == ""
+        # A later identity read still doesn't re-hit deviceinfo, and now
+        # surfaces the transport failure rather than masking it as "".
+        with pytest.raises(VizioConnectionError):
+            await vizio_tv.get_serial_number()
         deviceinfo_calls = [
             c
             for c in mock_client.call_args_list
