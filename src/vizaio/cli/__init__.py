@@ -710,7 +710,13 @@ def mute_off(ctx: typer.Context) -> None:
 
 @mute_app.command("toggle")
 def mute_toggle(ctx: typer.Context) -> None:
-    """Press the mute button. One round trip vs. on/off (which read state first)."""
+    """
+    Press the mute button — flips whatever state the device is in.
+
+    ``mute on``/``mute off`` are idempotent and, on volume-V2 firmware,
+    equally cheap; prefer them unless you specifically want toggle
+    semantics.
+    """
     _exec(ctx, lambda v: v.mute_toggle())
 
 
@@ -771,7 +777,12 @@ def volume_set(
     ctx: typer.Context,
     level: Annotated[int, typer.Argument(help="Absolute volume level (0..max).")],
 ) -> None:
-    """Set the absolute volume level (single round trip, no hashval)."""
+    """
+    Set the absolute volume level.
+
+    One round trip with no hashval on volume-V2 firmware; a hashval
+    GET-then-PUT everywhere else.
+    """
     _exec(ctx, lambda v: v.set_volume(level))
 
 

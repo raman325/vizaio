@@ -288,8 +288,12 @@ class TestResolveVolumeV2:
         assert spec.paths == (path,)
         assert spec.auth is AuthRequirement.REQUIRED
 
-    def test_step_is_supplied_by_caller_not_the_table(self) -> None:
-        """``increase``/``decrease`` take ``?STEP=n`` as a path suffix, so
-        the table holds the bare path and callers append the query."""
+    def test_step_is_not_part_of_the_path(self) -> None:
+        """The step count travels in the body (``{"STEP": n}``), never in
+        the path. The official app's generated client uses ``?STEP=n``,
+        but on real firmware that silently moves the volume by 1 whatever
+        the value — so the table holds the bare path and nothing appends
+        a query. See protocol-notes #31."""
         spec = _resolve(Endpoint.VOLUME_INCREASE, DeviceType.TV)
         assert "STEP" not in spec.paths[0]
+        assert "?" not in spec.paths[0]

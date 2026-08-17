@@ -387,3 +387,112 @@ class TestSetVolumeGating:
         with pytest.raises(VizioInvalidInputError, match="0-100"):
             await vizio_tv.set_volume(101)
         mock_client.assert_not_called()
+
+
+class TestV2FallbackOnUnsupportedEndpoint:
+    """A device that clears the version gate but lacks the endpoint must
+    still work.
+
+    The gate is inferred from a decompile plus one hardware sample. If a
+    TV reports a qualifying ``API_VERSION`` but answers ``URI_NOT_FOUND``
+    on the flat leaf, the V2 path must degrade to the path that works
+    everywhere rather than hard-failing — otherwise this change is a
+    regression for that device, since the old code always toggled.
+    """
+
+    async def test_mute_falls_back_when_endpoint_missing(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        from vizaio import VizioNotFoundError
+
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            VizioNotFoundError("no such uri"),
+            # fallback: is_muted (value + static options), then the toggle
+            _resp(make_success_response(items=[make_item("mute", "Off")])),
+            _resp(make_success_response(items=[make_item("mute", "Off")])),
+            _resp(make_success_response(items=[])),
+        ]
+        await vizio_tv.mute()
+        assert ("/key_command/",) in _paths(mock_client)
+
+    async def test_set_volume_falls_back_when_endpoint_missing(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        from vizaio import VizioNotFoundError
+
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            VizioNotFoundError("no such uri"),
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+            _resp(make_success_response(items=[])),
+        ]
+        await vizio_tv.set_volume(12)
+        body = mock_client.call_args.kwargs["body"]
+        assert body["REQUEST"] == "MODIFY"
+        assert body["VALUE"] == 12
+
+    async def test_other_errors_still_propagate(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Only 'this endpoint does not exist here' triggers the fallback.
+        A transient failure must not be silently retried down another path."""
+        from vizaio import VizioConnectionError
+
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            VizioConnectionError("boom"),
+        ]
+        with pytest.raises(VizioConnectionError):
+            await vizio_tv.mute()
+
+
+class TestRelativeVolumeGuards:
+    """The V2 branch must honour the same ``steps`` guard as the keypress
+    path, which returns early below 1."""
+
+    @pytest.mark.parametrize("steps", [0, -3])
+    async def test_non_positive_steps_send_nothing(
+        self, vizio_tv: Vizio, mock_client: AsyncMock, steps: int
+    ) -> None:
+        """``{"STEP": 0}`` would move the volume by 1 on real firmware
+        (empty/absent body means 1), and a negative step would ask
+        ``increase`` to go down."""
+        await vizio_tv.volume_up(steps, use_v2=True)
+        mock_client.assert_not_called()
+
+
+class TestMaxVolumeFailureIsNotCached:
+    async def test_failed_lookup_retries_next_call(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Falling back to the profile constant is a degraded answer, not
+        an answer — pinning it for the session means a TV that was asleep
+        on first call never reports its real scale."""
+        from vizaio import VizioConnectionError
+
+        mock_client.side_effect = [
+            VizioConnectionError("asleep"),
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+        ]
+        assert await vizio_tv.get_max_volume() == 100  # profile fallback
+        after_failure = len(mock_client.call_args_list)
+        assert await vizio_tv.get_max_volume() == 100  # same number, but...
+        # ...it must have gone back to the device rather than reusing the
+        # degraded answer. (TV_PROFILE.max_volume and the device's MAXIMUM
+        # are both 100, so only the call count distinguishes the two.)
+        assert len(mock_client.call_args_list) > after_failure
+
+    async def test_successful_lookup_is_cached(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+        ]
+        await vizio_tv.get_max_volume()
+        calls = len(mock_client.call_args_list)
+        await vizio_tv.get_max_volume()
+        assert len(mock_client.call_args_list) == calls

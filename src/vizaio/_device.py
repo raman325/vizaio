@@ -348,6 +348,12 @@ class Vizio:
         ``False`` only costs the older code path, whereas guessing
         ``True`` would send a device endpoints it may not implement.
 
+        Note that degradation is **sticky for the session**:
+        ``_get_deviceinfo`` caches the failure and re-raises rather than
+        refetching (deviceinfo is immutable, so one attempt per session),
+        which means a device unreachable on the very first probe stays on
+        the legacy paths until a new :class:`Vizio` is constructed.
+
         Note this is **not** the ``CAPABILITIES."AUDIO_2.0_API"`` flag.
         That flag exists on the wire but the official app never reads it,
         and it does not predict whether ``volume`` appears in the
@@ -393,6 +399,14 @@ class Vizio:
         instead. The captured VHD24M-0810 reports ``MINIMUM 0`` /
         ``MAXIMUM 100``, agreeing with ``TV_PROFILE``.
 
+        **This can return a value :meth:`set_volume` rejects.** The two
+        read different sources: a soundbar whose static tree reports
+        ``MAXIMUM 100`` still has ``SOUNDBAR_PROFILE.max_volume == 31``,
+        so ``set_volume(await get_max_volume())`` would raise
+        :class:`VizioInvalidInputError`. Scale against whichever bound
+        you intend to write through, or clamp with
+        ``min(level, v.profile.max_volume)``.
+
         Deliberately **not** wired into :meth:`set_volume`'s range check.
         That check stays offline — a setter shouldn't hide a round trip
         in its argument validation — and the profile constant is the
@@ -404,15 +418,26 @@ class Vizio:
         """
         if self._cached_max_volume is None:
             self._cached_max_volume = await self._resolve_max_volume()
-        return self._cached_max_volume
+        return (
+            self._cached_max_volume
+            if self._cached_max_volume is not None
+            else self._profile.max_volume
+        )
 
-    async def _resolve_max_volume(self) -> int:
-        """One-shot static-tree lookup for the volume ceiling."""
+    async def _resolve_max_volume(self) -> int | None:
+        """
+        Static-tree lookup for the volume ceiling.
+
+        Returns ``None`` when the device couldn't answer, so the caller
+        caches nothing and retries next time. A device asleep or briefly
+        unreachable on the first call would otherwise pin the profile
+        fallback for the whole session with no way to re-resolve.
+        """
         try:
             info = await self.get_setting("audio", "volume")
         except VizioError:
-            return self._profile.max_volume
-        return info.max if info.max is not None else self._profile.max_volume
+            return None
+        return info.max
 
     async def set_volume(self, level: int) -> None:
         """
@@ -442,11 +467,18 @@ class Vizio:
         if not 0 <= level <= max_volume:
             raise VizioInvalidInputError(f"volume {level} out of range 0-{max_volume}")
         if await self.supports_volume_v2():
-            await self._client.request_spec(
-                resolve(Endpoint.VOLUME_LEVEL, self._profile),
-                body=_payloads.volume_level(level),
-            )
-            return
+            try:
+                await self._client.request_spec(
+                    resolve(Endpoint.VOLUME_LEVEL, self._profile),
+                    body=_payloads.volume_level(level),
+                )
+                return
+            except VizioNotFoundError:
+                # Version gate says V2 but this firmware has no such leaf.
+                # The gate is inferred from a decompile plus one hardware
+                # sample, so treat URI_NOT_FOUND as "gate was wrong here"
+                # and use the path that works on every device.
+                pass
         await self.set_setting("audio", "volume", level)
 
     async def volume_up(self, steps: int = 1, *, use_v2: bool = False) -> None:
@@ -478,6 +510,13 @@ class Vizio:
         self, key: str, endpoint: Endpoint, steps: int, use_v2: bool
     ) -> None:
         """Dispatch a relative volume change down the keypress or V2 path."""
+        # Guard before the capability probe: ``_send_repeated_key`` returns
+        # early below 1, and the V2 endpoint must match. A literal
+        # ``{"STEP": 0}`` moves the volume by 1 on real firmware (an empty
+        # or absent body means 1), and a negative step would ask
+        # ``increase`` to go down.
+        if steps < 1:
+            return
         if use_v2 and await self.supports_volume_v2():
             await self._client.request_spec(
                 resolve(endpoint, self._profile), body=_payloads.volume_step(steps)
@@ -535,11 +574,18 @@ class Vizio:
         already a single request.
         """
         if await self.supports_volume_v2():
-            await self._client.request_spec(
-                resolve(Endpoint.VOLUME_MUTE_SET, self._profile),
-                body=_payloads.volume_mute(muted),
-            )
-            return
+            try:
+                await self._client.request_spec(
+                    resolve(Endpoint.VOLUME_MUTE_SET, self._profile),
+                    body=_payloads.volume_mute(muted),
+                )
+                return
+            except VizioNotFoundError:
+                # See set_volume: a qualifying API version does not
+                # guarantee the leaf exists. Falling back keeps this
+                # change strictly additive — mute worked on every device
+                # before, and must still.
+                pass
         if await self.is_muted() is not muted:
             await self.send_key("MUTE_TOGGLE")
 
@@ -547,11 +593,13 @@ class Vizio:
         """
         Send the mute-toggle key. Flips whatever state the device is in.
 
-        Cheaper than :meth:`mute` / :meth:`unmute` (one round trip vs.
-        two — those methods read :meth:`is_muted` first to be
-        idempotent). Use ``mute_toggle`` when you don't need to
-        guarantee the resulting state and just want "press the mute
-        button" semantics.
+        On volume-V2 firmware :meth:`mute` / :meth:`unmute` are also a
+        single round trip and perform no read, so prefer those — they
+        guarantee the resulting state. Only on older firmware is this
+        cheaper (one round trip vs. three, since those methods read
+        :meth:`is_muted` first to stay idempotent). Use ``mute_toggle``
+        when you don't need to guarantee the resulting state and just
+        want "press the mute button" semantics.
         """
         await self.send_key("MUTE_TOGGLE")
 

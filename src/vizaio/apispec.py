@@ -28,6 +28,25 @@ comparison algorithms:
 
 Both branches walk their candidate ladder from newest to oldest and
 return the first entry the target meets or exceeds.
+
+**Two known quirks are reproduced on purpose**, because deviating would
+open our gate on devices the vendor's own client treats as legacy — and
+sending a device endpoints Vizio never exercises on that firmware is the
+exact risk this gate exists to avoid:
+
+- A V2-form version that is *prefixed* or has a multi-digit component
+  (``FW_3.7.2-2621.0005``, ``3.10.2-2621.0005``) fails the V2 pattern and
+  falls to the legacy branch, resolving *below* its true rung. The app
+  does the same — it applies its regex to the whole trimmed string, and
+  its pattern is likewise single-digit per component.
+- :meth:`ApiSpec._resolve_v2` floors at :attr:`ApiSpec.V2_0_0_2000_0000`
+  even for a string below it, so a hypothetical ``1.0.0-0000.0000``
+  outranks :attr:`ApiSpec.V1_0_13_25`. Mirrors ``computeSpecVersionV2``'s
+  final ``return VER_2_0_0_0000_000``.
+
+Neither affects the only gate in use today (:func:`supports_volume_v2`,
+which tests the top rung). Revisit if a lower rung ever gates something,
+or if a real device is found reporting one of these forms.
 """
 
 from __future__ import annotations

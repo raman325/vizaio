@@ -256,8 +256,12 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     Endpoint.VOLUME_LEVEL_STATUS: row("GET", "/audio/volume/level", auth=REQ),
     Endpoint.VOLUME_MUTE_STATUS: row("GET", "/audio/volume/mute", auth=REQ),
     Endpoint.VOLUME_MUTE_SET: row("PUT", "/audio/volume/mute", auth=REQ),
-    # Relative steps. Callers append ``?STEP=n`` as a path suffix; the
-    # app sends the step count rather than repeating a keypress N times.
+    # Relative steps. The step count goes in the **body** as
+    # ``{"STEP": n}`` — NOT as the ``?STEP=n`` query string the official
+    # app's generated client uses. Verified on VHD24M-0810: the query
+    # form returns SUCCESS and moves the volume by exactly 1 whatever
+    # the value, so sending it is a silent off-by-N. See
+    # ``_payloads.volume_step`` and protocol-notes #31.
     Endpoint.VOLUME_INCREASE: row("PUT", "/audio/volume/increase", auth=REQ),
     Endpoint.VOLUME_DECREASE: row("PUT", "/audio/volume/decrease", auth=REQ),
     Endpoint.LAUNCH_APP: row("PUT", "/app/launch", auth=REQ, needs=Need.APPS),
