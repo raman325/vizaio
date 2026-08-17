@@ -768,10 +768,10 @@ win (1 round trip vs 3 for each, and mute becomes race-free).
 
 `volume_up()`/`volume_down()` always send keypresses, gate or no gate. A
 keypress batch is already a single `PUT` for any realistic step count, it works
-on every device family, and it is the only path Vizio's own app kept — the 5.3.0
-build has no `/audio/volume/*` reference at all. So the flat `increase`/`decrease`
-endpoints would never be the better choice, and offering them as an option would
-just push a decision onto you that the library can already answer.
+on every device family, and it is the only path Vizio's own app kept — recent
+builds dropped the flat volume endpoints entirely. So `increase`/`decrease`
+would never be the better choice, and offering them as an option would just
+push a decision onto you that the library can already answer.
 
 `supports_volume_v2()` and `get_api_version()` are exposed for inspection and
 diagnostics, not because you need them to get the right behaviour.

@@ -1,10 +1,11 @@
 # SmartCast Protocol Notes
 
 > **Update — APK decompile findings folded in.** The official Vizio Android
-> app (`com.vizio.vue.launcher` 5.0.0) was decompiled and analyzed; full
-> findings in `android-app-findings.md`. Where APK evidence overrides
-> earlier inferences, the relevant section below is annotated **APK
-> CONFIRMED** or **APK CORRECTED**.
+> app was decompiled and analyzed; the build analyzed, the classes cited and
+> the full evidence trail live in `android-app-findings.md`. This document
+> records what the protocol does and how confident we are; where APK evidence
+> overrides earlier inferences, the relevant section below is annotated
+> **APK CONFIRMED** or **APK CORRECTED**.
 
 This document captures protocol quirks observed in the wild and **how
 `vizaio` handles each one**. Every entry is classified by evidence
@@ -766,7 +767,7 @@ identical until hardware testing reveals differences.
 - Write request body: 3 seconds
 - Read response body: 10 seconds
 
-**Evidence:** APK `EmbeddedConnectionConfig.java` defaults.
+**Evidence:** the app's own connection-config defaults.
 
 **Our handling:** Match these exactly. The `Vizio` constructor's
 `timeout=` arg accepts a single float (sets the read timeout) or an
@@ -782,10 +783,9 @@ identical until hardware testing reveals differences.
 — not `Authorization`, not `Bearer`. pyvizio gets this right; documenting
 to lock it in.
 
-**Evidence:** APK `SmartCastHeaders.HEADER_KEY_AUTH = "AUTH"`. There's
-vestigial `Authorization`-header construction in
-`EmbeddedConnectionConfig.java:34` but the side-effect is discarded
-(dead code from an earlier design).
+**Evidence:** the app sends a literal `AUTH` header. There is vestigial
+`Authorization`-header construction in its connection config, but the
+side-effect is discarded (dead code from an earlier design).
 
 **Our handling:** `SmartCastClient` adds `AUTH: <token>` for auth-required
 endpoints. Also sends `VIZIO-SmartCast-Source: vizaio` to
@@ -822,9 +822,9 @@ after hardware testing showed the SmartCast event socket is part of the
 device's **Google Cast control plane**, not a general mDNS/REST feature:
 
 - The official app only ever opens `ws://<ip>:8005` (insecure), and only for
-  **Google-Cast-discovered** devices (`CastMediaRouterCallback.java:109`). The
-  mDNS path builds `https` capabilities only and never connects on `wp`/`wsp`.
-- On a real TV (VHD24M-0810, fw 3.720.9.1-1, SoC MTK) the advertised
+  **Google-Cast-discovered** devices. The mDNS path builds `https`
+  capabilities only and never connects on `wp`/`wsp`.
+- On a real TV the advertised
   `wp=8005`/`wsp=8006` are connection-refused even powered on; `PUT
   /event/register` returns `SUCCESS` but no socket appears; a WS upgrade on the
   REST port (7345 `lighttpd`) returns HTTP 500. Register success ≠ reachable
@@ -833,13 +833,13 @@ device's **Google Cast control plane**, not a general mDNS/REST feature:
 For push/real-time state, use the TV's Chromecast-built-in interface (e.g. Home
 Assistant's Google Cast integration) and poll vizaio for SmartCast state. See
 `docs/websocket-protocol-notes.md` for the full evidence writeup. Voice search
-uses yet another WebSocket (`VoiceSearch.java`) — also out of scope.
+uses yet another WebSocket — also out of scope.
 
 ---
 
 ## 29. T_ACTION_V1 items fire with `REQUEST: "ACTION"`
 
-**Confidence:** HARDWARE VERIFIED (M65Q7-H1, fw 1.720.9.1-1)
+**Confidence:** HARDWARE VERIFIED
 
 **Behavior:** Menu leaves of type `T_ACTION_V1` (e.g.
 `system/timers/blank_screen`, `admin_and_privacy/soft_power_cycle` =
@@ -880,9 +880,9 @@ types coerced to `MENU`).
 
 **Tests:** payload shape, GET→PUT flow + retry + type guard in
 `test_device.py::TestSettingActions`, CLI wiring, and a captured
-fixture (`tests/captured/settings_system_timers_blank_screen.json`) —
-the suite's first fixture from a second hardware family (M65Q7-H1
-alongside VHD24M-0810).
+fixture — the suite's first from a **second, independent hardware
+family**, so this behavior is confirmed across two device generations
+rather than one.
 
 **Related non-findings from the same session:** `KEYDOWN`/`KEYUP`
 actions are documented by exiva and accepted by firmware, but no
@@ -895,8 +895,7 @@ offers only `SmartCast` / `Last Used TV Input`.
 
 ## 30. `volume` is not reliably in the `audio` settings collection
 
-**Confidence:** FIELD REPORTED (V4K50S-0807, fw 86.910.19.1-2) +
-counterexample HARDWARE VERIFIED (VHD24M-0810)
+**Confidence:** FIELD REPORTED + counterexample HARDWARE VERIFIED
 
 **Behavior:** on some firmware, `GET /menu_native/dynamic/{root}/audio`
 returns a collection that **omits** `volume` (19 items, all
@@ -911,7 +910,7 @@ The same failure was filed and stale-closed three times before
 
 **There is no known client-observable predictor.** The obvious
 candidate — `CAPABILITIES."AUDIO_2.0_API"` — is *disproved* by our own
-capture: `tests/captured/device_info.json` (VHD24M-0810) advertises
+capture: our own `device_info` fixture advertises
 `AUDIO_2.0_API: true` and `tests/captured/settings_audio.json` from the
 same TV still lists `volume` and `mute` among 24 items. Both TVs also
 clear the volume-V2 API threshold (#31), so that isn't the discriminator
@@ -927,8 +926,7 @@ dict from `get_settings("audio")` — documented on both methods.
 
 ## 31. Volume API V2 — flat `/audio/volume/*` endpoints
 
-**Confidence:** APK CONFIRMED (5.0.0 decompile) + HARDWARE VERIFIED
-(VHD24M-0810, 2026-08-16) for everything except the mute PUT
+**Confidence:** APK CONFIRMED + HARDWARE VERIFIED
 
 **Behavior:** newer firmware exposes a second volume surface alongside
 the `menu_native` settings leaves. The official app gates it on the
@@ -962,7 +960,7 @@ every device, then the HTTP command, then Cast):
 | absolute | GET+PUT hashval at the menu_native leaf | `PUT /audio/volume/level` `{"LEVEL": n}` |
 | read | `GET {root}/audio/volume` (leaf) | same, plus flat `GET /audio/volume/level` and `GET /audio/volume/mute` |
 
-**App 5.3.0 retired this family client-side.** Four months after 5.0.0,
+**A later app release retired this family client-side.** Some months on,
 no `/audio/volume/*` literal remains anywhere in the dex (while
 `/key_command/` and friends survive verbatim — string literals are not
 encrypted, so the absence is real), the `command/volume/` package is
@@ -982,14 +980,14 @@ so carry some rot risk:
 | --- | --- | --- |
 | `set_volume()` | flat `PUT .../level` | hardware verified; 1 round trip vs 2 for the HASHVAL write |
 | `mute()` / `unmute()` | flat `PUT .../mute` | hardware verified; 1 vs 3, and **race-free** — read-then-toggle can lose to the physical remote between our read and our write |
-| `volume_up()` / `volume_down()` | keypress, always | keypress is *already* one batched PUT (up to 50 steps), works on every device family, and is the only path app 5.3.0 kept — so the V2 endpoint never wins. Catalogued but unused; no caller knob, since its "on" position would never be correct |
+| `volume_up()` / `volume_down()` | keypress, always | keypress is *already* one batched PUT (up to 50 steps), works on every device family, and is the only path the current app release kept — so the V2 endpoint never wins. Catalogued but unused; no caller knob, since its "on" position would never be correct |
 
 The rule: prefer the vendor-current path when it costs the same, and
 only reach for an abandoned endpoint when we have hardware evidence
 **and** it is measurably better. Everything above the gate falls back to
 the keypress/HASHVAL paths, which work on every device family.
 
-### Hardware results (VHD24M-0810, fw 3.720.9.1-1, 2026-08-16)
+### Hardware results
 
 Probed live; the TV was in **standby**, which matters for one row. Note
 that volume responds normally in standby but mute does not.
@@ -1065,12 +1063,12 @@ in #29:
   rates.
 
 For each, capture the device response into `tests/_fixtures.py` as a
-real captured fixture (with a `# captured from real Vizio M65Q7-H1
-firmware 4.x.y.z` comment) and lock the behavior into a test.
+real captured fixture (with a comment naming the device and firmware it
+came from) and lock the behavior into a test.
 
 ---
 
-## Real-device verification — VHD24M-0810, firmware 3.720.9.1-1
+## Real-device verification
 
 Captured payloads live in `tests/captured/` (PII-scrubbed) and are
 replayed end-to-end through the parser layer by
@@ -1163,8 +1161,8 @@ Plus a transport-level mapping correction:
 ### V4 — WebSocket SCPL update
 
 Captured live: `PUT /event/register` with the body the APK research
-inferred (`{"REQUEST": "MODIFY"}`) returns `INVALID_PARAMETER` on
-firmware 3.720.9.1-1. The body that returns `SUCCESS` is
+inferred (`{"REQUEST": "MODIFY"}`) returns `INVALID_PARAMETER` on current
+firmware. The body that returns `SUCCESS` is
 `{"REQUEST": "MODIFY", "VALUE": "TRUE"}` — the APK's `Body` model
 serialized `VALUE` as null but newer firmware requires it as the
 string `"TRUE"`. (`true` as a JSON bool crashes the device parser
