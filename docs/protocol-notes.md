@@ -1,10 +1,11 @@
 # SmartCast Protocol Notes
 
 > **Update — APK decompile findings folded in.** The official Vizio Android
-> app (`com.vizio.vue.launcher` 5.0.0) was decompiled and analyzed; full
-> findings in `android-app-findings.md`. Where APK evidence overrides
-> earlier inferences, the relevant section below is annotated **APK
-> CONFIRMED** or **APK CORRECTED**.
+> app was decompiled and analyzed; the build analyzed, the classes cited and
+> the full evidence trail live in `android-app-findings.md`. This document
+> records what the protocol does and how confident we are; where APK evidence
+> overrides earlier inferences, the relevant section below is annotated
+> **APK CONFIRMED** or **APK CORRECTED**.
 
 This document captures protocol quirks observed in the wild and **how
 `vizaio` handles each one**. Every entry is classified by evidence
@@ -485,6 +486,8 @@ Asserted at the payload level — no possibility of a sign inversion.
 | 26 | `AUTH` (not `Authorization`) | APK CONFIRMED | Literal `AUTH` header | yes |
 | 27 | Zeroconf-only discovery | APK CONFIRMED | SSDP optional fallback | yes |
 | 29 | T_ACTION_V1 → `REQUEST: ACTION` | HARDWARE VERIFIED | `trigger_setting_action` / `blank_screen` | yes |
+| 30 | `volume` may be absent from the `audio` collection | FIELD REPORTED | Always read the leaf; no predictor exists | yes |
+| 31 | Volume API V2 (`/audio/volume/*`) | HARDWARE VERIFIED | Gated on `API_VERSION` ≥ 2.0.0-2031.0014; STEP goes in the body | yes |
 
 ---
 
@@ -764,7 +767,7 @@ identical until hardware testing reveals differences.
 - Write request body: 3 seconds
 - Read response body: 10 seconds
 
-**Evidence:** APK `EmbeddedConnectionConfig.java` defaults.
+**Evidence:** the app's own connection-config defaults.
 
 **Our handling:** Match these exactly. The `Vizio` constructor's
 `timeout=` arg accepts a single float (sets the read timeout) or an
@@ -780,10 +783,9 @@ identical until hardware testing reveals differences.
 — not `Authorization`, not `Bearer`. pyvizio gets this right; documenting
 to lock it in.
 
-**Evidence:** APK `SmartCastHeaders.HEADER_KEY_AUTH = "AUTH"`. There's
-vestigial `Authorization`-header construction in
-`EmbeddedConnectionConfig.java:34` but the side-effect is discarded
-(dead code from an earlier design).
+**Evidence:** the app sends a literal `AUTH` header. There is vestigial
+`Authorization`-header construction in its connection config, but the
+side-effect is discarded (dead code from an earlier design).
 
 **Our handling:** `SmartCastClient` adds `AUTH: <token>` for auth-required
 endpoints. Also sends `VIZIO-SmartCast-Source: vizaio` to
@@ -820,9 +822,9 @@ after hardware testing showed the SmartCast event socket is part of the
 device's **Google Cast control plane**, not a general mDNS/REST feature:
 
 - The official app only ever opens `ws://<ip>:8005` (insecure), and only for
-  **Google-Cast-discovered** devices (`CastMediaRouterCallback.java:109`). The
-  mDNS path builds `https` capabilities only and never connects on `wp`/`wsp`.
-- On a real TV (VHD24M-0810, fw 3.720.9.1-1, SoC MTK) the advertised
+  **Google-Cast-discovered** devices. The mDNS path builds `https`
+  capabilities only and never connects on `wp`/`wsp`.
+- On a real TV the advertised
   `wp=8005`/`wsp=8006` are connection-refused even powered on; `PUT
   /event/register` returns `SUCCESS` but no socket appears; a WS upgrade on the
   REST port (7345 `lighttpd`) returns HTTP 500. Register success ≠ reachable
@@ -831,13 +833,13 @@ device's **Google Cast control plane**, not a general mDNS/REST feature:
 For push/real-time state, use the TV's Chromecast-built-in interface (e.g. Home
 Assistant's Google Cast integration) and poll vizaio for SmartCast state. See
 `docs/websocket-protocol-notes.md` for the full evidence writeup. Voice search
-uses yet another WebSocket (`VoiceSearch.java`) — also out of scope.
+uses yet another WebSocket — also out of scope.
 
 ---
 
 ## 29. T_ACTION_V1 items fire with `REQUEST: "ACTION"`
 
-**Confidence:** HARDWARE VERIFIED (M65Q7-H1, fw 1.720.9.1-1)
+**Confidence:** HARDWARE VERIFIED
 
 **Behavior:** Menu leaves of type `T_ACTION_V1` (e.g.
 `system/timers/blank_screen`, `admin_and_privacy/soft_power_cycle` =
@@ -878,9 +880,9 @@ types coerced to `MENU`).
 
 **Tests:** payload shape, GET→PUT flow + retry + type guard in
 `test_device.py::TestSettingActions`, CLI wiring, and a captured
-fixture (`tests/captured/settings_system_timers_blank_screen.json`) —
-the suite's first fixture from a second hardware family (M65Q7-H1
-alongside VHD24M-0810).
+fixture — the suite's first from a **second, independent hardware
+family**, so this behavior is confirmed across two device generations
+rather than one.
 
 **Related non-findings from the same session:** `KEYDOWN`/`KEYUP`
 actions are documented by exiva and accepted by firmware, but no
@@ -888,6 +890,151 @@ KEYDOWN-hold sequence triggers Blank Screen — the long-press detection
 lives in the remote-input path, not `/key_command/`. The settings tree
 has no "disable SmartCast Home input steal" leaf; `input_at_power_on`
 offers only `SmartCast` / `Last Used TV Input`.
+
+---
+
+## 30. `volume` is not reliably in the `audio` settings collection
+
+**Confidence:** FIELD REPORTED + counterexample HARDWARE VERIFIED
+
+**Behavior:** on some firmware, `GET /menu_native/dynamic/{root}/audio`
+returns a collection that **omits** `volume` (19 items, all
+speaker/soundbar leaves), while the child resource
+`GET /menu_native/dynamic/{root}/audio/volume` still returns a perfectly
+good item. Reported in
+[home-assistant/core#179254](https://github.com/home-assistant/core/issues/179254),
+where pyvizio's unguarded `audio_settings["volume"]` raises `KeyError`
+every poll and the media player entity stays permanently unavailable.
+The same failure was filed and stale-closed three times before
+(#143807, #146391, #163886) without being root-caused.
+
+**There is no known client-observable predictor.** The obvious
+candidate — `CAPABILITIES."AUDIO_2.0_API"` — is *disproved* by our own
+capture: our own `device_info` fixture advertises
+`AUDIO_2.0_API: true` and `tests/captured/settings_audio.json` from the
+same TV still lists `volume` and `mute` among 24 items. Both TVs also
+clear the volume-V2 API threshold (#31), so that isn't the discriminator
+either. Treat the collection as possibly-incomplete on any firmware.
+
+**Our handling:** `Vizio.get_volume()` / `is_muted()` have always read
+the **leaf** (`get_setting("audio", "volume")`), matching what the
+official app's `GetCurrentVolumeCommandStrategy` does, so vizaio is
+structurally immune. The hazard is only for callers that build their own
+dict from `get_settings("audio")` — documented on both methods.
+
+---
+
+## 31. Volume API V2 — flat `/audio/volume/*` endpoints
+
+**Confidence:** APK CONFIRMED + HARDWARE VERIFIED
+
+**Behavior:** newer firmware exposes a second volume surface alongside
+the `menu_native` settings leaves. The official app gates it on the
+device's **API spec version**, not on any capability flag:
+
+```
+isVolumeAPIV2Supported() = isTvDevice()
+    && minimumApiSpecVersion >= "2.0.0-2031.0014"
+```
+
+`API_VERSION` is a top-level field of the unauthenticated
+`/state/device/deviceinfo` VALUE block. Parsing has two branches — see
+`src/vizaio/apispec.py`, a direct port of `DeviceInfoAnalyzer.RestApiUtil`:
+
+| Form | Example | Comparison |
+| --- | --- | --- |
+| V2 | `3.7.2-2621.0005` | strip non-digits, compare **character-wise** |
+| Legacy | `1.0.13.25`, `FW_1.0.12.11` | split on `_`/`-`, take last, compare dotted components **numerically** |
+
+Ladder, oldest to newest: `1.0.0.0` < `1.0.12.11` < `1.0.13.25` <
+`2.0.0-2000.0000` < `2.0.0-2031.0014`.
+
+Per-operation surface (`SetVolumeCommand` / `MuteToggleCommand`
+`retryStrategy()` — note the app tries the **key command first** on
+every device, then the HTTP command, then Cast):
+
+| Operation | V1 | V2 |
+| --- | --- | --- |
+| relative | N× KEYPRESS codeset 5 | `PUT /audio/volume/increase` / `decrease`, body `{"STEP": n}` |
+| mute | `MUTE_TOGGLE` key | `PUT /audio/volume/mute` `{"MUTE": bool}` |
+| absolute | GET+PUT hashval at the menu_native leaf | `PUT /audio/volume/level` `{"LEVEL": n}` |
+| read | `GET {root}/audio/volume` (leaf) | same, plus flat `GET /audio/volume/level` and `GET /audio/volume/mute` |
+
+**A later app release retired this family client-side.** Some months on,
+no `/audio/volume/*` literal remains anywhere in the dex (while
+`/key_command/` and friends survive verbatim — string literals are not
+encrypted, so the absence is real), the `command/volume/` package is
+deleted, and its replacement
+`connectivity/domain/volume_remote/WiFiDeviceHardwareVolumeHandler`
+dispatches `KeyCommandItem.AUDIO_VOLUME_PLUS`/`MINUS`. The new device-API
+interface has no volume method at all. See android-app-findings §11.
+
+**Our handling:** `Vizio.supports_volume_v2()` reproduces the gate off
+the already-cached deviceinfo (and short-circuits to `False` for
+audio-root profiles without any network call). The split between
+"use it inside the gate" and "opt-in" is decided by whether the endpoint
+actually buys anything, given that all of them are vendor-abandoned and
+so carry some rot risk:
+
+| Method | Inside the gate | Why |
+| --- | --- | --- |
+| `set_volume()` | flat `PUT .../level` | hardware verified; 1 round trip vs 2 for the HASHVAL write |
+| `mute()` / `unmute()` | flat `PUT .../mute` | hardware verified; 1 vs 3, and **race-free** — read-then-toggle can lose to the physical remote between our read and our write |
+| `volume_up()` / `volume_down()` | keypress, always | keypress is *already* one batched PUT (up to 50 steps), works on every device family, and is the only path the current app release kept — so the V2 endpoint never wins. Catalogued but unused; no caller knob, since its "on" position would never be correct |
+
+The rule: prefer the vendor-current path when it costs the same, and
+only reach for an abandoned endpoint when we have hardware evidence
+**and** it is measurably better. Everything above the gate falls back to
+the keypress/HASHVAL paths, which work on every device family.
+
+### Hardware results
+
+Probed live; the TV was in **standby**, which matters for one row. Note
+that volume responds normally in standby but mute does not.
+
+| Call | Result |
+| --- | --- |
+| `GET /audio/volume/level` | **WORKS** — `{"ITEM":{"TYPE":"T_JSON_OBJECT_V1","VALUE":{"LEVEL":9,"MUTE":false}}}` |
+| `GET /audio/volume/mute` | **WORKS** — `{"ITEM":{"TYPE":"T_BOOLEAN_V1","VALUE":false}}` |
+| `PUT /audio/volume/level` `{"LEVEL":n}` | **WORKS** — exact set |
+| `PUT /audio/volume/increase` `{"STEP":n}` | **WORKS** — exact delta |
+| `PUT /audio/volume/increase?STEP=n` | **SILENTLY WRONG** — `SUCCESS`, moves by 1 for any n |
+| `PUT /audio/volume/mute` `{"MUTE":bool}` | **WORKS** (panel on) — idempotent under repeat |
+
+Three things worth keeping:
+
+1. **The APK's query form for STEP is wrong**, at least for this
+   firmware. `?STEP=3` returns `SUCCESS` and moves the volume by exactly
+   1; `{"STEP": 3}` in the body applies 3. Verified both directions at
+   several values; empty body and no body both mean 1. A silent
+   off-by-N is worse than an error, so vizaio sends the body form only.
+2. **Both reads use a singular `ITEM`**, not the `ITEMS` array, and
+   neither carries a `HASHVAL`. `GET /audio/volume/level` returns
+   **level and mute together** — one round trip for what currently costs
+   four (`get_volume()` and `is_muted()` are two GETs each, value plus
+   static options). Captured as `tests/captured/audio_volume_{level,mute}.json`.
+3. **Mute is inert in standby — for every method, not just this one.**
+   The first pass had the flat PUT returning `SUCCESS` and changing
+   nothing, which read as a broken endpoint. But the known-good
+   `MUTE_TOGGLE` key was equally inert in the same session and
+   `get_power_state()` was `False`. Re-run with the panel on: the key
+   control works, `{"MUTE": true}` works, re-sending it is idempotent
+   (does **not** toggle), `{"MUTE": false}` works, and both the flat read
+   and the `menu_native` leaf agree throughout. Volume responds in
+   standby; mute does not. **Always check power state and include a
+   known-good control command before believing a negative result on this
+   device** — the control is what caught it here.
+
+   The endpoint also type-checks its body: a non-boolean `MUTE` returns
+   `TYPE_ERROR`, and `{"VALUE": …}` returns `INVALID_PARAMETER`.
+
+**Reads follow the same gate as writes.** `get_volume()` and
+`is_muted()` use the flat endpoints on V2 firmware and the `menu_native`
+leaf everywhere else, falling back on `URI_NOT_FOUND`. Two reasons: a
+device should not be written on one surface and read from another, and
+the flat reads are one request against the leaf's two (value + static
+options), which halves a polling consumer's cost. The two surfaces agreed
+on every reading taken during hardware verification.
 
 ---
 
@@ -916,12 +1063,12 @@ in #29:
   rates.
 
 For each, capture the device response into `tests/_fixtures.py` as a
-real captured fixture (with a `# captured from real Vizio M65Q7-H1
-firmware 4.x.y.z` comment) and lock the behavior into a test.
+real captured fixture (with a comment naming the device and firmware it
+came from) and lock the behavior into a test.
 
 ---
 
-## Real-device verification — VHD24M-0810, firmware 3.720.9.1-1
+## Real-device verification
 
 Captured payloads live in `tests/captured/` (PII-scrubbed) and are
 replayed end-to-end through the parser layer by
@@ -1014,8 +1161,8 @@ Plus a transport-level mapping correction:
 ### V4 — WebSocket SCPL update
 
 Captured live: `PUT /event/register` with the body the APK research
-inferred (`{"REQUEST": "MODIFY"}`) returns `INVALID_PARAMETER` on
-firmware 3.720.9.1-1. The body that returns `SUCCESS` is
+inferred (`{"REQUEST": "MODIFY"}`) returns `INVALID_PARAMETER` on current
+firmware. The body that returns `SUCCESS` is
 `{"REQUEST": "MODIFY", "VALUE": "TRUE"}` — the APK's `Body` model
 serialized `VALUE` as null but newer firmware requires it as the
 string `"TRUE"`. (`true` as a JSON bool crashes the device parser

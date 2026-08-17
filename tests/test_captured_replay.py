@@ -368,3 +368,39 @@ class TestStatusToExceptionMapping:
         except VizioInvalidParameterError:
             return
         raise AssertionError("expected VizioInvalidParameterError")
+
+
+class TestFlatVolumeEndpointShapes:
+    """The flat volume-V2 reads, captured live 2026-08-16.
+
+    Both use a **singular ``ITEM``**, not the usual ``ITEMS`` array, and
+    neither carries a ``HASHVAL``.
+    """
+
+    def test_level_returns_both_level_and_mute(self) -> None:
+        """``GET /audio/volume/level`` answers volume *and* mute in one
+        round trip — cheaper than the two settings-leaf reads (2 GETs
+        each) that ``get_volume()`` + ``is_muted()`` cost today."""
+        raw = json.loads((CAPTURED / "audio_volume_level.json").read_text())
+        assert raw["STATUS"]["RESULT"] == "SUCCESS"
+        item = raw["ITEM"]
+        assert item["TYPE"] == "T_JSON_OBJECT_V1"
+        assert item["VALUE"] == {"LEVEL": 9, "MUTE": False}
+        assert "ITEMS" not in raw
+        assert "HASHVAL" not in json.dumps(raw)
+
+    def test_mute_returns_a_bare_boolean(self) -> None:
+        raw = json.loads((CAPTURED / "audio_volume_mute.json").read_text())
+        assert raw["STATUS"]["RESULT"] == "SUCCESS"
+        item = raw["ITEM"]
+        assert item["TYPE"] == "T_BOOLEAN_V1"
+        assert item["VALUE"] is False
+        assert "ITEMS" not in raw
+
+    def test_both_agree_with_the_menu_native_leaf(self) -> None:
+        """Cross-check: the flat reads and the settings leaf reported the
+        same state in the same capture, so the flat MUTE field is not a
+        stale mirror."""
+        level = json.loads((CAPTURED / "audio_volume_level.json").read_text())
+        mute = json.loads((CAPTURED / "audio_volume_mute.json").read_text())
+        assert level["ITEM"]["VALUE"]["MUTE"] == mute["ITEM"]["VALUE"]

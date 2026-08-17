@@ -116,6 +116,39 @@ def _all_call_paths(mock: AsyncMock) -> list[tuple[str, ...]]:
     return [c.args[0].paths for c in mock.call_args_list]
 
 
+def _v2_deviceinfo() -> Response:
+    """A deviceinfo payload whose API version clears the volume-V2 gate.
+
+    ``set_volume`` probes :meth:`Vizio.supports_volume_v2` before choosing
+    between the flat PUT and the HASHVAL write. Tests that mean to
+    exercise the flat path feed this first.
+    """
+    return Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {"CNAME": "deviceinfo", "VALUE": {"API_VERSION": "3.3.3-2538.0001"}}
+            ],
+        }
+    )
+
+
+def _legacy_deviceinfo() -> Response:
+    """A deviceinfo payload whose API version predates volume-V2.
+
+    ``mute()``/``unmute()``/``set_volume()`` probe
+    :meth:`Vizio.supports_volume_v2` before choosing a strategy. Tests
+    that mean to exercise the read-then-toggle / HASHVAL fallbacks feed
+    this first so the probe resolves to the legacy branch.
+    """
+    return Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [{"CNAME": "deviceinfo", "VALUE": {"API_VERSION": "1.0.13.25"}}],
+        }
+    )
+
+
 def _last_call_body(mock: AsyncMock) -> dict:
     """Inspect the PUT body of the most recent request.
 
@@ -283,10 +316,15 @@ class TestVolume:
     async def test_set_volume_flat_no_hashval(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
-        """Flat /audio/volume/level PUT: one call, body {LEVEL:n}, no GET."""
-        mock_client.return_value = _resp(make_success_response())
+        """On volume-V2 firmware: flat /audio/volume/level PUT, body
+        {LEVEL:n}, no HASHVAL GET. One deviceinfo GET resolves the gate
+        (cached for the session); see TestSetVolumeGating in
+        test_device_volume_v2.py for the non-V2 fallback."""
+        mock_client.side_effect = [
+            _v2_deviceinfo(),
+            _resp(make_success_response()),
+        ]
         await vizio_tv.set_volume(12)
-        assert mock_client.call_count == 1
         assert _last_call_paths(mock_client) == ("/audio/volume/level",)
         assert _last_call_body(mock_client) == {"LEVEL": 12}
 
@@ -382,10 +420,12 @@ class TestMute:
         3.720.9.1-1: discrete codes don't exist as discrete actions —
         they all behave as toggles).
 
-        ``is_muted`` uses ``get_setting`` which fires two GETs
+        One deviceinfo GET resolves the volume-V2 probe to the legacy
+        branch, ``is_muted`` uses ``get_setting`` which fires two GETs
         (dynamic value + static options), then the toggle is one PUT.
         """
         mock_client.side_effect = [
+            _legacy_deviceinfo(),
             _resp(make_success_response(items=[make_item("mute", "Off")])),
             _resp(make_success_response(items=[make_item("mute", "Off")])),
             _resp(make_key_press_response()),
@@ -395,23 +435,27 @@ class TestMute:
         body = _last_call_body(mock_client)
         assert body["KEYLIST"][0]["CODESET"] == 5
         assert body["KEYLIST"][0]["CODE"] == 4
-        assert mock_client.call_count == 3
+        assert mock_client.call_count == 4
 
     async def test_mute_when_muted_is_noop(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
         """Already muted — no toggle sent (idempotent)."""
-        mock_client.return_value = _resp(
-            make_success_response(items=[make_item("mute", "On")])
-        )
+        mock_client.side_effect = [
+            _legacy_deviceinfo(),
+            _resp(make_success_response(items=[make_item("mute", "On")])),
+            _resp(make_success_response(items=[make_item("mute", "On")])),
+        ]
         await vizio_tv.mute()
-        # Two GETs for is_muted (dynamic + static options), no PUT.
-        assert mock_client.call_count == 2
+        # deviceinfo probe + two GETs for is_muted (dynamic + static
+        # options), no PUT.
+        assert mock_client.call_count == 3
 
     async def test_unmute_when_muted_sends_toggle(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
         mock_client.side_effect = [
+            _legacy_deviceinfo(),
             _resp(make_success_response(items=[make_item("mute", "On")])),
             _resp(make_success_response(items=[make_item("mute", "On")])),
             _resp(make_key_press_response()),
@@ -420,16 +464,18 @@ class TestMute:
         body = _last_call_body(mock_client)
         assert body["KEYLIST"][0]["CODESET"] == 5
         assert body["KEYLIST"][0]["CODE"] == 4
-        assert mock_client.call_count == 3
+        assert mock_client.call_count == 4
 
     async def test_unmute_when_unmuted_is_noop(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
-        mock_client.return_value = _resp(
-            make_success_response(items=[make_item("mute", "Off")])
-        )
+        mock_client.side_effect = [
+            _legacy_deviceinfo(),
+            _resp(make_success_response(items=[make_item("mute", "Off")])),
+            _resp(make_success_response(items=[make_item("mute", "Off")])),
+        ]
         await vizio_tv.unmute()
-        assert mock_client.call_count == 2
+        assert mock_client.call_count == 3
 
     async def test_mute_toggle_sends_key_without_state_query(
         self, vizio_tv: Vizio, mock_client: AsyncMock

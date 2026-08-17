@@ -58,6 +58,13 @@ _EMPTY_DEVICEINFO = {
     "STATUS": {"RESULT": "SUCCESS", "DETAIL": "ok"},
 }
 
+# deviceinfo whose API version clears the volume-V2 gate, so `volume set`
+# takes the flat /audio/volume/level path rather than the HASHVAL write.
+_V2_DEVICEINFO = {
+    "ITEMS": [{"CNAME": "deviceinfo", "VALUE": {"API_VERSION": "3.3.3-2538.0001"}}],
+    "STATUS": {"RESULT": "SUCCESS", "DETAIL": "ok"},
+}
+
 
 def _tv_url(endpoint: Endpoint, *, suffix: str = "") -> str:
     """Resolve the TV-profile URL for an endpoint (first path)."""
@@ -304,7 +311,9 @@ class TestVolumeCommands:
     def test_set(
         self, runner: CliRunner, saved_tv: Path, mock_aio: aioresponses
     ) -> None:
-        # Flat /audio/volume/level PUT — one call, no GET.
+        # Volume-V2 firmware: one deviceinfo GET for the capability gate,
+        # then the flat /audio/volume/level PUT — no HASHVAL round trip.
+        mock_aio.get(_tv_url(Endpoint.DEVICE_INFO), payload=_V2_DEVICEINFO)
         mock_aio.put(_tv_url(Endpoint.VOLUME_LEVEL), payload=make_success_response())
         result = _invoke(runner, saved_tv, "volume", "set", "12")
         assert result.exit_code == 0, result.output

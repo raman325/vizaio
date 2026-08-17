@@ -44,6 +44,17 @@ def volume_level(level: int) -> dict[str, Any]:
     return {"LEVEL": level}
 
 
+def volume_mute(muted: bool) -> dict[str, Any]:
+    """
+    Body for the flat ``PUT /audio/volume/mute`` — no HASHVAL needed.
+
+    Takes the desired state rather than toggling, so the call is
+    idempotent without a preceding read. Mirrors ``VolumeMuteBody`` in
+    the official app (a lone boolean ``MUTE`` field).
+    """
+    return {"MUTE": muted}
+
+
 def key_press(codes: Sequence[KeyCode]) -> dict[str, Any]:
     """
     Build a KEYLIST PUT body. ``ACTION`` is always ``KEYPRESS``.

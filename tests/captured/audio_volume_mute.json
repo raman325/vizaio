@@ -1,0 +1,11 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEM": {
+    "TYPE": "T_BOOLEAN_V1",
+    "VALUE": false
+  },
+  "URI": "/audio/volume/mute"
+}

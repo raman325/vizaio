@@ -389,6 +389,67 @@ def parse_vizios_binary(response: Response) -> str:
     return str(vizios) if vizios else ""
 
 
+def parse_volume_level(response: Response) -> int:
+    """
+    Extract the level from a flat ``GET /audio/volume/level`` response.
+
+    That endpoint answers with a **singular** ``ITEM`` of type
+    ``T_JSON_OBJECT_V1`` whose ``VALUE`` carries both ``LEVEL`` and
+    ``MUTE``, and no ``HASHVAL``. :meth:`Response.from_json` folds the
+    singular item into ``items`` and lowercases the value keys.
+    """
+    value = _flat_volume_value(response)
+    level = value.get("level")
+    if not isinstance(level, int):
+        raise VizioResponseError(
+            f"volume level has unexpected shape: {type(level).__name__}"
+        )
+    return level
+
+
+def parse_volume_mute(response: Response) -> bool:
+    """
+    Extract mute state from a flat ``GET /audio/volume/mute`` response.
+
+    A singular ``ITEM`` of type ``T_BOOLEAN_V1`` whose ``VALUE`` is the
+    bare boolean.
+    """
+    if not response.items:
+        raise VizioResponseError("volume mute response has no item")
+    value = response.items[0].value
+    if not isinstance(value, bool):
+        raise VizioResponseError(
+            f"volume mute has unexpected shape: {type(value).__name__}"
+        )
+    return value
+
+
+def _flat_volume_value(response: Response) -> Mapping[str, Any]:
+    """Return the ``ITEM.VALUE`` mapping of a flat volume response."""
+    if not response.items:
+        raise VizioResponseError("flat volume response has no item")
+    value = response.items[0].value
+    if not isinstance(value, Mapping):
+        raise VizioResponseError(
+            f"flat volume VALUE has unexpected shape: {type(value).__name__}"
+        )
+    return value
+
+
+def parse_api_version(response: Response) -> str:
+    """
+    Extract ``API_VERSION`` from a deviceinfo response.
+
+    A top-level field of the deviceinfo ``VALUE`` block (sibling of
+    ``CAPABILITIES`` / ``SYSTEM_INFO``), not part of ``SYSTEM_INFO``.
+    Distinct from :func:`parse_firmware_version`: this is the *protocol*
+    spec the firmware implements, which is what :mod:`vizaio.apispec`
+    gates capabilities on. Empty string when absent.
+    """
+    version = _deviceinfo_value(response).get("api_version")
+    return str(version) if version else ""
+
+
 def parse_system_info(response: Response) -> dict[str, Any]:
     """
     Extract the ``SYSTEM_INFO`` block from a deviceinfo response.

@@ -4,7 +4,10 @@
 
 - **Newer version (analyzed):** `com.vizio.vue.launcher` 5.0.0.rc-3.20260311.20.release (versionCode 28228, posted 2026-03-21, min API 29). Package label: "VIZIO | WatchFree+". Source: APKMirror `.apkm` bundle, `base.apk` extracted (~144 MB).
 - **Older version:** `uptodown-com.vizio.vue.launcher.apk` (~9.8 MB) was **mislabeled** — its `AndroidManifest.xml` declares `package="com.uptodown"` (the Uptodown app store), not the Vizio app. Decompilation was attempted (jadx ran to completion) but no `com/vizio` namespace exists; it was discarded as not relevant. Only the newer APK provided ground truth. Recommendation: re-download an actual older Vizio APK if cross-version comparison is desired.
-- **Tooling:** `jadx 1.5.5` (Homebrew) for Java decompilation; `unzip` for APKM extraction; `apktool 3.0.2` available but unused (jadx output sufficient). Working directory `/tmp/vizio-apk-analysis/`.
+- **Newest version analyzed:** 5.3.0.rc-2.20260728.21.release (versionCode 28238, posted 2026-07-28). Pulled both as `.xapk` (APKPure) and `.apkm` (APKMirror) — the two `base.apk` files are **byte-identical by SHA-256**, and only `base.apk` carries dex in either; every other entry is a `split_config.*` resource or native-lib split. There is no feature split, from either mirror.
+- **5.0.0 remains the authoritative decompile, because 5.3.0 is obfuscated.** Under `com/vizio`, 5.0.0 has **0 single-letter class names out of 25,196**; 5.3.0 has **3,277 out of 16,661**. Vizio enabled R8 name obfuscation for its own namespace between 2026-03-11 and 2026-07-28, closing the window that made this analysis easy. What still works in 5.3.0: **string literals are not encrypted** (`/key_command/`, `/pairing/start`, `/state/device/deviceinfo` all appear verbatim), so endpoint-path greps over the raw dex remain trustworthy even where class and method names are gone. Package names are also partly retained (e.g. `com/vizio/connectivity/domain/volume_remote/` with classes `a`, `b`, `c`).
+- **Where to get APKs:** APKMirror, APKPure and apkcombo all return Cloudflare 403 to `curl`. The APKPure *app* API works headlessly and is sufficient — `api.pureapk.com/m/v3/cms/app_version?package_name=com.vizio.vue.launcher` with headers `x-cv: 3172501`, `x-sv: 29`, `x-abis`, `x-gp: 1` and UA `APKPure/3.17.25 (Aegon)`; it returns protobuf containing signed `download.pureapk.com` URLs that require the same headers. **Verify the package before decompiling** — `~/Downloads/smartcast.apk` is an Aptoide-wrapped store app (`com/aptoide/*`), the same trap as the uptodown file below.
+- **Tooling:** `jadx 1.5.5` (Homebrew) for Java decompilation; `unzip` for APKM extraction; `apktool 3.0.2` available but unused (jadx output sufficient). Working directory `/tmp/vizio-apk-analysis/`. **jadx gotcha:** running it against the whole APK silently drops `V2SCPApi.java` — the single most valuable file — emitting only its `$…` inner classes, and it drops other large classes the same way. That can masquerade as "this package isn't in the build". Extract the dex files and run jadx per `classes*.dex`, and before concluding anything is absent, check the raw dex string pool with `grep -a` for type descriptors (`Lcom/vizio/…;`) and string literals — that is the ground truth, not jadx's output tree.
 - **Decompiled tree:** ~49,000 `.java` files for the newer APK. Heavy obfuscation in third-party code, but the entire `com/vizio/*` namespace is **un-obfuscated** (Kotlin metadata strings preserve original class/property names). This made the analysis straightforward.
 
 High-value packages: `com.vizio.connectivity.data.{network.impl.DeviceApiRoutes, network.models.ResponseResult, network.responses.*, scpl.SCPLCommandsManager, discovery.*}`, `com.vizio.connectivity.domain.commands.KeyCommandItem`, `com.vizio.vnf.swagger.apis.V2SCPApi` (the 4230-line generated Swagger client containing every endpoint), `com.vizio.vnf.network.message.{SmartCastHeaders, network.EmbeddedConnectionConfig, Retry}`, `com.vizio.vdf.services.control.command.*`, and `com.vizio.smartcast.menutree.models.enums.VZRestEndpoint` (the 177-entry legacy menu-tree taxonomy).
@@ -344,6 +347,156 @@ The filter is `enabled OR visible` (not name-based), and CAST is rotated to the 
 - **`SoftApPairingViewModel`** — soundbar onboarding does in-app SoftAp connection (joining the soundbar's hotspot, calling its API while disconnected from internet, then handing off WiFi creds). pyvizio could re-implement this for headless soundbar provisioning.
 - **Pairing cancellation with `pairing/cancel`** is mandatory before re-pairing — `DevicePairingViewModel.updateStateForCancellation()` always sends it. pyvizio should ensure it does the same after a failed `pair` step.
 - **`Authorization` header is half-implemented** — `EmbeddedConnectionConfig.java:34` constructs `Authorization`, but the side-effect is discarded (no `=` on the `MapsKt.plus` result). Looks like dead code from an earlier design; the live header is `AUTH`.
+
+### 10. Volume API V2 — how the app picks a volume strategy
+
+Investigated for [home-assistant/core#179254](https://github.com/home-assistant/core/issues/179254).
+This is the answer to "how does one binary drive many firmware
+generations": the app resolves the device's **API spec version** and
+branches. There is no server-side negotiation and no capability flag
+involved, which is why the logic is portable to any client.
+
+`com/vizio/vnf/network/message/device/DeviceInfoAnalyzer.java`:
+
+```java
+public final boolean isVolumeAPIV2Supported() {
+    ApiMinimumSpecVersion minimumApiSpecVersion;
+    return isTvDevice()
+        && (minimumApiSpecVersion = getMinimumApiSpecVersion()) != null
+        && minimumApiSpecVersion.getId()
+             >= ApiMinimumSpecVersion.VER_2_0_0_2031_0014_FUR_SUPPORTED.getId();
+}
+```
+
+The ladder (`ApiMinimumSpecVersion`, id → apiName):
+
+```
+-1 VER_UNKNOWN                        ""
+ 0 VER_1_0_0_0                        "1.0.0.0"
+ 1 VER_1_0_12_11                      "1.0.12.11"
+ 2 VER_1_0_13_25                      "1.0.13.25"
+ 3 VER_2_0_0_0000_000                 "2.0.0-2000.0000"
+ 4 VER_2_0_0_2031_0014_FUR_SUPPORTED  "2.0.0-2031.0014"   ← the threshold
+```
+
+`RestApiUtil` resolves a raw string with **two different comparison
+algorithms**, chosen by regex (`V2_PATTERN_REGEX = \d.\d.\d-\d{4}.\d{4}`,
+note the unescaped dots):
+
+- `computeSpecVersionV2` — walks the V2 rungs descending, using
+  `compareVersion`, which strips `\D+` from both strings and compares
+  **character by character** over `max(len)` positions with missing
+  characters treated as NUL.
+- `computeSpecVersion` (legacy) — strips `[^0-9.]`, splits on `.`, walks
+  the V1 rungs descending comparing `min(len)` components **numerically**;
+  a target with fewer components than the candidate fails it.
+
+Recomputed whenever the merged `apiVersion` field changes, in
+`InternalDevice$apiVersionMerger$1.allowMerge`.
+
+**The branch it feeds** — `SetVolumeCommand.retryStrategy()` and
+`MuteToggleCommand.retryStrategy()`. Both build an ordered fallback list,
+and in both the **key command comes first on every device**; the V1/V2
+choice only affects the second rung, with Cast last:
+
+```java
+arrayList.add(to(Protocol.HTTP, volumeKeyCommand(str)));            // always first
+if (settingsRoot == SETTINGS_ROOT_TV) {
+    arrayList.add(this.volumeV2Supported
+        ? to(Protocol.HTTP, setVolumeCommandV2(str))                 // increase/decrease?STEP=
+        : to(Protocol.HTTP, new SetVolumeHTTPCommand(this, str, settingsRoot)));
+}
+arrayList.add(to(Protocol.CAST, new SetVolumeCastCommand()));
+```
+
+`setVolumeCommandV2` picks `increaseVolumeCommandV2` or
+`decreaseVolumeCommandV2` by sign. The V1 `SetVolumeHTTPCommand` is a
+GET-then-PUT that reads `VolumeItemDetail.VALUE` + `HASHVAL` from the
+menu_native leaf and writes `min(max(0, value + delta), 100)` — an
+independent confirmation that **100 is the TV volume ceiling**.
+
+Request bodies: `VolumeLevelBody` is a lone `Integer LEVEL`;
+`VolumeMuteBody` is a lone `Boolean MUTE`.
+
+**Reads are unaffected by the version gate.**
+`GetCurrentVolumeCommandStrategy` uses `volumeStatusCommand` —
+`GET /menu_native/dynamic/{root}/audio/volume`, the **leaf** — on both
+V1 and V2. It never reads the `audio` collection. That is precisely why
+`vizaio.get_volume()` works on the firmware in #179254 while pyvizio's
+`audio_settings["volume"]` raises `KeyError`.
+
+**Caveat on the flat reads — since resolved on hardware.** `V2SCPApi`
+also generates `GET /audio/volume/level` (`volumeLevelStatus`) and
+`GET /audio/volume/mute` (`volumeMuteStatus`), but nothing in
+`com/vizio/**` calls them, and the generated model
+`VolumeLevelStatusResponse_ITEM` has only `Object`-typed `type` / `ref`
+fields with no value member — so the decompile could not tell us the wire
+shape. A live probe (VHD24M-0810, 2026-08-16) settled it: both use a
+singular `ITEM`, carry no `HASHVAL`, and `level` returns **both** values
+at once — `{"ITEM":{"TYPE":"T_JSON_OBJECT_V1","VALUE":{"LEVEL":9,"MUTE":false}}}`
+and `{"ITEM":{"TYPE":"T_BOOLEAN_V1","VALUE":false}}`. Captured as
+`tests/captured/audio_volume_{level,mute}.json`. See protocol-notes #31.
+
+**The APK's `?STEP={STEP}` query form is wrong on real firmware.** The
+generated config is
+`RequestMethod.PUT, "/audio/volume/increase?STEP={STEP}"`, but live that
+returns `SUCCESS` and moves the volume by exactly 1 for any value.
+`{"STEP": n}` in the **body** applies the requested delta. Verified both
+directions at several values; empty body and no body also mean 1. Either
+the generated client was always wrong here or the firmware changed —
+worth remembering that a generated Swagger client is a description of a
+spec, not proof of device behavior.
+
+**`AUDIO_2.0_API` is not this flag.** The string appears nowhere in the
+5.0.0 or 5.3.0 dex; `DeviceInfoCapabilities` models 22 keys and that is
+not among them, so the app never reads it. It is real on the wire
+(`tests/captured/device_info.json` has it `true`) but does not predict
+the missing-`volume` shape — that same TV lists `volume` in its `audio`
+collection. See protocol-notes #30.
+
+### 11. App 5.3.0 retired the flat volume family client-side
+
+Four months after 5.0.0, the entire HTTP volume surface is gone from the
+client and volume is driven purely by key commands. Established from raw
+dex (names are obfuscated in 5.3.0, string literals are not):
+
+- **No `/audio/volume/*` path literal anywhere** in the 5.3.0 dex, while
+  `/key_command/`, `/pairing/start`, `/app/launch` and
+  `/state/device/deviceinfo` all survive verbatim — so this is real
+  absence, not string encryption. `/menu_native/dynamic/{deviceEndpoint}/audio/volume`
+  and `/menu_native/static/{dynamicSettings}/audio/volume` are gone too.
+- **The command layer was deleted, not renamed.**
+  `vdf/services/control/command/volume/{SetVolumeCommand,MuteToggleCommand,GetCurrentVolumeCommandStrategy}`
+  and `VolumeCapabilityKt` are absent; the surviving
+  `vdf/services/control/` classes gained only obfuscated `pinpair/a…x`.
+- **The replacement is** `com/vizio/connectivity/domain/volume_remote/`
+  (kept package name, classes obfuscated to `a`/`b`/`c` plus
+  `WiFiDeviceHardwareVolumeHandler`). That handler dispatches
+  `KeyCommandItem.AUDIO_VOLUME_PLUS` / `AUDIO_VOLUME_MINUS`, and
+  `TVRemoteViewModel.toggleMute` dispatches a mute key.
+- **The new device-API interface has no volume method.** `uh.a` (~27
+  methods: inputs, power, pairing, apps, system info, extended state)
+  exposes only a generic
+  `c(KeyCommandItem, String, …)` for this.
+- `VolumeMuteBody` and `V2SCPApi$muteVolume$1$decode$…` linger in
+  `classes8.dex` as **orphaned dead generated code** — the outer method
+  and its path constant were tree-shaken.
+
+Note the 5.3.0 `V2SCPApi` also shrank from 59 endpoint paths to 31 with
+0 added. Most of that is ordinary tree-shaking as call sites moved to
+the newer `connectivity/domain` layer (`ScplRequestManager`), which
+coexists with the legacy Swagger client — `/state/device/deviceinfo`, for
+instance, drops out of `V2SCPApi` while remaining in the dex. Do not read
+the shrunken path list as a protocol deprecation list; the volume finding
+above is separate and rests on whole-dex absence.
+
+**Implication for a library:** keypresses are the path Vizio still
+exercises against new firmware, so they belong as the default. Flat
+endpoints that the vendor's own client abandoned should be opt-in — no
+one is regression-testing them against new firmware releases. The
+exception worth making is an endpoint we have **hardware-verified
+ourselves**, e.g. `PUT /audio/volume/level`, where direct evidence beats
+the app's changing preferences.
 
 ## Endpoints catalogued
 
