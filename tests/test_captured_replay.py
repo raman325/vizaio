@@ -373,14 +373,8 @@ class TestStatusToExceptionMapping:
 class TestFlatVolumeEndpointShapes:
     """The flat volume-V2 reads, captured live 2026-08-16.
 
-    The APK could not tell us these: its generated
-    ``VolumeLevelStatusResponse_ITEM`` model carries only Object-typed
-    ``type``/``ref`` fields with no value member. These fixtures are the
-    ground truth.
-
     Both use a **singular ``ITEM``**, not the usual ``ITEMS`` array, and
-    neither carries a ``HASHVAL`` — consistent with these being
-    hashval-free endpoints.
+    neither carries a ``HASHVAL``.
     """
 
     def test_level_returns_both_level_and_mute(self) -> None:
@@ -405,8 +399,8 @@ class TestFlatVolumeEndpointShapes:
 
     def test_both_agree_with_the_menu_native_leaf(self) -> None:
         """Cross-check: the flat reads and the settings leaf reported the
-        same state in the same capture session, so the flat MUTE field is
-        not a stale mirror."""
+        same state in the same capture, so the flat MUTE field is not a
+        stale mirror."""
         level = json.loads((CAPTURED / "audio_volume_level.json").read_text())
         mute = json.loads((CAPTURED / "audio_volume_mute.json").read_text())
         assert level["ITEM"]["VALUE"]["MUTE"] == mute["ITEM"]["VALUE"]

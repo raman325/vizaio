@@ -395,12 +395,8 @@ def parse_volume_level(response: Response) -> int:
 
     That endpoint answers with a **singular** ``ITEM`` of type
     ``T_JSON_OBJECT_V1`` whose ``VALUE`` carries both ``LEVEL`` and
-    ``MUTE`` — and no ``HASHVAL``. :meth:`Response.from_json` folds the
+    ``MUTE``, and no ``HASHVAL``. :meth:`Response.from_json` folds the
     singular item into ``items`` and lowercases the value keys.
-
-    Shape captured live from VHD24M-0810; the APK's generated model gave
-    only ``Object``-typed fields, so this is the ground truth. See
-    ``tests/captured/audio_volume_level.json``.
     """
     value = _flat_volume_value(response)
     level = value.get("level")
@@ -416,7 +412,7 @@ def parse_volume_mute(response: Response) -> bool:
     Extract mute state from a flat ``GET /audio/volume/mute`` response.
 
     A singular ``ITEM`` of type ``T_BOOLEAN_V1`` whose ``VALUE`` is the
-    bare boolean. See ``tests/captured/audio_volume_mute.json``.
+    bare boolean.
     """
     if not response.items:
         raise VizioResponseError("volume mute response has no item")
@@ -447,9 +443,8 @@ def parse_api_version(response: Response) -> str:
     A top-level field of the deviceinfo ``VALUE`` block (sibling of
     ``CAPABILITIES`` / ``SYSTEM_INFO``), not part of ``SYSTEM_INFO``.
     Distinct from :func:`parse_firmware_version`: this is the *protocol*
-    spec the firmware implements (e.g. ``"3.3.3-2538.0001"``), which is
-    what :mod:`vizaio.apispec` gates capabilities on. Empty string when
-    absent — older firmware may not expose it.
+    spec the firmware implements, which is what :mod:`vizaio.apispec`
+    gates capabilities on. Empty string when absent.
     """
     version = _deviceinfo_value(response).get("api_version")
     return str(version) if version else ""

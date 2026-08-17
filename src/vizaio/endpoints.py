@@ -246,25 +246,20 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     ),
     # Control —————————————————————————————————————————————————————————
     Endpoint.KEY_PRESS: row("PUT", "/key_command/"),
-    # Flat absolute-volume set — no HASHVAL required (verified live on
-    # VHD24M-0810), unlike the menu_native audio/volume path.
+    # Flat absolute-volume set — no HASHVAL required, unlike the
+    # menu_native audio/volume path.
     Endpoint.VOLUME_LEVEL: row("PUT", "/audio/volume/level", auth=REQ),
     # The rest of the flat volume family, present on volume-V2 firmware.
-    # Reads here need no HASHVAL and are unaffected by whether ``volume``
-    # appears in the ``audio`` settings *collection* — see
-    # home-assistant/core#179254.
+    # These need no HASHVAL and are unaffected by whether ``volume``
+    # appears in the ``audio`` settings *collection*.
     Endpoint.VOLUME_LEVEL_STATUS: row("GET", "/audio/volume/level", auth=REQ),
     Endpoint.VOLUME_MUTE_STATUS: row("GET", "/audio/volume/mute", auth=REQ),
     Endpoint.VOLUME_MUTE_SET: row("PUT", "/audio/volume/mute", auth=REQ),
     # Relative steps. Catalogued but **unused** — ``volume_up`` /
-    # ``volume_down`` always send keypresses, which are already a single
-    # batched PUT and work on every device family (see their docstrings).
-    # Recorded here because the surface is real and the calling
-    # convention is counter-intuitive: the step count goes in the
-    # **body** as ``{"STEP": n}``, NOT as the ``?STEP=n`` query string
-    # the official app's generated client uses. Verified on VHD24M-0810 —
-    # the query form returns SUCCESS and moves the volume by exactly 1
-    # whatever the value, a silent off-by-N. See protocol-notes #31.
+    # ``volume_down`` always send keypresses (see their docstrings).
+    # If you ever do call these: the step count goes in the **body** as
+    # ``{"STEP": n}``. The ``?STEP=n`` query form returns SUCCESS and
+    # moves the volume by exactly 1 whatever the value.
     Endpoint.VOLUME_INCREASE: row("PUT", "/audio/volume/increase", auth=REQ),
     Endpoint.VOLUME_DECREASE: row("PUT", "/audio/volume/decrease", auth=REQ),
     Endpoint.LAUNCH_APP: row("PUT", "/app/launch", auth=REQ, needs=Need.APPS),

@@ -264,9 +264,8 @@ class TestResolveVolumeV2:
     """The flat ``/audio/volume/*`` family — protocol surface used by the
     official app when ``supports_volume_v2()`` is true.
 
-    All five are top-level paths (no ``{root}`` templating) and all
-    require auth, matching ``V2SCPApi``'s generated request configs in
-    the 5.0.0 decompile.
+    All are top-level paths (no ``{root}`` templating) and all require
+    auth.
     """
 
     @pytest.mark.parametrize(

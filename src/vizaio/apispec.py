@@ -1,55 +1,36 @@
 """
 API spec version ladder — the gate for firmware-dependent endpoints.
 
-Vizio ships one mobile app against many firmware generations, so the app
-itself must decide at runtime which protocol surface a device speaks. It
-does that from the ``API_VERSION`` string in the unauthenticated
-``/state/device/deviceinfo`` payload, mapped onto an ordered ladder of
-*minimum spec versions*. This module is a direct port of that logic, so
-``vizaio`` reaches the same conclusion the official client would.
+Resolves the ``API_VERSION`` string from ``/state/device/deviceinfo`` to
+an ordered :class:`ApiSpec` rung, so callers can gate an endpoint with a
+single ``>=`` comparison.
 
-Source: ``com/vizio/vnf/network/message/device/DeviceInfoAnalyzer.java``
-in the ``com.vizio.vue.launcher`` 5.0.0 decompile (``RestApiUtil``, plus
-the ``ApiMinimumSpecVersion`` enum). See ``docs/android-app-findings.md``.
+Two version formats are in circulation, compared differently:
 
-Two string shapes exist, and the app treats them with two *different*
-comparison algorithms:
+- **V2 form** (``3.7.2-2621.0005``) — non-digits stripped, then compared
+  **character by character** with the shorter string padded with NUL.
+- **Legacy form** (``1.0.13.25``, or prefixed like ``FW_1.0.12.11``) —
+  split on ``_``/``-``, keep the trailing component, strip everything but
+  digits and dots, compare dot-separated components **numerically**.
 
-- **V2 form** — ``3.7.2-2621.0005``. All non-digits are stripped and the
-  remainder is compared **character by character**, shorter string padded
-  with NUL. Since every real V2 string sanitizes to 11 digits this
-  behaves like a numeric compare, but the character semantics are
-  preserved here so odd-length strings order the way the device's client
-  would order them.
-- **Legacy form** — ``1.0.13.25``, or prefixed like ``FW_1.0.12.11``. The
-  app splits on ``_``/``-``, keeps the trailing component, strips
-  everything but digits and dots, then compares dot-separated components
-  **numerically**.
+Both walk their ladder newest-to-oldest and return the first rung the
+target meets or exceeds.
 
-Both branches walk their candidate ladder from newest to oldest and
-return the first entry the target meets or exceeds.
+This must resolve identically to the official client, which is why three
+things that look like bugs are deliberate. **Do not "fix" them without
+changing the gate's meaning:**
 
-**Two known quirks are reproduced on purpose**, because deviating would
-open our gate on devices the vendor's own client treats as legacy — and
-sending a device endpoints Vizio never exercises on that firmware is the
-exact risk this gate exists to avoid:
+- ``_V2_FORM`` is matched with ``fullmatch``, so a prefixed or
+  multi-digit version (``FW_3.7.2-2621.0005``, ``3.10.2-2621.0005``)
+  falls to the legacy branch and resolves below its true rung.
+- ``_resolve_v2`` floors at :attr:`ApiSpec.V2_0_0_2000_0000` even for a
+  string below it, so such a version outranks :attr:`ApiSpec.V1_0_13_25`.
+- ``_V2_FORM`` escapes its dots, so degenerate separators
+  (``3x7x2-2621x0005``) take the legacy branch rather than the V2 one.
 
-- A V2-form version that is *prefixed* or has a multi-digit component
-  (``FW_3.7.2-2621.0005``, ``3.10.2-2621.0005``) fails the V2 pattern and
-  falls to the legacy branch, resolving *below* its true rung. The app
-  does the same: ``DeviceInfoAnalyzer`` calls
-  ``getV2_PATTERN_REGEX().matches(str)`` on the whole trimmed string, and
-  Kotlin's ``Regex.matches`` requires the **entire** input to match (it
-  is not ``containsMatchIn``) — hence ``fullmatch`` here. Its pattern is
-  likewise single-digit per component.
-- :meth:`ApiSpec._resolve_v2` floors at :attr:`ApiSpec.V2_0_0_2000_0000`
-  even for a string below it, so a hypothetical ``1.0.0-0000.0000``
-  outranks :attr:`ApiSpec.V1_0_13_25`. Mirrors ``computeSpecVersionV2``'s
-  final ``return VER_2_0_0_0000_000``.
-
-Neither affects the only gate in use today (:func:`supports_volume_v2`,
-which tests the top rung). Revisit if a lower rung ever gates something,
-or if a real device is found reporting one of these forms.
+Neither of the first two affects :func:`supports_volume_v2`, the only
+gate today, which tests the top rung. Revisit if a lower rung ever gates
+something.
 """
 
 from __future__ import annotations
@@ -60,10 +41,6 @@ import re
 __all__ = ["ApiSpec", "supports_volume_v2"]
 
 
-# The app's literal pattern is ``\d.\d.\d-\d{4}.\d{4}`` — with *unescaped*
-# dots, so it also matches separators like ``3x7x2-2621x0005``. The dots
-# are escaped here: no real device emits the degenerate forms, and a
-# stricter pattern keeps the branch choice predictable.
 _V2_FORM = re.compile(r"\d\.\d\.\d-\d{4}\.\d{4}")
 
 _NON_DIGITS = re.compile(r"\D+")
@@ -74,9 +51,7 @@ class ApiSpec(IntEnum):
     """
     Minimum API spec version a device's firmware satisfies.
 
-    Ordered — compare with ``>=`` to gate a capability. Values mirror
-    the ``id`` field of the app's ``ApiMinimumSpecVersion`` enum so the
-    ordering is identical.
+    Ordered — compare with ``>=`` to gate a capability.
     """
 
     V1_0_0_0 = 0
@@ -84,8 +59,7 @@ class ApiSpec(IntEnum):
     V1_0_13_25 = 2
     V2_0_0_2000_0000 = 3
     V2_0_0_2031_0014 = 4
-    """Threshold for the flat ``/audio/volume/*`` endpoint family. Named
-    ``VER_2_0_0_2031_0014_FUR_SUPPORTED`` in the app."""
+    """Threshold for the flat ``/audio/volume/*`` endpoint family."""
 
     @property
     def version_string(self) -> str:
@@ -97,10 +71,10 @@ class ApiSpec(IntEnum):
         """
         Resolve a raw ``API_VERSION`` string to the highest spec it meets.
 
-        Unparseable or missing input resolves to :attr:`V1_0_0_0` — the
-        oldest rung. Degrading downward is the safe direction: it only
-        costs the legacy code path, whereas guessing high would offer a
-        device endpoints its firmware does not implement.
+        Unparseable or missing input resolves to :attr:`V1_0_0_0`, the
+        oldest rung — guessing low only costs the legacy code path,
+        whereas guessing high offers a device endpoints it may not
+        implement.
         """
         if not api_version:
             return cls.V1_0_0_0
@@ -144,7 +118,7 @@ _VERSION_STRINGS: dict[ApiSpec, str] = {
 
 def _compare_digits(version1: str, version2: str) -> int:
     """
-    Compare two version strings the way the app's ``compareVersion`` does.
+    Compare two version strings digit-wise.
 
     Strips every non-digit from both, then compares character by
     character over ``max(len)`` positions, treating a missing character
@@ -166,9 +140,8 @@ def _at_least(target: list[str], candidate: list[str]) -> bool:
     Return whether dotted ``target`` meets or exceeds ``candidate``.
 
     Compares only the components both share; a target with *fewer*
-    components than the candidate cannot satisfy it (the app breaks out
-    of the loop in that case). Non-numeric components are skipped rather
-    than failing the whole comparison.
+    components than the candidate cannot satisfy it. Non-numeric
+    components are skipped rather than failing the whole comparison.
     """
     for left, right in zip(target, candidate, strict=False):
         try:
@@ -184,14 +157,13 @@ def supports_volume_v2(api_version: str | None, *, is_tv: bool) -> bool:
     """
     Return whether the device speaks the flat ``/audio/volume/*`` API.
 
-    Mirrors ``DeviceInfoAnalyzer.isVolumeAPIV2Supported()``: the device
-    must be a TV (settings root other than ``audio_settings``) *and*
-    report an API version of at least ``2.0.0-2031.0014``.
+    Requires a TV (settings root other than ``audio_settings``) *and* an
+    API version of at least ``2.0.0-2031.0014``.
 
     Note this is **not** the ``CAPABILITIES."AUDIO_2.0_API"`` flag some
-    firmware advertises. That flag is real on the wire but the official
-    app never reads it, and it does not predict this behavior — a TV can
-    report it while still listing ``volume`` in the ``audio`` collection.
+    firmware advertises. That flag exists on the wire but does not
+    predict this behavior — a TV can report it and still list ``volume``
+    in the ``audio`` collection.
     """
     if not is_tv:
         return False

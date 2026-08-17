@@ -146,16 +146,12 @@ class TestVolumeV2Detection:
 class TestMuteOnVolumeV2:
     """On V2 firmware, mute sets a value instead of toggling.
 
-    Hardware (VHD24M-0810, panel on): ``PUT /audio/volume/mute``
-    ``{"MUTE": bool}`` works, is idempotent under repeat, and is reflected
-    by both the flat read and the ``menu_native`` leaf. That makes it
-    strictly better than read-then-toggle — one round trip instead of
-    three, and no race against someone pressing mute on the physical
-    remote between our read and our write.
+    ``PUT /audio/volume/mute`` ``{"MUTE": bool}`` is idempotent under
+    repeat, making it strictly better than read-then-toggle: one round
+    trip instead of three, and no race against someone pressing mute on
+    the physical remote between the read and the write.
 
-    Same shape as ``set_volume``: gated, no caller flag. Contrast
-    ``volume_up``/``volume_down``, where the keypress path is already a
-    single request so the V2 endpoint wins nothing and stays opt-in.
+    Gated, with no caller flag — same shape as ``set_volume``.
     """
 
     async def test_v2_mute_sets_the_value(
@@ -219,16 +215,11 @@ class TestMuteOnVolumeV2:
 class TestRelativeVolumeAlwaysUsesKeypresses:
     """Relative volume has no caller knob — the library picks.
 
-    The V2 ``increase``/``decrease`` endpoints exist and work (verified on
-    VHD24M-0810 with ``{"STEP": n}`` in the body, *not* the ``?STEP=n``
-    query the APK shows), but they never beat the keypress path:
-
-    - a keypress batch is already a single PUT for any step count up to
-      ``_KEYLIST_CHUNK_SIZE`` (50), which covers every realistic input on
-      a 0-100 scale;
-    - keypresses work on every device family, V2 or not;
-    - app 5.3.0 dropped the HTTP path and drives volume purely with key
-      commands, so it is the only one the vendor still exercises.
+    The V2 ``increase``/``decrease`` endpoints work, but never beat the
+    keypress path: a keypress batch is already a single PUT for any step
+    count up to ``_KEYLIST_CHUNK_SIZE`` (50), which covers every
+    realistic input on a 0-100 scale, and it works on every device
+    family regardless of firmware.
 
     Exposing a flag would push a choice onto the caller that the library
     can already answer — and whose "on" position is never the better one.
@@ -323,12 +314,9 @@ class TestCapabilityProbeCost:
 class TestSetVolumeGating:
     """``set_volume`` must respect the same gate as the rest of the family.
 
-    ``PUT /audio/volume/level`` is V2-family — Vizio's own builder names it
-    ``setVolumeLevelCommandV2`` — and the app only ever adds an HTTP volume
-    rung for TVs. It also has **zero callers** in 5.0.0 and is absent from
-    5.3.0, so it is unexercised by the vendor; sending it to a soundbar or
-    to pre-V2 TV firmware is a guess. The fallback is the app's own V1
-    branch: GET the leaf for its HASHVAL, then MODIFY.
+    ``PUT /audio/volume/level`` is V2-family and TV-only, so sending it
+    to a soundbar or to pre-V2 firmware is a guess. The fallback is GET
+    the leaf for its HASHVAL, then MODIFY.
     """
 
     async def test_v2_tv_uses_the_flat_put(
@@ -387,11 +375,10 @@ class TestV2FallbackOnUnsupportedEndpoint:
     """A device that clears the version gate but lacks the endpoint must
     still work.
 
-    The gate is inferred from a decompile plus one hardware sample. If a
-    TV reports a qualifying ``API_VERSION`` but answers ``URI_NOT_FOUND``
-    on the flat leaf, the V2 path must degrade to the path that works
-    everywhere rather than hard-failing — otherwise this change is a
-    regression for that device, since the old code always toggled.
+    A qualifying ``API_VERSION`` does not guarantee the endpoint exists.
+    If a TV reports one but answers ``URI_NOT_FOUND`` on the flat leaf,
+    the V2 path must degrade to the path that works everywhere rather
+    than hard-failing.
     """
 
     async def test_mute_falls_back_when_endpoint_missing(
@@ -531,8 +518,7 @@ class TestReadsUseTheSameSurfaceAsWrites:
 
     Also halves the poll cost: the menu_native leaf reads are two GETs
     each (value + static options), the flat reads are one and carry no
-    HASHVAL. Shapes hardware-verified — see
-    ``tests/captured/audio_volume_{level,mute}.json``.
+    HASHVAL.
     """
 
     async def test_v2_volume_read_uses_the_flat_endpoint(

@@ -334,13 +334,13 @@ class Vizio:
         """
         Return the device's protocol API version (e.g. ``"3.3.3-2538.0001"``).
 
-        Read from ``API_VERSION`` in the cached, unauthenticated
-        deviceinfo payload — no extra round trip once anything else has
-        touched deviceinfo. Distinct from
-        :meth:`get_firmware_version`, which is the *build* string
-        (``"3.720.9.1-1"``). This one identifies the SmartCast protocol
-        spec the firmware implements and is what capability gates key
-        off. Empty string when the device doesn't expose it.
+        Read from ``API_VERSION`` in the cached deviceinfo payload, so
+        no extra round trip once anything else has touched deviceinfo.
+
+        Distinct from :meth:`get_firmware_version`, which is the *build*
+        string; this is the protocol spec the firmware implements, and is
+        what capability gates compare against. Empty string when the
+        device doesn't expose it.
         """
         return parse_api_version(await self._get_deviceinfo())
 
@@ -348,29 +348,19 @@ class Vizio:
         """
         Return whether the device speaks the flat ``/audio/volume/*`` API.
 
-        Mirrors the official app's gate exactly (see
-        :func:`vizaio.apispec.supports_volume_v2`): a TV whose
-        :meth:`get_api_version` is at least ``2.0.0-2031.0014``.
+        True for a TV whose :meth:`get_api_version` is at least
+        ``2.0.0-2031.0014``; see :func:`vizaio.apispec.supports_volume_v2`.
 
-        Degrades to ``False`` when deviceinfo can't be read. Guessing
+        Degrades to ``False`` when deviceinfo can't be read — guessing
         ``False`` only costs the older code path, whereas guessing
-        ``True`` would send a device endpoints it may not implement.
+        ``True`` sends a device endpoints it may not implement. A failed
+        probe is not cached, so the next call retries.
 
-        Note that degradation is **sticky for the session**:
-        ``_get_deviceinfo`` caches the failure and re-raises rather than
-        refetching (deviceinfo is immutable, so one attempt per session),
-        which means a device unreachable on the very first probe stays on
-        the legacy paths until a new :class:`Vizio` is constructed.
-
-        Note this is **not** the ``CAPABILITIES."AUDIO_2.0_API"`` flag.
-        That flag exists on the wire but the official app never reads it,
-        and it does not predict whether ``volume`` appears in the
-        ``audio`` settings collection — a TV can advertise it and still
-        list ``volume`` there.
+        This is **not** the ``CAPABILITIES."AUDIO_2.0_API"`` flag, which
+        exists on the wire but does not predict whether ``volume``
+        appears in the ``audio`` settings collection.
         """
-        # Check the half of the gate the profile already answers before
-        # paying for a deviceinfo round trip: an audio-root device is
-        # excluded no matter what version it reports.
+        # Answered by the profile alone — skip the deviceinfo round trip.
         if self._profile.settings_root is SettingsRoot.AUDIO:
             return False
         if self._cached_volume_v2 is not None:
@@ -378,10 +368,9 @@ class Vizio:
         try:
             api_version = await self.get_api_version()
         except VizioError:
-            # Don't cache: this is "we couldn't ask", not "the device
-            # said no". Clear the session-wide deviceinfo negative cache
-            # so the next call genuinely re-probes rather than replaying
-            # the stored error forever.
+            # "Couldn't ask", not "device said no" — leave the result
+            # uncached and clear deviceinfo's negative cache, or every
+            # later call replays this error for the whole session.
             self._cached_deviceinfo_error = None
             return False
         self._cached_volume_v2 = apispec.supports_volume_v2(api_version, is_tv=True)
@@ -391,12 +380,9 @@ class Vizio:
         """
         Return the device's current raw volume (range depends on profile).
 
-        Reads the ``audio/volume`` **leaf**, never the ``audio``
-        collection — which is what makes this work on firmware that
-        omits ``volume`` from the collection listing (see
-        home-assistant/core#179254). Callers that build their own bulk
-        audio dict from :meth:`get_settings` must not assume ``volume``
-        is in it.
+        Never reads the ``audio`` collection, which on some firmware
+        omits ``volume`` entirely. Callers building their own dict from
+        :meth:`get_settings` must not assume ``volume`` is in it.
         """
         if await self.supports_volume_v2():
             try:
@@ -411,32 +397,15 @@ class Vizio:
         """
         Return the device's top volume value, for scaling a 0-1 fraction.
 
-        Prefers the device's own ``MAXIMUM`` from the static settings
-        tree and falls back to the profile constant when the device
-        doesn't expose the static leaf. Cached for the session — the
-        scale doesn't change at runtime.
+        Reads the device's own ``MAXIMUM`` from the static settings tree,
+        clamped to ``profile.max_volume`` and falling back to it when the
+        device doesn't expose the leaf. Cached for the session.
 
-        The profile constants are informed guesses (100 for TVs, 31 for
-        soundbars per pyvizio #125, 24 for Crave); this asks the device
-        instead. The captured VHD24M-0810 reports ``MINIMUM 0`` /
-        ``MAXIMUM 100``, agreeing with ``TV_PROFILE``.
-
-        **This can return a value :meth:`set_volume` rejects.** The two
-        read different sources: a soundbar whose static tree reports
-        ``MAXIMUM 100`` still has ``SOUNDBAR_PROFILE.max_volume == 31``,
-        so ``set_volume(await get_max_volume())`` would raise
-        :class:`VizioInvalidInputError`. Scale against whichever bound
-        you intend to write through, or clamp with
-        ``min(level, v.profile.max_volume)``.
-
-        Deliberately **not** wired into :meth:`set_volume`'s range check.
-        That check stays offline — a setter shouldn't hide a round trip
-        in its argument validation — and the profile constant is the
-        safer bound there: it is a clamp protecting against pyvizio #125
-        (volume=1 maxing out a soundbar), so widening it from a value the
-        device self-reports could reintroduce that bug. Use this accessor
-        when you need the real scale, e.g. to turn a 0-1 fraction into a
-        device level.
+        The clamp means the result is always a value :meth:`set_volume`
+        accepts, so ``set_volume(await get_max_volume())`` is safe.
+        :meth:`set_volume` validates against ``profile.max_volume``
+        directly rather than calling this, keeping its range check
+        offline.
         """
         if self._cached_max_volume is None:
             self._cached_max_volume = await self._resolve_max_volume()
@@ -446,18 +415,14 @@ class Vizio:
         """
         Static-tree lookup for the volume ceiling.
 
-        Returns ``None`` only when the device **couldn't answer**, so the
-        caller caches nothing and retries next time — a device asleep on
-        the first call would otherwise pin the fallback for the whole
-        session. A device that answers *without* a ``MAXIMUM`` is a real
-        answer and resolves to the profile bound, which does cache;
-        otherwise that whole device class would re-probe on every call.
+        ``None`` means the device **couldn't answer**, so the caller
+        caches nothing and retries. A device that answers *without* a
+        ``MAXIMUM`` resolves to the profile bound instead, which does
+        cache — returning ``None`` there would re-probe on every call.
 
-        Never exceeds ``profile.max_volume``, so the value is always one
-        :meth:`set_volume` accepts. The profile figure is a deliberate
-        clamp (pyvizio #125 — volume=1 maxing out a soundbar), and an
-        accessor that reported a number the setter rejects would just
-        move the reconciliation onto the caller.
+        Never exceeds ``profile.max_volume``: that figure is a safety
+        clamp, and widening it from a device-reported value could let a
+        caller write a level the device mishandles.
         """
         try:
             info = await self.get_setting("audio", "volume")
@@ -472,24 +437,16 @@ class Vizio:
         Set the absolute volume level.
 
         On volume-V2 firmware this is the flat ``PUT /audio/volume/level``
-        with body ``{"LEVEL": n}`` — a single round trip with **no
-        HASHVAL** dance (verified live on VHD24M-0810). Everywhere else
-        it falls back to the ``menu_native`` GET-then-PUT that
-        :meth:`set_setting` performs, which is exactly the official
-        app's V1 branch.
+        with body ``{"LEVEL": n}`` — one round trip, no HASHVAL.
+        Everywhere else it falls back to the ``menu_native``
+        GET-then-PUT that :meth:`set_setting` performs.
 
-        The gate matters because this endpoint is V2-family — Vizio's
-        own builder calls it ``setVolumeLevelCommandV2`` — and the app
-        only ever adds an HTTP volume rung for TVs, never for
-        soundbars/Crave. It is also **unexercised by the vendor**: zero
-        callers in app 5.0.0 and absent from 5.3.0 entirely. Our one
-        hardware verification is a TV that happens to be V2-capable, so
-        it says nothing about audio devices or older firmware; sending
-        it there would be a guess. See protocol-notes #31.
+        The gate is not an optimization: the flat endpoint is TV-only and
+        absent on older firmware, so sending it unconditionally would
+        break audio devices.
 
-        ``level`` is validated against the profile's ``max_volume``
-        before any request; out-of-range raises
-        :class:`VizioInvalidInputError`.
+        ``level`` is validated against ``profile.max_volume`` before any
+        request; out-of-range raises :class:`VizioInvalidInputError`.
         """
         max_volume = self._profile.max_volume
         if not 0 <= level <= max_volume:
@@ -502,10 +459,9 @@ class Vizio:
                 )
                 return
             except VizioNotFoundError:
-                # Version gate says V2 but this firmware has no such leaf.
-                # The gate is inferred from a decompile plus one hardware
-                # sample, so treat URI_NOT_FOUND as "gate was wrong here"
-                # and use the path that works on every device.
+                # Gate said V2 but this firmware lacks the leaf. Treat
+                # URI_NOT_FOUND as "gate was wrong here" and fall back to
+                # the path that works on every device.
                 pass
         await self.set_setting("audio", "volume", level)
 
@@ -516,16 +472,10 @@ class Vizio:
         Sends ``steps`` keypresses batched into a single PUT. Non-positive
         ``steps`` is a no-op.
 
-        There is deliberately no way to route this through the flat
-        ``PUT /audio/volume/increase`` endpoint. That endpoint exists and
-        works (verified on VHD24M-0810 — with ``{"STEP": n}`` in the
-        **body**, not the ``?STEP=n`` query the official app's generated
-        client shows, which silently moves by 1 whatever the value), but
-        it never beats this path: a keypress batch is already one request
-        for any step count up to :data:`_KEYLIST_CHUNK_SIZE`, keypresses
-        work on every device family regardless of firmware, and app 5.3.0
-        dropped the HTTP path entirely in favour of key commands. See
-        protocol-notes #31.
+        Deliberately does not use the flat ``PUT /audio/volume/increase``
+        endpoint even where it is available: a keypress batch is already
+        one request for any step count up to :data:`_KEYLIST_CHUNK_SIZE`
+        and works on every device family, so there is nothing to gain.
         """
         await self._send_repeated_key("VOL_UP", steps)
 
@@ -533,8 +483,8 @@ class Vizio:
         """
         Lower the volume by ``steps`` (default 1).
 
-        See :meth:`volume_up` — same single batched PUT, and the same
-        reason the flat V2 endpoint is not offered as an alternative.
+        See :meth:`volume_up` — same single batched PUT, same reason the
+        flat endpoint is not used.
         """
         await self._send_repeated_key("VOL_DOWN", steps)
 
@@ -556,10 +506,8 @@ class Vizio:
         On volume-V2 firmware this is a single
         ``PUT /audio/volume/mute`` carrying the desired state — one round
         trip instead of three, and **race-free**: the fallback below can
-        lose to someone pressing mute on the physical remote between our
-        read and our write. Hardware verified on VHD24M-0810 with the
-        panel on, including idempotency under repeat (see
-        protocol-notes #31).
+        lose to someone pressing mute on the physical remote between the
+        read and the write.
 
         Everywhere else it reads :meth:`is_muted` and sends
         ``MUTE_TOGGLE`` only on mismatch. The discrete
@@ -589,9 +537,7 @@ class Vizio:
         Prefers the V2 value-set (one round trip, race-free) and falls
         back to read-then-toggle, because the discrete
         ``MUTE_ON``/``MUTE_OFF`` key codes are unreliable (see
-        :meth:`mute`). Unlike :meth:`volume_up`, this is not opt-in: the
-        V2 path is strictly better here, whereas there the keypress is
-        already a single request.
+        :meth:`mute`).
         """
         if await self.supports_volume_v2():
             try:
@@ -602,9 +548,7 @@ class Vizio:
                 return
             except VizioNotFoundError:
                 # See set_volume: a qualifying API version does not
-                # guarantee the leaf exists. Falling back keeps this
-                # change strictly additive — mute worked on every device
-                # before, and must still.
+                # guarantee the leaf exists.
                 pass
         if await self.is_muted() is not muted:
             await self.send_key("MUTE_TOGGLE")

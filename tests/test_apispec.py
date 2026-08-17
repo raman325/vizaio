@@ -4,8 +4,7 @@ Vizio firmware advertises an ``API_VERSION`` string in the
 unauthenticated ``deviceinfo`` payload. The official Android app maps
 that string onto an ordered ladder of *minimum spec versions* and gates
 its newer flat volume endpoints on clearing a threshold — see
-``DeviceInfoAnalyzer.isVolumeAPIV2Supported()`` in the 5.0.0 decompile
-and ``docs/android-app-findings.md``.
+``docs/android-app-findings.md``.
 
 Two string shapes exist in the wild:
 
@@ -33,7 +32,7 @@ class TestApiSpecOrdering:
         [
             # V2-form strings from real devices.
             ("3.7.2-2621.0005", ApiSpec.V2_0_0_2031_0014),  # issue #179254 TV
-            ("3.3.3-2538.0001", ApiSpec.V2_0_0_2031_0014),  # captured VHD24M-0810
+            ("3.3.3-2538.0001", ApiSpec.V2_0_0_2031_0014),  # our captured fixture
             ("2.0.0-2031.0014", ApiSpec.V2_0_0_2031_0014),  # exactly the threshold
             ("2.0.0-2031.0013", ApiSpec.V2_0_0_2000_0000),  # one below it
             ("2.0.0-2000.0000", ApiSpec.V2_0_0_2000_0000),
