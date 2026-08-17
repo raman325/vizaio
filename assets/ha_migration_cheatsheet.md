@@ -52,7 +52,7 @@ They were only used during pairing and are now passed at the right time.
 | `await v.mute_on()` | `await v.mute()` | |
 | `await v.mute_off()` | `await v.unmute()` | |
 | `await v.mute_toggle()` | *removed* | Compose: `(unmute if await v.is_muted() else mute)()` |
-| `v.get_max_volume()` | `v.profile.max_volume` | Property on the device profile |
+| `v.get_max_volume()` | `await v.get_max_volume()` | Now a real coroutine: asks the device's static tree, clamped to `profile.max_volume` so the result is always settable. `v.profile.max_volume` remains the offline constant `set_volume()` validates against. |
 
 ## Channel / media
 

@@ -765,7 +765,7 @@ network call at all.
 **There is no knob for any of this** — the library picks the path.
 `set_volume()`, `mute()` and `unmute()` use the flat endpoints automatically
 when the gate opens, because both are hardware-verified here and each is a clear
-win (1 round trip vs 2 and 3 respectively, and mute becomes race-free).
+win (1 round trip vs 3 for each, and mute becomes race-free).
 
 `volume_up()`/`volume_down()` always send keypresses, gate or no gate. A
 keypress batch is already a single `PUT` for any realistic step count, it works

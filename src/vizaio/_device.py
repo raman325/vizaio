@@ -81,6 +81,8 @@ from .parse import (
     parse_system_info,
     parse_system_versions,
     parse_vizios_binary,
+    parse_volume_level,
+    parse_volume_mute,
 )
 from .types import (
     AppAvailability,
@@ -234,6 +236,12 @@ class Vizio:
         # up yet"; the profile's ``max_volume`` is the fallback when the
         # device doesn't expose the static leaf.
         self._cached_max_volume: int | None = None
+        # Volume-V2 capability, resolved from deviceinfo on first use.
+        # ``None`` means "not known yet" — a probe that *failed* leaves it
+        # None so the next call retries, because ``_get_deviceinfo``
+        # negative-caches for the session and would otherwise strand a
+        # briefly-unreachable device on the legacy paths permanently.
+        self._cached_volume_v2: bool | None = None
         self._closed = False
 
     # ------------------------------------------------------------------
@@ -365,11 +373,19 @@ class Vizio:
         # excluded no matter what version it reports.
         if self._profile.settings_root is SettingsRoot.AUDIO:
             return False
+        if self._cached_volume_v2 is not None:
+            return self._cached_volume_v2
         try:
             api_version = await self.get_api_version()
         except VizioError:
+            # Don't cache: this is "we couldn't ask", not "the device
+            # said no". Clear the session-wide deviceinfo negative cache
+            # so the next call genuinely re-probes rather than replaying
+            # the stored error forever.
+            self._cached_deviceinfo_error = None
             return False
-        return apispec.supports_volume_v2(api_version, is_tv=True)
+        self._cached_volume_v2 = apispec.supports_volume_v2(api_version, is_tv=True)
+        return self._cached_volume_v2
 
     async def get_volume(self) -> int:
         """
@@ -382,6 +398,12 @@ class Vizio:
         audio dict from :meth:`get_settings` must not assume ``volume``
         is in it.
         """
+        if await self.supports_volume_v2():
+            try:
+                response = await self._request(Endpoint.VOLUME_LEVEL_STATUS)
+                return parse_volume_level(response)
+            except VizioNotFoundError:
+                pass
         info = await self.get_setting("audio", "volume")
         return int(info.value)
 
@@ -418,26 +440,32 @@ class Vizio:
         """
         if self._cached_max_volume is None:
             self._cached_max_volume = await self._resolve_max_volume()
-        return (
-            self._cached_max_volume
-            if self._cached_max_volume is not None
-            else self._profile.max_volume
-        )
+        return self._cached_max_volume or self._profile.max_volume
 
     async def _resolve_max_volume(self) -> int | None:
         """
         Static-tree lookup for the volume ceiling.
 
-        Returns ``None`` when the device couldn't answer, so the caller
-        caches nothing and retries next time. A device asleep or briefly
-        unreachable on the first call would otherwise pin the profile
-        fallback for the whole session with no way to re-resolve.
+        Returns ``None`` only when the device **couldn't answer**, so the
+        caller caches nothing and retries next time — a device asleep on
+        the first call would otherwise pin the fallback for the whole
+        session. A device that answers *without* a ``MAXIMUM`` is a real
+        answer and resolves to the profile bound, which does cache;
+        otherwise that whole device class would re-probe on every call.
+
+        Never exceeds ``profile.max_volume``, so the value is always one
+        :meth:`set_volume` accepts. The profile figure is a deliberate
+        clamp (pyvizio #125 — volume=1 maxing out a soundbar), and an
+        accessor that reported a number the setter rejects would just
+        move the reconciliation onto the caller.
         """
         try:
             info = await self.get_setting("audio", "volume")
         except VizioError:
             return None
-        return info.max
+        if info.max is None:
+            return self._profile.max_volume
+        return min(info.max, self._profile.max_volume)
 
     async def set_volume(self, level: int) -> None:
         """
@@ -512,6 +540,12 @@ class Vizio:
 
     async def is_muted(self) -> bool:
         """Return ``True`` if the device's mute setting is on."""
+        if await self.supports_volume_v2():
+            try:
+                response = await self._request(Endpoint.VOLUME_MUTE_STATUS)
+                return parse_volume_mute(response)
+            except VizioNotFoundError:
+                pass
         info = await self.get_setting("audio", "mute")
         return str(info.value).lower() == "on"
 

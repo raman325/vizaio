@@ -1030,12 +1030,13 @@ Three things worth keeping:
    The endpoint also type-checks its body: a non-boolean `MUTE` returns
    `TYPE_ERROR`, and `{"VALUE": …}` returns `INVALID_PARAMETER`.
 
-**Not adopted despite working:** the flat reads stay out of
-`get_volume()` / `is_muted()`. They are a genuine round-trip win and now
-have verified shapes, but they are V2-gated and vendor-abandoned, while
-the `menu_native` leaf read works on every device and is already immune
-to #30. Revisit if polling cost becomes a real constraint for a consumer
-like Home Assistant.
+**Reads follow the same gate as writes.** `get_volume()` and
+`is_muted()` use the flat endpoints on V2 firmware and the `menu_native`
+leaf everywhere else, falling back on `URI_NOT_FOUND`. Two reasons: a
+device should not be written on one surface and read from another, and
+the flat reads are one request against the leaf's two (value + static
+options), which halves a polling consumer's cost. The two surfaces agreed
+on every reading taken during hardware verification.
 
 ---
 

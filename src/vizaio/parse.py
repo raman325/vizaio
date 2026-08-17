@@ -389,6 +389,57 @@ def parse_vizios_binary(response: Response) -> str:
     return str(vizios) if vizios else ""
 
 
+def parse_volume_level(response: Response) -> int:
+    """
+    Extract the level from a flat ``GET /audio/volume/level`` response.
+
+    That endpoint answers with a **singular** ``ITEM`` of type
+    ``T_JSON_OBJECT_V1`` whose ``VALUE`` carries both ``LEVEL`` and
+    ``MUTE`` — and no ``HASHVAL``. :meth:`Response.from_json` folds the
+    singular item into ``items`` and lowercases the value keys.
+
+    Shape captured live from VHD24M-0810; the APK's generated model gave
+    only ``Object``-typed fields, so this is the ground truth. See
+    ``tests/captured/audio_volume_level.json``.
+    """
+    value = _flat_volume_value(response)
+    level = value.get("level")
+    if not isinstance(level, int):
+        raise VizioResponseError(
+            f"volume level has unexpected shape: {type(level).__name__}"
+        )
+    return level
+
+
+def parse_volume_mute(response: Response) -> bool:
+    """
+    Extract mute state from a flat ``GET /audio/volume/mute`` response.
+
+    A singular ``ITEM`` of type ``T_BOOLEAN_V1`` whose ``VALUE`` is the
+    bare boolean. See ``tests/captured/audio_volume_mute.json``.
+    """
+    if not response.items:
+        raise VizioResponseError("volume mute response has no item")
+    value = response.items[0].value
+    if not isinstance(value, bool):
+        raise VizioResponseError(
+            f"volume mute has unexpected shape: {type(value).__name__}"
+        )
+    return value
+
+
+def _flat_volume_value(response: Response) -> Mapping[str, Any]:
+    """Return the ``ITEM.VALUE`` mapping of a flat volume response."""
+    if not response.items:
+        raise VizioResponseError("flat volume response has no item")
+    value = response.items[0].value
+    if not isinstance(value, Mapping):
+        raise VizioResponseError(
+            f"flat volume VALUE has unexpected shape: {type(value).__name__}"
+        )
+    return value
+
+
 def parse_api_version(response: Response) -> str:
     """
     Extract ``API_VERSION`` from a deviceinfo response.

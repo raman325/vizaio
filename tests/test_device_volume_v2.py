@@ -401,8 +401,11 @@ class TestV2FallbackOnUnsupportedEndpoint:
 
         mock_client.side_effect = [
             _captured("device_info.json"),
-            VizioNotFoundError("no such uri"),
-            # fallback: is_muted (value + static options), then the toggle
+            VizioNotFoundError("no such uri"),  # flat mute PUT absent
+            # Fallback is read-then-toggle. The read is gated the same
+            # way, so on a device missing the flat family it also probes
+            # and falls through to the leaf.
+            VizioNotFoundError("no such uri"),  # flat mute GET absent
             _resp(make_success_response(items=[make_item("mute", "Off")])),
             _resp(make_success_response(items=[make_item("mute", "Off")])),
             _resp(make_success_response(items=[])),
@@ -485,4 +488,162 @@ class TestMaxVolumeFailureIsNotCached:
         await vizio_tv.get_max_volume()
         calls = len(mock_client.call_args_list)
         await vizio_tv.get_max_volume()
+        assert len(mock_client.call_args_list) == calls
+
+
+class TestCapabilityProbeRecoversFromTransientFailure:
+    """A capability answer must be cached when *known*, retried when not.
+
+    ``_get_deviceinfo`` negative-caches and re-raises for the session, so
+    a V2 TV that was asleep or briefly unreachable on the very first
+    probe would otherwise be pinned to the legacy paths for the entire
+    life of the ``Vizio`` object — in Home Assistant, the life of the
+    config entry — silently losing the race-free mute this gate exists to
+    deliver. ``_resolve_max_volume`` already refuses to cache a failure
+    for exactly this reason; the capability probe must match.
+    """
+
+    async def test_transient_failure_is_retried(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        from vizaio import VizioConnectionError
+
+        mock_client.side_effect = [
+            VizioConnectionError("asleep"),
+            _captured("device_info.json"),
+        ]
+        assert await vizio_tv.supports_volume_v2() is False  # degraded
+        assert await vizio_tv.supports_volume_v2() is True  # recovered
+
+    async def test_known_answer_is_cached(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.return_value = _captured("device_info.json")
+        assert await vizio_tv.supports_volume_v2() is True
+        calls = len(mock_client.call_args_list)
+        assert await vizio_tv.supports_volume_v2() is True
+        assert len(mock_client.call_args_list) == calls
+
+
+class TestReadsUseTheSameSurfaceAsWrites:
+    """Reads follow the gate too, so a V2 device isn't written on one
+    surface and read from another.
+
+    Also halves the poll cost: the menu_native leaf reads are two GETs
+    each (value + static options), the flat reads are one and carry no
+    HASHVAL. Shapes hardware-verified — see
+    ``tests/captured/audio_volume_{level,mute}.json``.
+    """
+
+    async def test_v2_volume_read_uses_the_flat_endpoint(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            _captured("audio_volume_level.json"),
+        ]
+        assert await vizio_tv.get_volume() == 9
+        assert _paths(mock_client)[-1] == ("/audio/volume/level",)
+
+    async def test_v2_mute_read_uses_the_flat_endpoint(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            _captured("audio_volume_mute.json"),
+        ]
+        assert await vizio_tv.is_muted() is False
+        assert _paths(mock_client)[-1] == ("/audio/volume/mute",)
+
+    async def test_v2_read_is_one_request(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """The menu_native path costs two (value + static options)."""
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            _captured("audio_volume_level.json"),
+            _captured("audio_volume_level.json"),
+        ]
+        await vizio_tv.get_volume()
+        before = len(mock_client.call_args_list)
+        await vizio_tv.get_volume()
+        assert len(mock_client.call_args_list) == before + 1
+
+    async def test_falls_back_to_the_leaf_when_flat_is_missing(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        from vizaio import VizioNotFoundError
+
+        mock_client.side_effect = [
+            _captured("device_info.json"),
+            VizioNotFoundError("no such uri"),
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+        ]
+        assert await vizio_tv.get_volume() == 23
+        assert _paths(mock_client)[-1] == ("/menu_native/static/tv_settings",)
+
+    async def test_legacy_firmware_reads_the_leaf(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _deviceinfo_with_api_version("1.0.13.25"),
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+        ]
+        assert await vizio_tv.get_volume() == 23
+        assert ("/audio/volume/level",) not in _paths(mock_client)
+
+    async def test_soundbar_reads_the_leaf_without_probing(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+        ]
+        assert await vizio_soundbar.get_volume() == 23
+        assert ("/state/device/deviceinfo",) not in _paths(mock_client)
+
+
+class TestMaxVolumeAgreesWithSetVolume:
+    """``get_max_volume()`` must never return a value ``set_volume()``
+    rejects — otherwise the obvious ``set_volume(await get_max_volume())``
+    raises, and reconciling the two numbers becomes the caller's job."""
+
+    async def test_never_exceeds_the_write_bound(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Soundbar static tree says 100; the profile clamps writes at 31
+        (pyvizio #125). The accessor must report the bound that writes
+        actually honour."""
+        mock_client.side_effect = [
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+        ]
+        assert await vizio_soundbar.get_max_volume() == 31
+
+    async def test_reported_max_is_always_settable(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            _captured("settings_audio_volume.json"),
+            _captured("static_audio.json"),
+            _captured("device_info.json"),
+            _resp(make_success_response(items=[])),
+        ]
+        await vizio_tv.set_volume(await vizio_tv.get_max_volume())
+
+
+class TestMaxVolumeCachesAnAnsweredNoBound:
+    async def test_device_without_static_bound_is_not_reprobed(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """ "Device answered, has no MAXIMUM" is a real answer and must
+        cache; only "device didn't answer" should retry. Otherwise this
+        device class pays two GETs on every single call, forever."""
+        no_bound = _resp(make_success_response(items=[make_item("volume", 9)]))
+        mock_client.side_effect = [no_bound, no_bound]
+        assert await vizio_tv.get_max_volume() == 100  # profile fallback
+        calls = len(mock_client.call_args_list)
+        assert await vizio_tv.get_max_volume() == 100
         assert len(mock_client.call_args_list) == calls

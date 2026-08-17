@@ -37,8 +37,11 @@ exact risk this gate exists to avoid:
 - A V2-form version that is *prefixed* or has a multi-digit component
   (``FW_3.7.2-2621.0005``, ``3.10.2-2621.0005``) fails the V2 pattern and
   falls to the legacy branch, resolving *below* its true rung. The app
-  does the same — it applies its regex to the whole trimmed string, and
-  its pattern is likewise single-digit per component.
+  does the same: ``DeviceInfoAnalyzer`` calls
+  ``getV2_PATTERN_REGEX().matches(str)`` on the whole trimmed string, and
+  Kotlin's ``Regex.matches`` requires the **entire** input to match (it
+  is not ``containsMatchIn``) — hence ``fullmatch`` here. Its pattern is
+  likewise single-digit per component.
 - :meth:`ApiSpec._resolve_v2` floors at :attr:`ApiSpec.V2_0_0_2000_0000`
   even for a string below it, so a hypothetical ``1.0.0-0000.0000``
   outranks :attr:`ApiSpec.V1_0_13_25`. Mirrors ``computeSpecVersionV2``'s
