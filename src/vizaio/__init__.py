@@ -6,6 +6,7 @@ from importlib.metadata import PackageNotFoundError, version as _pkg_version
 
 from ._device import PairSession, Vizio
 from ._keys import RemoteKey
+from .apispec import ApiSpec
 from .apps import (
     fetch_app_availability,
     fetch_app_catalog,
@@ -73,6 +74,7 @@ __all__ = [
     "CRAVE_PRO_PROFILE",
     "SOUNDBAR_PROFILE",
     "TV_PROFILE",
+    "ApiSpec",
     "AppAvailability",
     "AppConfig",
     "AppRecord",

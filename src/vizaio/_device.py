@@ -33,7 +33,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Final, Self
 
-from . import _payloads
+from . import _payloads, apispec
 from .apps import (
     APP_HOME,
     BUNDLED_APPS,
@@ -52,6 +52,7 @@ from .apps import (
 from .client import SmartCastClient
 from .endpoints import (
     Endpoint,
+    SettingsRoot,
     resolve,
 )
 from .errors import (
@@ -64,6 +65,7 @@ from .errors import (
     VizioUnsupportedError,
 )
 from .parse import (
+    parse_api_version,
     parse_auth_token,
     parse_current_app_config,
     parse_current_input,
@@ -227,6 +229,11 @@ class Vizio:
         self._cached_deviceinfo: Response | None = None
         self._cached_deviceinfo_error: VizioError | None = None
         self._deviceinfo_lock = asyncio.Lock()
+        # Volume scale, resolved from the device's static settings tree on
+        # first use and cached for the session. ``None`` means "not looked
+        # up yet"; the profile's ``max_volume`` is the fallback when the
+        # device doesn't expose the static leaf.
+        self._cached_max_volume: int | None = None
         self._closed = False
 
     # ------------------------------------------------------------------
@@ -315,37 +322,168 @@ class Vizio:
     # Volume / mute
     # ------------------------------------------------------------------
 
+    async def get_api_version(self) -> str:
+        """
+        Return the device's protocol API version (e.g. ``"3.3.3-2538.0001"``).
+
+        Read from ``API_VERSION`` in the cached, unauthenticated
+        deviceinfo payload — no extra round trip once anything else has
+        touched deviceinfo. Distinct from
+        :meth:`get_firmware_version`, which is the *build* string
+        (``"3.720.9.1-1"``). This one identifies the SmartCast protocol
+        spec the firmware implements and is what capability gates key
+        off. Empty string when the device doesn't expose it.
+        """
+        return parse_api_version(await self._get_deviceinfo())
+
+    async def supports_volume_v2(self) -> bool:
+        """
+        Return whether the device speaks the flat ``/audio/volume/*`` API.
+
+        Mirrors the official app's gate exactly (see
+        :func:`vizaio.apispec.supports_volume_v2`): a TV whose
+        :meth:`get_api_version` is at least ``2.0.0-2031.0014``.
+
+        Degrades to ``False`` when deviceinfo can't be read. Guessing
+        ``False`` only costs the older code path, whereas guessing
+        ``True`` would send a device endpoints it may not implement.
+
+        Note this is **not** the ``CAPABILITIES."AUDIO_2.0_API"`` flag.
+        That flag exists on the wire but the official app never reads it,
+        and it does not predict whether ``volume`` appears in the
+        ``audio`` settings collection — a TV can advertise it and still
+        list ``volume`` there.
+        """
+        # Check the half of the gate the profile already answers before
+        # paying for a deviceinfo round trip: an audio-root device is
+        # excluded no matter what version it reports.
+        if self._profile.settings_root is SettingsRoot.AUDIO:
+            return False
+        try:
+            api_version = await self.get_api_version()
+        except VizioError:
+            return False
+        return apispec.supports_volume_v2(api_version, is_tv=True)
+
     async def get_volume(self) -> int:
-        """Return the device's current raw volume (range depends on profile)."""
+        """
+        Return the device's current raw volume (range depends on profile).
+
+        Reads the ``audio/volume`` **leaf**, never the ``audio``
+        collection — which is what makes this work on firmware that
+        omits ``volume`` from the collection listing (see
+        home-assistant/core#179254). Callers that build their own bulk
+        audio dict from :meth:`get_settings` must not assume ``volume``
+        is in it.
+        """
         info = await self.get_setting("audio", "volume")
         return int(info.value)
+
+    async def get_max_volume(self) -> int:
+        """
+        Return the device's top volume value, for scaling a 0-1 fraction.
+
+        Prefers the device's own ``MAXIMUM`` from the static settings
+        tree and falls back to the profile constant when the device
+        doesn't expose the static leaf. Cached for the session — the
+        scale doesn't change at runtime.
+
+        The profile constants are informed guesses (100 for TVs, 31 for
+        soundbars per pyvizio #125, 24 for Crave); this asks the device
+        instead. The captured VHD24M-0810 reports ``MINIMUM 0`` /
+        ``MAXIMUM 100``, agreeing with ``TV_PROFILE``.
+
+        Deliberately **not** wired into :meth:`set_volume`'s range check.
+        That check stays offline — a setter shouldn't hide a round trip
+        in its argument validation — and the profile constant is the
+        safer bound there: it is a clamp protecting against pyvizio #125
+        (volume=1 maxing out a soundbar), so widening it from a value the
+        device self-reports could reintroduce that bug. Use this accessor
+        when you need the real scale, e.g. to turn a 0-1 fraction into a
+        device level.
+        """
+        if self._cached_max_volume is None:
+            self._cached_max_volume = await self._resolve_max_volume()
+        return self._cached_max_volume
+
+    async def _resolve_max_volume(self) -> int:
+        """One-shot static-tree lookup for the volume ceiling."""
+        try:
+            info = await self.get_setting("audio", "volume")
+        except VizioError:
+            return self._profile.max_volume
+        return info.max if info.max is not None else self._profile.max_volume
 
     async def set_volume(self, level: int) -> None:
         """
         Set the absolute volume level.
 
-        Uses the flat ``PUT /audio/volume/level`` endpoint with body
-        ``{"LEVEL": n}`` — a single round trip with **no HASHVAL** dance
-        (verified live on VHD24M-0810), unlike the ``menu_native`` audio
-        path that ``set_setting`` would take. ``level`` is validated
-        against the profile's ``max_volume``; out-of-range raises
+        On volume-V2 firmware this is the flat ``PUT /audio/volume/level``
+        with body ``{"LEVEL": n}`` — a single round trip with **no
+        HASHVAL** dance (verified live on VHD24M-0810). Everywhere else
+        it falls back to the ``menu_native`` GET-then-PUT that
+        :meth:`set_setting` performs, which is exactly the official
+        app's V1 branch.
+
+        The gate matters because this endpoint is V2-family — Vizio's
+        own builder calls it ``setVolumeLevelCommandV2`` — and the app
+        only ever adds an HTTP volume rung for TVs, never for
+        soundbars/Crave. It is also **unexercised by the vendor**: zero
+        callers in app 5.0.0 and absent from 5.3.0 entirely. Our one
+        hardware verification is a TV that happens to be V2-capable, so
+        it says nothing about audio devices or older firmware; sending
+        it there would be a guess. See protocol-notes #31.
+
+        ``level`` is validated against the profile's ``max_volume``
+        before any request; out-of-range raises
         :class:`VizioInvalidInputError`.
         """
         max_volume = self._profile.max_volume
         if not 0 <= level <= max_volume:
             raise VizioInvalidInputError(f"volume {level} out of range 0-{max_volume}")
-        await self._client.request_spec(
-            resolve(Endpoint.VOLUME_LEVEL, self._profile),
-            body=_payloads.volume_level(level),
-        )
+        if await self.supports_volume_v2():
+            await self._client.request_spec(
+                resolve(Endpoint.VOLUME_LEVEL, self._profile),
+                body=_payloads.volume_level(level),
+            )
+            return
+        await self.set_setting("audio", "volume", level)
 
-    async def volume_up(self, steps: int = 1) -> None:
-        """Send ``steps`` volume-up keypresses in one PUT (default 1)."""
-        await self._send_repeated_key("VOL_UP", steps)
+    async def volume_up(self, steps: int = 1, *, use_v2: bool = False) -> None:
+        """
+        Raise the volume by ``steps`` (default 1).
 
-    async def volume_down(self, steps: int = 1) -> None:
-        """Send ``steps`` volume-down keypresses in one PUT (default 1)."""
-        await self._send_repeated_key("VOL_DOWN", steps)
+        Sends ``steps`` keypresses batched into a single PUT — the same
+        first choice the official app makes on every device, and already
+        one round trip regardless of ``steps``.
+
+        ``use_v2=True`` opts into ``PUT /audio/volume/increase`` with
+        body ``{"STEP": n}`` on firmware that supports it (see
+        :meth:`supports_volume_v2`); on firmware that doesn't, the
+        keypress path is used anyway. Not the default: the app treats it
+        as a fallback behind the key command in 5.0.0 and drops it
+        entirely in 5.3.0.
+        """
+        await self._relative_volume("VOL_UP", Endpoint.VOLUME_INCREASE, steps, use_v2)
+
+    async def volume_down(self, steps: int = 1, *, use_v2: bool = False) -> None:
+        """
+        Lower the volume by ``steps`` (default 1).
+
+        See :meth:`volume_up` for the ``use_v2`` trade-off.
+        """
+        await self._relative_volume("VOL_DOWN", Endpoint.VOLUME_DECREASE, steps, use_v2)
+
+    async def _relative_volume(
+        self, key: str, endpoint: Endpoint, steps: int, use_v2: bool
+    ) -> None:
+        """Dispatch a relative volume change down the keypress or V2 path."""
+        if use_v2 and await self.supports_volume_v2():
+            await self._client.request_spec(
+                resolve(endpoint, self._profile), body=_payloads.volume_step(steps)
+            )
+            return
+        await self._send_repeated_key(key, steps)
 
     async def is_muted(self) -> bool:
         """Return ``True`` if the device's mute setting is on."""
@@ -354,10 +492,19 @@ class Vizio:
 
     async def mute(self) -> None:
         """
-        Mute the device. Idempotent — no-op if already muted.
+        Mute the device. Idempotent.
 
-        Implementation reads :meth:`is_muted` and sends ``MUTE_TOGGLE``
-        only on mismatch. The discrete ``MUTE_ON``/``MUTE_OFF`` codes
+        On volume-V2 firmware this is a single
+        ``PUT /audio/volume/mute`` carrying the desired state — one round
+        trip instead of three, and **race-free**: the fallback below can
+        lose to someone pressing mute on the physical remote between our
+        read and our write. Hardware verified on VHD24M-0810 with the
+        panel on, including idempotency under repeat (see
+        protocol-notes #31).
+
+        Everywhere else it reads :meth:`is_muted` and sends
+        ``MUTE_TOGGLE`` only on mismatch. The discrete
+        ``MUTE_ON``/``MUTE_OFF`` codes
         are firmware-class-specific (verified on VHD24M-0810 fw
         3.720.9.1-1: codeset 5 codes 2/3/4 all behave as toggles, codes
         5/6 return FAILURE). Soundbars and Crave speakers may have
@@ -365,17 +512,35 @@ class Vizio:
         reliable behavior. Power users wanting raw codes can call
         ``send_key("MUTE_ON")`` directly.
         """
-        if not await self.is_muted():
-            await self.send_key("MUTE_TOGGLE")
+        await self._set_muted(True)
 
     async def unmute(self) -> None:
         """
-        Unmute the device. Idempotent — no-op if already unmuted.
+        Unmute the device. Idempotent.
 
-        See :meth:`mute` for the rationale on the read-then-toggle
-        pattern.
+        See :meth:`mute` — same value-set on volume-V2 firmware, same
+        read-then-toggle fallback elsewhere.
         """
-        if await self.is_muted():
+        await self._set_muted(False)
+
+    async def _set_muted(self, muted: bool) -> None:
+        """
+        Drive mute to ``muted``, idempotently.
+
+        Prefers the V2 value-set (one round trip, race-free) and falls
+        back to read-then-toggle, because the discrete
+        ``MUTE_ON``/``MUTE_OFF`` key codes are unreliable (see
+        :meth:`mute`). Unlike :meth:`volume_up`, this is not opt-in: the
+        V2 path is strictly better here, whereas there the keypress is
+        already a single request.
+        """
+        if await self.supports_volume_v2():
+            await self._client.request_spec(
+                resolve(Endpoint.VOLUME_MUTE_SET, self._profile),
+                body=_payloads.volume_mute(muted),
+            )
+            return
+        if await self.is_muted() is not muted:
             await self.send_key("MUTE_TOGGLE")
 
     async def mute_toggle(self) -> None:

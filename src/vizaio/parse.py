@@ -389,6 +389,21 @@ def parse_vizios_binary(response: Response) -> str:
     return str(vizios) if vizios else ""
 
 
+def parse_api_version(response: Response) -> str:
+    """
+    Extract ``API_VERSION`` from a deviceinfo response.
+
+    A top-level field of the deviceinfo ``VALUE`` block (sibling of
+    ``CAPABILITIES`` / ``SYSTEM_INFO``), not part of ``SYSTEM_INFO``.
+    Distinct from :func:`parse_firmware_version`: this is the *protocol*
+    spec the firmware implements (e.g. ``"3.3.3-2538.0001"``), which is
+    what :mod:`vizaio.apispec` gates capabilities on. Empty string when
+    absent — older firmware may not expose it.
+    """
+    version = _deviceinfo_value(response).get("api_version")
+    return str(version) if version else ""
+
+
 def parse_system_info(response: Response) -> dict[str, Any]:
     """
     Extract the ``SYSTEM_INFO`` block from a deviceinfo response.

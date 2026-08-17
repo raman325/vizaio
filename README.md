@@ -720,17 +720,66 @@ await v.volume_up(steps=3)  # send 3 KEYPRESSes in one PUT
 await v.volume_down(steps=1)
 
 muted: bool = await v.is_muted()
-await v.mute()  # idempotent: reads state, sends toggle on mismatch
-await v.unmute()  # idempotent: same pattern
+await v.mute()  # idempotent
+await v.unmute()  # idempotent
 await v.mute_toggle()  # one round trip: press MUTE_TOGGLE blindly
 ```
 
-`mute()` and `unmute()` are idempotent at the cost of an extra read. `mute_toggle()`
-is half the round trips and matches the device's actual remote-button semantics.
+`mute()` and `unmute()` are idempotent. On volume-V2 firmware (below) they
+send the desired state in a single `PUT` — which is also **race-free**.
+Elsewhere they read the current state and send `MUTE_TOGGLE` only on mismatch,
+which can lose to someone pressing mute on the physical remote in between.
+`mute_toggle()` is always one round trip and matches the remote button.
 
-`get_volume()` returns the device's raw value. The volume scale **differs by
-device family** — see [Device-type quirks](#device-type-quirks). Divide by
-`v.profile.max_volume` for a 0–1 range.
+`get_volume()` returns the device's raw value, read from the `audio/volume`
+**leaf** — never the `audio` collection, which on some firmware omits
+`volume` entirely (see below). The volume scale **differs by device family**
+— see [Device-type quirks](#device-type-quirks):
+
+```python
+max_volume: int = await v.get_max_volume()  # asks the device, cached
+fraction = await v.get_volume() / max_volume
+```
+
+`get_max_volume()` reads `MAXIMUM` from the device's static settings tree and
+falls back to `v.profile.max_volume` when the device doesn't expose it.
+`set_volume()`'s range check deliberately stays on the profile constant so a
+setter never hides a round trip in argument validation.
+
+#### Volume API V2
+
+Newer TV firmware adds a flat `/audio/volume/*` family. `vizaio` detects it
+the same way the official app does — from the device's `API_VERSION`, not
+from any capability flag:
+
+```python
+await v.get_api_version()  # e.g. "3.3.3-2538.0001" (protocol spec, not firmware build)
+await v.supports_volume_v2()  # True on a TV at >= 2.0.0-2031.0014
+
+await v.volume_up(3, use_v2=True)  # PUT /audio/volume/increase, body {"STEP": 3}
+```
+
+Both detectors are cheap: they read the deviceinfo payload the client already
+caches, and an audio-root profile (soundbar, Crave) answers `False` with no
+network call at all.
+
+`set_volume()`, `mute()` and `unmute()` use this family automatically when the
+gate opens — both endpoints are hardware-verified here, and each is a clear
+win (1 round trip vs 2 and 3 respectively, and mute becomes race-free).
+
+`volume_up()`/`volume_down()` are the exception: they stay on keypresses unless
+you pass `use_v2=True`. `vizaio` already batches N steps into a single `PUT`, so
+the V2 endpoint wins nothing there — and Vizio's own app dropped this whole
+family between 5.0.0 (Mar 2026) and 5.3.0 (Jul 2026), the newer build having no
+`/audio/volume/*` reference at all. Since nobody is regression-testing these
+against new firmware, they're only worth using where they measurably help.
+
+> **Heads-up for bulk readers.** Some firmware omits `volume` (and `mute`)
+> from `get_settings("audio")` while the individual leaves still work, and
+> there is no client-observable way to predict which. Don't index that dict
+> for volume — use `get_volume()` / `is_muted()`. This is the root cause of
+> [home-assistant/core#179254](https://github.com/home-assistant/core/issues/179254);
+> see protocol-notes #30 and #31.
 
 ### Input switching
 

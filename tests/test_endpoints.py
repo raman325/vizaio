@@ -258,3 +258,38 @@ def _resolve(endpoint: Endpoint, dtype: DeviceType) -> EndpointSpec:
     from vizaio.endpoints import resolve
 
     return resolve(endpoint, dtype.profile)
+
+
+class TestResolveVolumeV2:
+    """The flat ``/audio/volume/*`` family — protocol surface used by the
+    official app when ``supports_volume_v2()`` is true.
+
+    All five are top-level paths (no ``{root}`` templating) and all
+    require auth, matching ``V2SCPApi``'s generated request configs in
+    the 5.0.0 decompile.
+    """
+
+    @pytest.mark.parametrize(
+        ("endpoint", "method", "path"),
+        [
+            (Endpoint.VOLUME_LEVEL, "PUT", "/audio/volume/level"),
+            (Endpoint.VOLUME_LEVEL_STATUS, "GET", "/audio/volume/level"),
+            (Endpoint.VOLUME_MUTE_STATUS, "GET", "/audio/volume/mute"),
+            (Endpoint.VOLUME_MUTE_SET, "PUT", "/audio/volume/mute"),
+            (Endpoint.VOLUME_INCREASE, "PUT", "/audio/volume/increase"),
+            (Endpoint.VOLUME_DECREASE, "PUT", "/audio/volume/decrease"),
+        ],
+    )
+    def test_paths_and_methods(
+        self, endpoint: Endpoint, method: str, path: str
+    ) -> None:
+        spec = _resolve(endpoint, DeviceType.TV)
+        assert spec.method == method
+        assert spec.paths == (path,)
+        assert spec.auth is AuthRequirement.REQUIRED
+
+    def test_step_is_supplied_by_caller_not_the_table(self) -> None:
+        """``increase``/``decrease`` take ``?STEP=n`` as a path suffix, so
+        the table holds the bare path and callers append the query."""
+        spec = _resolve(Endpoint.VOLUME_INCREASE, DeviceType.TV)
+        assert "STEP" not in spec.paths[0]

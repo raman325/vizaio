@@ -76,6 +76,17 @@ class Endpoint(StrEnum):
     CURRENT_INPUT = "current_input"
     VOLUME_LEVEL = "volume_level"
 
+    # Flat volume family ("volume API V2"). Available only on firmware
+    # whose API spec clears ``ApiSpec.V2_0_0_2031_0014`` — see
+    # :func:`vizaio.apispec.supports_volume_v2`. Resolving these does not
+    # check that threshold (the profile has no way to know it without a
+    # deviceinfo round trip); ``Vizio`` gates the call sites instead.
+    VOLUME_LEVEL_STATUS = "volume_level_status"
+    VOLUME_MUTE_STATUS = "volume_mute_status"
+    VOLUME_MUTE_SET = "volume_mute_set"
+    VOLUME_INCREASE = "volume_increase"
+    VOLUME_DECREASE = "volume_decrease"
+
     # Apps (TV only)
     CURRENT_APP = "current_app"
     LAUNCH_APP = "launch_app"
@@ -238,6 +249,17 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     # Flat absolute-volume set — no HASHVAL required (verified live on
     # VHD24M-0810), unlike the menu_native audio/volume path.
     Endpoint.VOLUME_LEVEL: row("PUT", "/audio/volume/level", auth=REQ),
+    # The rest of the flat volume family, present on volume-V2 firmware.
+    # Reads here need no HASHVAL and are unaffected by whether ``volume``
+    # appears in the ``audio`` settings *collection* — see
+    # home-assistant/core#179254.
+    Endpoint.VOLUME_LEVEL_STATUS: row("GET", "/audio/volume/level", auth=REQ),
+    Endpoint.VOLUME_MUTE_STATUS: row("GET", "/audio/volume/mute", auth=REQ),
+    Endpoint.VOLUME_MUTE_SET: row("PUT", "/audio/volume/mute", auth=REQ),
+    # Relative steps. Callers append ``?STEP=n`` as a path suffix; the
+    # app sends the step count rather than repeating a keypress N times.
+    Endpoint.VOLUME_INCREASE: row("PUT", "/audio/volume/increase", auth=REQ),
+    Endpoint.VOLUME_DECREASE: row("PUT", "/audio/volume/decrease", auth=REQ),
     Endpoint.LAUNCH_APP: row("PUT", "/app/launch", auth=REQ, needs=Need.APPS),
     Endpoint.CURRENT_APP: row("GET", "/app/current", auth=REQ, needs=Need.APPS),
     # Inputs ——————————————————————————————————————————————————————————

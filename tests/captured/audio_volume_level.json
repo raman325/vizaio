@@ -1,0 +1,14 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEM": {
+    "TYPE": "T_JSON_OBJECT_V1",
+    "VALUE": {
+      "LEVEL": 9,
+      "MUTE": false
+    }
+  },
+  "URI": "/audio/volume/level"
+}

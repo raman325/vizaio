@@ -44,6 +44,31 @@ def volume_level(level: int) -> dict[str, Any]:
     return {"LEVEL": level}
 
 
+def volume_step(step: int) -> dict[str, Any]:
+    """
+    Body for ``PUT /audio/volume/{increase,decrease}``.
+
+    The step count goes in the **body**, despite the official app's
+    generated client using a ``?STEP={STEP}`` query string. Verified on
+    VHD24M-0810: the query form returns ``SUCCESS`` and moves the volume
+    by exactly 1 whatever the value, while ``{"STEP": n}`` applies the
+    requested delta. An empty body or no body also yields 1. Sending the
+    query form would be a silent wrong-by-one — worse than an error.
+    """
+    return {"STEP": step}
+
+
+def volume_mute(muted: bool) -> dict[str, Any]:
+    """
+    Body for the flat ``PUT /audio/volume/mute`` — no HASHVAL needed.
+
+    Takes the desired state rather than toggling, so the call is
+    idempotent without a preceding read. Mirrors ``VolumeMuteBody`` in
+    the official app (a lone boolean ``MUTE`` field).
+    """
+    return {"MUTE": muted}
+
+
 def key_press(codes: Sequence[KeyCode]) -> dict[str, Any]:
     """
     Build a KEYLIST PUT body. ``ACTION`` is always ``KEYPRESS``.
