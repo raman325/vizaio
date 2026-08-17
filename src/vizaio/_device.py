@@ -481,48 +481,34 @@ class Vizio:
                 pass
         await self.set_setting("audio", "volume", level)
 
-    async def volume_up(self, steps: int = 1, *, use_v2: bool = False) -> None:
+    async def volume_up(self, steps: int = 1) -> None:
         """
         Raise the volume by ``steps`` (default 1).
 
-        Sends ``steps`` keypresses batched into a single PUT — the same
-        first choice the official app makes on every device, and already
-        one round trip regardless of ``steps``.
+        Sends ``steps`` keypresses batched into a single PUT. Non-positive
+        ``steps`` is a no-op.
 
-        ``use_v2=True`` opts into ``PUT /audio/volume/increase`` with
-        body ``{"STEP": n}`` on firmware that supports it (see
-        :meth:`supports_volume_v2`); on firmware that doesn't, the
-        keypress path is used anyway. Not the default: the app treats it
-        as a fallback behind the key command in 5.0.0 and drops it
-        entirely in 5.3.0.
+        There is deliberately no way to route this through the flat
+        ``PUT /audio/volume/increase`` endpoint. That endpoint exists and
+        works (verified on VHD24M-0810 — with ``{"STEP": n}`` in the
+        **body**, not the ``?STEP=n`` query the official app's generated
+        client shows, which silently moves by 1 whatever the value), but
+        it never beats this path: a keypress batch is already one request
+        for any step count up to :data:`_KEYLIST_CHUNK_SIZE`, keypresses
+        work on every device family regardless of firmware, and app 5.3.0
+        dropped the HTTP path entirely in favour of key commands. See
+        protocol-notes #31.
         """
-        await self._relative_volume("VOL_UP", Endpoint.VOLUME_INCREASE, steps, use_v2)
+        await self._send_repeated_key("VOL_UP", steps)
 
-    async def volume_down(self, steps: int = 1, *, use_v2: bool = False) -> None:
+    async def volume_down(self, steps: int = 1) -> None:
         """
         Lower the volume by ``steps`` (default 1).
 
-        See :meth:`volume_up` for the ``use_v2`` trade-off.
+        See :meth:`volume_up` — same single batched PUT, and the same
+        reason the flat V2 endpoint is not offered as an alternative.
         """
-        await self._relative_volume("VOL_DOWN", Endpoint.VOLUME_DECREASE, steps, use_v2)
-
-    async def _relative_volume(
-        self, key: str, endpoint: Endpoint, steps: int, use_v2: bool
-    ) -> None:
-        """Dispatch a relative volume change down the keypress or V2 path."""
-        # Guard before the capability probe: ``_send_repeated_key`` returns
-        # early below 1, and the V2 endpoint must match. A literal
-        # ``{"STEP": 0}`` moves the volume by 1 on real firmware (an empty
-        # or absent body means 1), and a negative step would ask
-        # ``increase`` to go down.
-        if steps < 1:
-            return
-        if use_v2 and await self.supports_volume_v2():
-            await self._client.request_spec(
-                resolve(endpoint, self._profile), body=_payloads.volume_step(steps)
-            )
-            return
-        await self._send_repeated_key(key, steps)
+        await self._send_repeated_key("VOL_DOWN", steps)
 
     async def is_muted(self) -> bool:
         """Return ``True`` if the device's mute setting is on."""

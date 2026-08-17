@@ -756,23 +756,26 @@ from any capability flag:
 await v.get_api_version()  # e.g. "3.3.3-2538.0001" (protocol spec, not firmware build)
 await v.supports_volume_v2()  # True on a TV at >= 2.0.0-2031.0014
 
-await v.volume_up(3, use_v2=True)  # PUT /audio/volume/increase, body {"STEP": 3}
 ```
 
 Both detectors are cheap: they read the deviceinfo payload the client already
 caches, and an audio-root profile (soundbar, Crave) answers `False` with no
 network call at all.
 
-`set_volume()`, `mute()` and `unmute()` use this family automatically when the
-gate opens — both endpoints are hardware-verified here, and each is a clear
+**There is no knob for any of this** — the library picks the path.
+`set_volume()`, `mute()` and `unmute()` use the flat endpoints automatically
+when the gate opens, because both are hardware-verified here and each is a clear
 win (1 round trip vs 2 and 3 respectively, and mute becomes race-free).
 
-`volume_up()`/`volume_down()` are the exception: they stay on keypresses unless
-you pass `use_v2=True`. `vizaio` already batches N steps into a single `PUT`, so
-the V2 endpoint wins nothing there — and Vizio's own app dropped this whole
-family between 5.0.0 (Mar 2026) and 5.3.0 (Jul 2026), the newer build having no
-`/audio/volume/*` reference at all. Since nobody is regression-testing these
-against new firmware, they're only worth using where they measurably help.
+`volume_up()`/`volume_down()` always send keypresses, gate or no gate. A
+keypress batch is already a single `PUT` for any realistic step count, it works
+on every device family, and it is the only path Vizio's own app kept — the 5.3.0
+build has no `/audio/volume/*` reference at all. So the flat `increase`/`decrease`
+endpoints would never be the better choice, and offering them as an option would
+just push a decision onto you that the library can already answer.
+
+`supports_volume_v2()` and `get_api_version()` are exposed for inspection and
+diagnostics, not because you need them to get the right behaviour.
 
 > **Heads-up for bulk readers.** Some firmware omits `volume` (and `mute`)
 > from `get_settings("audio")` while the individual leaves still work, and

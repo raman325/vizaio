@@ -216,59 +216,53 @@ class TestMuteOnVolumeV2:
         assert ("/key_command/",) in _paths(mock_client)
 
 
-class TestRelativeVolumeOnV2:
-    """``{"STEP": n}`` in the **body** — not the ``?STEP=n`` query the APK
-    shows.
+class TestRelativeVolumeAlwaysUsesKeypresses:
+    """Relative volume has no caller knob — the library picks.
 
-    Hardware (VHD24M-0810): the query form returns SUCCESS and moves the
-    volume by exactly 1 regardless of the value; the body form applies the
-    requested delta. Verified for both directions at several values, plus
-    empty-body and no-body defaulting to 1.
+    The V2 ``increase``/``decrease`` endpoints exist and work (verified on
+    VHD24M-0810 with ``{"STEP": n}`` in the body, *not* the ``?STEP=n``
+    query the APK shows), but they never beat the keypress path:
+
+    - a keypress batch is already a single PUT for any step count up to
+      ``_KEYLIST_CHUNK_SIZE`` (50), which covers every realistic input on
+      a 0-100 scale;
+    - keypresses work on every device family, V2 or not;
+    - app 5.3.0 dropped the HTTP path and drives volume purely with key
+      commands, so it is the only one the vendor still exercises.
+
+    Exposing a flag would push a choice onto the caller that the library
+    can already answer — and whose "on" position is never the better one.
     """
 
-    async def test_volume_up_sends_step_in_the_body(
+    async def test_v2_firmware_still_uses_keypresses(
         self, vizio_tv: Vizio, mock_client: AsyncMock
     ) -> None:
-        mock_client.side_effect = [
-            _captured("device_info.json"),
-            _resp(make_success_response(items=[])),
-        ]
-        await vizio_tv.volume_up(3, use_v2=True)
-        assert _paths(mock_client)[-1] == ("/audio/volume/increase",)
-        assert mock_client.call_args.kwargs["body"] == {"STEP": 3}
-
-    async def test_volume_down_sends_step_in_the_body(
-        self, vizio_tv: Vizio, mock_client: AsyncMock
-    ) -> None:
-        mock_client.side_effect = [
-            _captured("device_info.json"),
-            _resp(make_success_response(items=[])),
-        ]
-        await vizio_tv.volume_down(2, use_v2=True)
-        assert _paths(mock_client)[-1] == ("/audio/volume/decrease",)
-        assert mock_client.call_args.kwargs["body"] == {"STEP": 2}
-
-    async def test_no_step_query_is_appended(
-        self, vizio_tv: Vizio, mock_client: AsyncMock
-    ) -> None:
-        """The query form is a silent no-op on real firmware, so it must
-        never be sent — a wrong-but-SUCCESS request is worse than none."""
-        mock_client.side_effect = [
-            _captured("device_info.json"),
-            _resp(make_success_response(items=[])),
-        ]
-        await vizio_tv.volume_up(3, use_v2=True)
-        assert _suffixes(mock_client) == ["", ""]
-
-    async def test_keypress_remains_the_default(
-        self, vizio_tv: Vizio, mock_client: AsyncMock
-    ) -> None:
-        """The official app tries the key command first on every device,
-        vizaio already batches N keys into a single PUT, and app 5.3.0
-        dropped the HTTP path entirely — so the default is unchanged."""
         mock_client.return_value = _resp(make_success_response(items=[]))
         await vizio_tv.volume_up(3)
         assert _paths(mock_client) == [("/key_command/",)]
+
+    async def test_no_capability_probe_is_issued(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """No deviceinfo fetch either — the answer can't change the path."""
+        mock_client.return_value = _resp(make_success_response(items=[]))
+        await vizio_tv.volume_down(2)
+        assert ("/state/device/deviceinfo",) not in _paths(mock_client)
+
+    async def test_batches_into_one_request(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """The reason V2 wins nothing: N steps is still one PUT."""
+        mock_client.return_value = _resp(make_success_response(items=[]))
+        await vizio_tv.volume_up(10)
+        assert len(mock_client.call_args_list) == 1
+        assert len(mock_client.call_args.kwargs["body"]["KEYLIST"]) == 10
+
+    async def test_no_use_v2_parameter_exists(self) -> None:
+        import inspect
+
+        for method in (Vizio.volume_up, Vizio.volume_down):
+            assert "use_v2" not in inspect.signature(method).parameters
 
 
 class TestMaxVolume:
@@ -449,17 +443,13 @@ class TestV2FallbackOnUnsupportedEndpoint:
 
 
 class TestRelativeVolumeGuards:
-    """The V2 branch must honour the same ``steps`` guard as the keypress
-    path, which returns early below 1."""
+    """Non-positive steps are a no-op, as they always were."""
 
     @pytest.mark.parametrize("steps", [0, -3])
     async def test_non_positive_steps_send_nothing(
         self, vizio_tv: Vizio, mock_client: AsyncMock, steps: int
     ) -> None:
-        """``{"STEP": 0}`` would move the volume by 1 on real firmware
-        (empty/absent body means 1), and a negative step would ask
-        ``increase`` to go down."""
-        await vizio_tv.volume_up(steps, use_v2=True)
+        await vizio_tv.volume_up(steps)
         mock_client.assert_not_called()
 
 

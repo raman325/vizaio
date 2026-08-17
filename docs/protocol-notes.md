@@ -982,7 +982,7 @@ so carry some rot risk:
 | --- | --- | --- |
 | `set_volume()` | flat `PUT .../level` | hardware verified; 1 round trip vs 2 for the HASHVAL write |
 | `mute()` / `unmute()` | flat `PUT .../mute` | hardware verified; 1 vs 3, and **race-free** — read-then-toggle can lose to the physical remote between our read and our write |
-| `volume_up()` / `volume_down()` | keypress, `use_v2=True` to override | keypress is *already* one batched PUT, so the V2 endpoint wins nothing; and it is the only path app 5.3.0 kept |
+| `volume_up()` / `volume_down()` | keypress, always | keypress is *already* one batched PUT (up to 50 steps), works on every device family, and is the only path app 5.3.0 kept — so the V2 endpoint never wins. Catalogued but unused; no caller knob, since its "on" position would never be correct |
 
 The rule: prefer the vendor-current path when it costs the same, and
 only reach for an abandoned endpoint when we have hardware evidence

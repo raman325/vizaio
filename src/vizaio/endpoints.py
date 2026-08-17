@@ -256,12 +256,15 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     Endpoint.VOLUME_LEVEL_STATUS: row("GET", "/audio/volume/level", auth=REQ),
     Endpoint.VOLUME_MUTE_STATUS: row("GET", "/audio/volume/mute", auth=REQ),
     Endpoint.VOLUME_MUTE_SET: row("PUT", "/audio/volume/mute", auth=REQ),
-    # Relative steps. The step count goes in the **body** as
-    # ``{"STEP": n}`` — NOT as the ``?STEP=n`` query string the official
-    # app's generated client uses. Verified on VHD24M-0810: the query
-    # form returns SUCCESS and moves the volume by exactly 1 whatever
-    # the value, so sending it is a silent off-by-N. See
-    # ``_payloads.volume_step`` and protocol-notes #31.
+    # Relative steps. Catalogued but **unused** — ``volume_up`` /
+    # ``volume_down`` always send keypresses, which are already a single
+    # batched PUT and work on every device family (see their docstrings).
+    # Recorded here because the surface is real and the calling
+    # convention is counter-intuitive: the step count goes in the
+    # **body** as ``{"STEP": n}``, NOT as the ``?STEP=n`` query string
+    # the official app's generated client uses. Verified on VHD24M-0810 —
+    # the query form returns SUCCESS and moves the volume by exactly 1
+    # whatever the value, a silent off-by-N. See protocol-notes #31.
     Endpoint.VOLUME_INCREASE: row("PUT", "/audio/volume/increase", auth=REQ),
     Endpoint.VOLUME_DECREASE: row("PUT", "/audio/volume/decrease", auth=REQ),
     Endpoint.LAUNCH_APP: row("PUT", "/app/launch", auth=REQ, needs=Need.APPS),
