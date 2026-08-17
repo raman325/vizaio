@@ -755,7 +755,6 @@ from any capability flag:
 ```python
 await v.get_api_version()  # e.g. "3.3.3-2538.0001" (protocol spec, not firmware build)
 await v.supports_volume_v2()  # True on a TV at >= 2.0.0-2031.0014
-
 ```
 
 Both detectors are cheap: they read the deviceinfo payload the client already
