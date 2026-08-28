@@ -22,8 +22,10 @@ from vizaio._payloads import (
     begin_pair,
     cancel_pair,
     finish_pair,
+    join_hidden_network,
     key_press,
     launch_app,
+    select_access_point,
     set_input,
     write_setting,
 )
@@ -201,3 +203,21 @@ class TestPayloadIsolation:
         b = key_press([(11, 0)])
         a["KEYLIST"].append({"X": "Y"})
         assert len(b["KEYLIST"]) == 1
+
+
+def test_select_access_point_sends_name_only() -> None:
+    # Verified on hardware (issue #40): the NAME+PASSWORD variant the
+    # Android app's change-network path sends did NOT work; NAME alone did.
+    assert select_access_point(ssid="MinasTirith", hashval=3250072061) == {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": "MinasTirith"}],
+        "HASHVAL": 3250072061,
+    }
+
+
+def test_join_hidden_network_sends_name_and_password() -> None:
+    assert join_hidden_network(ssid="ghost", password="pw", hashval=7) == {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": "ghost", "PASSWORD": "pw"}],
+        "HASHVAL": 7,
+    }

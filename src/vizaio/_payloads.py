@@ -109,3 +109,31 @@ def launch_app(config: AppConfig) -> dict[str, Any]:
 def set_input(*, name: str, hashval: int) -> dict[str, Any]:
     """MODIFY the active input by name."""
     return {"VALUE": name, "HASHVAL": hashval, "REQUEST": "MODIFY"}
+
+
+def select_access_point(*, ssid: str, hashval: int) -> dict[str, Any]:
+    """
+    Point the device at a visible network by SSID.
+
+    ``VALUE`` is a one-element list carrying ``NAME`` only. The official
+    app's change-network path also sends ``PASSWORD`` here, but that
+    variant was rejected by the firmware tested in issue #40 while this
+    one succeeded. The password goes in a separate PUT against
+    ``network/set_wifi_password`` via :func:`write_setting`.
+    """
+    return {"REQUEST": "MODIFY", "VALUE": [{"NAME": ssid}], "HASHVAL": hashval}
+
+
+def join_hidden_network(*, ssid: str, password: str, hashval: int) -> dict[str, Any]:
+    """
+    Join a network that does not broadcast its SSID.
+
+    Unlike the visible path this carries the password in the same PUT.
+    APK-derived and **not hardware verified** — no hidden network was
+    available during the issue #40 capture.
+    """
+    return {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": ssid, "PASSWORD": password}],
+        "HASHVAL": hashval,
+    }
