@@ -47,11 +47,18 @@ from .errors import (
     VizioInvalidParameterError,
     VizioNotFoundError,
     VizioResponseError,
+    VizioWifiError,
 )
-from .types import AuthRequirement, ResponseStatus
+from .types import AuthRequirement, ResponseStatus, WifiResult
 from .wire import Response
 
 _LOGGER = logging.getLogger(__name__)
+
+# Radio/DHCP results from the Wi-Fi provisioning leaves. The prefix set
+# catches NET_* strings we don't model yet — the device's vocabulary is
+# wider than what the APK's constants file enumerates.
+_WIFI_RESULT_VALUES: Final[set[str]] = {r.value for r in WifiResult}
+_WIFI_RESULT_PREFIXES: Final[tuple[str, ...]] = ("net_wifi_", "net_ip_", "net_unknown")
 
 DEFAULT_CONNECT_TIMEOUT: Final = 2.0
 DEFAULT_WRITE_TIMEOUT: Final = 3.0
@@ -388,6 +395,19 @@ def _check_status(response: Response, spec: EndpointSpec) -> None:
         ResponseStatus.PAIRING_DENIED,
     ):
         raise VizioAuthError(response.detail or status.value)
+    if status is ResponseStatus.REQUIRES_SYSTEM_PIN:
+        raise VizioAuthError(response.detail or status.value)
+    lowered = response.result_raw.lower()
+    if lowered in _WIFI_RESULT_VALUES or lowered.startswith(_WIFI_RESULT_PREFIXES):
+        raise VizioWifiError(
+            result=(
+                WifiResult(lowered)
+                if lowered in _WIFI_RESULT_VALUES
+                else WifiResult.UNKNOWN
+            ),
+            code=response.result_raw,
+            detail=response.detail,
+        )
     # FAILURE, UNKNOWN, anything else.
     raise VizioResponseError(
         f"unexpected status {response.result_raw!r}: {response.detail}"

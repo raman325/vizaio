@@ -4,7 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from vizaio.types import AccessPoint, ResponseStatus, SettingType, WifiResult
+from vizaio.client import _check_status
+from vizaio.endpoints import EndpointSpec
+from vizaio.errors import VizioAuthError, VizioError, VizioWifiError
+from vizaio.types import (
+    AccessPoint,
+    AuthRequirement,
+    ResponseStatus,
+    SettingType,
+    WifiResult,
+)
+from vizaio.wire import Response
 
 
 def _ap(security: str) -> AccessPoint:
@@ -56,3 +66,42 @@ def test_network_setting_types_are_modelled() -> None:
     assert SettingType("T_AP_V1") is SettingType.ACCESS_POINT
     assert SettingType("T_STRING_V1") is SettingType.STRING
     assert SettingType("T_TEST_CONNECTION_V1") is SettingType.TEST_CONNECTION
+
+
+_SPEC = EndpointSpec(paths=("/x",), method="PUT", auth=AuthRequirement.NONE)
+
+
+def _status_response(result: str) -> Response:
+    """Build a Response carrying an arbitrary STATUS.RESULT string."""
+    return Response.from_json({"STATUS": {"RESULT": result, "DETAIL": "d"}})
+
+
+def test_wifi_result_maps_to_wifi_error() -> None:
+    with pytest.raises(VizioWifiError) as excinfo:
+        _check_status(_status_response("NET_WIFI_AUTH_REJECTED"), _SPEC)
+    assert excinfo.value.result is WifiResult.AUTH_REJECTED
+    assert excinfo.value.code == "NET_WIFI_AUTH_REJECTED"
+
+
+def test_already_connected_still_raises_at_the_transport_layer() -> None:
+    # The tolerance for ALREADY_CONNECTED lives in join_access_point, not
+    # here — the transport layer has no idea which flow it is serving.
+    with pytest.raises(VizioWifiError) as excinfo:
+        _check_status(_status_response("NET_WIFI_ALREADY_CONNECTED"), _SPEC)
+    assert excinfo.value.result is WifiResult.ALREADY_CONNECTED
+
+
+def test_unmodelled_net_code_maps_to_unknown_but_keeps_raw() -> None:
+    with pytest.raises(VizioWifiError) as excinfo:
+        _check_status(_status_response("NET_WIFI_SOMETHING_NEW"), _SPEC)
+    assert excinfo.value.result is WifiResult.UNKNOWN
+    assert excinfo.value.code == "NET_WIFI_SOMETHING_NEW"
+
+
+def test_requires_system_pin_maps_to_auth_error() -> None:
+    with pytest.raises(VizioAuthError):
+        _check_status(_status_response("REQUIRES_SYSTEM_PIN"), _SPEC)
+
+
+def test_wifi_error_is_a_vizio_error() -> None:
+    assert issubclass(VizioWifiError, VizioError)
