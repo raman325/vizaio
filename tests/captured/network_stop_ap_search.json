@@ -1,0 +1,1 @@
+{"STATUS":{"RESULT":"SUCCESS","DETAIL":"Success"},"ITEMS":[{"HASHVAL":139197155,"CNAME":"stop_ap_search","TYPE":"T_ACTION_V1","NAME":"Stop AP Search","VALUE":"T_ACTION_V1"}],"HASHLIST":[2158910621,1896934952],"URI":"/menu_native/dynamic/audio_settings/network/stop_ap_search","PARAMETERS":{"FLAT":"TRUE","HELPTEXT":"FALSE","HASHONLY":"FALSE"}}
