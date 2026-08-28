@@ -31,6 +31,7 @@ from collections.abc import Callable, Mapping
 import contextlib
 from dataclasses import replace
 from datetime import datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any, Final, Self
 
 from . import _payloads, apispec
@@ -111,6 +112,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from aiohttp import ClientSession, ClientTimeout
+
+_LOGGER = logging.getLogger(__name__)
 
 # Per APK findings (protocol-notes #19): the official app sends
 # arbitrary-length KEYLISTs in one PUT. We chunk above this defensive
@@ -1006,6 +1009,24 @@ class Vizio:
                 return
             raise
 
+    def wifi_setup_session(self) -> WifiSetupSession:
+        """
+        Open a Wi-Fi provisioning session.
+
+        Starts a scan on entry and always stops it on exit::
+
+            async with vizio.wifi_setup_session() as session:
+                for ap in await session.access_points():
+                    print(ap.ssid)
+                await session.join("MyNetwork", password="hunter2")
+
+        The host must already be joined to the device's setup access
+        point; that is an OS-level operation this library does not
+        perform. The device's address is the DHCP gateway of that
+        network.
+        """
+        return WifiSetupSession(self)
+
     async def _network_hashval(self, endpoint: Endpoint) -> int:
         """GET a network leaf and return the HASHVAL its write must echo."""
         response = await self._request(endpoint)
@@ -1870,6 +1891,70 @@ def _resolve_input_target(name: str, inputs: Sequence[InputInfo]) -> str:
         | {i.meta_name for i in inputs if i.meta_name}
     )
     raise VizioInvalidInputError(f"input {name!r} not found. Valid: {valid}")
+
+
+class WifiSetupSession:
+    """
+    Async context manager that brackets a Wi-Fi provisioning flow.
+
+    Starts an access-point scan on entry, always stops it on exit —
+    including when the body raises, and including on the success path,
+    which is what the official app does too. The stop is best-effort: a
+    failure there is swallowed so it can never mask the caller's own
+    exception.
+
+    Unlike :class:`PairSession` there is no completion flag. Pairing must
+    not cancel after a successful complete; stopping a scan after a
+    successful join is correct, so the cleanup is unconditional.
+    """
+
+    def __init__(self, vizio: Vizio) -> None:
+        """Bind the session to the device it will provision."""
+        self._vizio = vizio
+
+    async def __aenter__(self) -> Self:
+        """Start the scan; best-effort stop if the start itself fails."""
+        try:
+            await self._vizio.start_ap_scan()
+        except BaseException:
+            await self._stop()
+            raise
+        return self
+
+    async def __aexit__(self, *exc: Any) -> None:
+        """Stop the scan unconditionally, swallowing cleanup failures."""
+        await self._stop()
+
+    async def _stop(self) -> None:
+        """Stop the scan, ignoring device errors."""
+        try:
+            await self._vizio.stop_ap_scan()
+        except VizioError:
+            _LOGGER.debug("stop_ap_scan failed during session cleanup", exc_info=True)
+
+    async def access_points(self) -> tuple[AccessPoint, ...]:
+        """
+        Read the current scan results.
+
+        Performs one GET per call. Scans fill in over several seconds, so
+        call this again to refresh rather than expecting the first read
+        to be complete.
+        """
+        return await self._vizio.get_access_points()
+
+    async def join(
+        self,
+        ssid: str,
+        *,
+        password: str | None = None,
+        hidden: bool = False,
+    ) -> None:
+        """
+        Hand the device credentials.
+
+        Re-callable — retry a bad password without leaving the session.
+        """
+        await self._vizio.join_access_point(ssid, password=password, hidden=hidden)
 
 
 class PairSession:

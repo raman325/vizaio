@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from vizaio import DeviceType, Vizio
+from vizaio._device import WifiSetupSession
 from vizaio.client import _check_status
 from vizaio.endpoints import EndpointSpec
 from vizaio.errors import (
@@ -400,3 +401,99 @@ async def test_join_access_point_propagates_auth_rejection() -> None:
     with pytest.raises(VizioWifiError) as excinfo:
         await _soundbar(client).join_access_point("MinasTirith", password="wrong")
     assert excinfo.value.result is WifiResult.AUTH_REJECTED
+
+
+class _FakeVizio:
+    """Records provisioning calls; lets tests inject failures."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+        self.start_error: Exception | None = None
+        self.stop_error: Exception | None = None
+        self.join_error: Exception | None = None
+        self.aps: tuple[AccessPoint, ...] = ()
+
+    async def start_ap_scan(self) -> None:
+        self.calls.append("start")
+        if self.start_error is not None:
+            raise self.start_error
+
+    async def stop_ap_scan(self) -> None:
+        self.calls.append("stop")
+        if self.stop_error is not None:
+            raise self.stop_error
+
+    async def get_access_points(self) -> tuple[AccessPoint, ...]:
+        self.calls.append("read")
+        return self.aps
+
+    async def join_access_point(
+        self, ssid: str, *, password: str | None = None, hidden: bool = False
+    ) -> None:
+        self.calls.append(f"join:{ssid}:{password}:{hidden}")
+        if self.join_error is not None:
+            raise self.join_error
+
+
+async def test_session_starts_and_stops_the_scan() -> None:
+    fake = _FakeVizio()
+    async with WifiSetupSession(fake):  # type: ignore[arg-type]
+        pass
+    assert fake.calls == ["start", "stop"]
+
+
+async def test_session_stops_the_scan_when_the_body_raises() -> None:
+    fake = _FakeVizio()
+    with pytest.raises(RuntimeError, match="boom"):
+        async with WifiSetupSession(fake):  # type: ignore[arg-type]
+            raise RuntimeError("boom")
+    assert fake.calls == ["start", "stop"]
+
+
+async def test_session_stops_the_scan_when_join_raises() -> None:
+    fake = _FakeVizio()
+    fake.join_error = VizioWifiError(WifiResult.AUTH_REJECTED, "NET_WIFI_AUTH_REJECTED")
+    with pytest.raises(VizioWifiError):
+        async with WifiSetupSession(fake) as session:  # type: ignore[arg-type]
+            await session.join("net", password="wrong")
+    assert fake.calls[-1] == "stop"
+
+
+async def test_failed_stop_does_not_mask_the_callers_exception() -> None:
+    fake = _FakeVizio()
+    fake.stop_error = VizioWifiError(WifiResult.UNKNOWN, "NET_UNKNOWN_ERROR")
+    with pytest.raises(RuntimeError, match="original"):
+        async with WifiSetupSession(fake):  # type: ignore[arg-type]
+            raise RuntimeError("original")
+
+
+async def test_failed_start_still_attempts_a_stop() -> None:
+    fake = _FakeVizio()
+    fake.start_error = VizioResponseError("nope")
+    with pytest.raises(VizioResponseError):
+        async with WifiSetupSession(fake):  # type: ignore[arg-type]
+            pass
+    assert fake.calls == ["start", "stop"]
+
+
+async def test_access_points_is_re_readable() -> None:
+    fake = _FakeVizio()
+    async with WifiSetupSession(fake) as session:  # type: ignore[arg-type]
+        await session.access_points()
+        await session.access_points()
+    assert fake.calls.count("read") == 2
+
+
+async def test_join_is_re_callable_after_a_failure() -> None:
+    fake = _FakeVizio()
+    async with WifiSetupSession(fake) as session:  # type: ignore[arg-type]
+        await session.join("net", password="first")
+        await session.join("net", password="second")
+    assert "join:net:first:False" in fake.calls
+    assert "join:net:second:False" in fake.calls
+
+
+async def test_wifi_setup_session_factory_returns_a_session() -> None:
+    device = Vizio(host="h:9000", device_type=DeviceType.SOUNDBAR)
+    assert isinstance(device.wifi_setup_session(), WifiSetupSession)
+    await device.aclose()
