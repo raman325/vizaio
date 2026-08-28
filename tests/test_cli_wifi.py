@@ -87,3 +87,81 @@ def test_wifi_join_reports_a_rejected_password() -> None:
         )
     assert result.exit_code == 1
     assert "NET_WIFI_AUTH_REJECTED" in result.output
+
+
+def test_interactive_selects_a_network_and_prompts_for_a_password() -> None:
+    device = _fake_device()
+    with (
+        patch("vizaio.cli.Vizio", return_value=device),
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
+        # "1" picks HomeNet (secured), then the password.
+        result = runner.invoke(app, ["wifi", "interactive", "1.2.3.4"], input="1\npw\n")
+    assert result.exit_code == 0
+    device.join_access_point.assert_awaited_once_with(
+        "HomeNet", password="pw", hidden=False
+    )
+    assert "vizaio discover" in result.stdout
+
+
+def test_interactive_skips_the_password_prompt_for_an_open_network() -> None:
+    device = _fake_device()
+    with (
+        patch("vizaio.cli.Vizio", return_value=device),
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
+        # "2" picks OpenNet; no password line follows.
+        result = runner.invoke(app, ["wifi", "interactive", "1.2.3.4"], input="2\n")
+    assert result.exit_code == 0
+    device.join_access_point.assert_awaited_once_with(
+        "OpenNet", password=None, hidden=False
+    )
+
+
+def test_interactive_handles_a_hidden_network() -> None:
+    device = _fake_device()
+    with (
+        patch("vizaio.cli.Vizio", return_value=device),
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
+        result = runner.invoke(
+            app, ["wifi", "interactive", "1.2.3.4"], input="0\nghost\npw\n"
+        )
+    assert result.exit_code == 0
+    device.join_access_point.assert_awaited_once_with(
+        "ghost", password="pw", hidden=True
+    )
+
+
+def test_interactive_reprompts_after_a_rejected_password() -> None:
+    device = _fake_device(
+        join_access_point=AsyncMock(
+            side_effect=[
+                VizioWifiError(WifiResult.AUTH_REJECTED, "NET_WIFI_AUTH_REJECTED"),
+                None,
+            ]
+        )
+    )
+    with (
+        patch("vizaio.cli.Vizio", return_value=device),
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
+        result = runner.invoke(
+            app, ["wifi", "interactive", "1.2.3.4"], input="1\nwrong\nright\n"
+        )
+    assert result.exit_code == 0
+    assert device.join_access_point.await_count == 2
+
+
+def test_interactive_rescans_when_nothing_is_found() -> None:
+    device = _fake_device(get_access_points=AsyncMock(side_effect=[(), _APS]))
+    with (
+        patch("vizaio.cli.Vizio", return_value=device),
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
+        # "y" retries the scan, then "1" picks HomeNet, then the password.
+        result = runner.invoke(
+            app, ["wifi", "interactive", "1.2.3.4"], input="y\n1\npw\n"
+        )
+    assert result.exit_code == 0
+    assert device.get_access_points.await_count == 2

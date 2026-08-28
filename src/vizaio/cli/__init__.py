@@ -34,6 +34,9 @@ from .. import (
     Vizio,
     VizioError,
     VizioInvalidInputError,
+    VizioWifiError,
+    WifiResult,
+    WifiSetupSession,
 )
 from ..discovery import async_classify_device, async_resolve_host, discover
 from ._config import Config, DeviceRecord
@@ -768,6 +771,83 @@ def wifi_join(
     _print(
         render_message(
             f"Credentials sent for {ssid!r}. Rejoin your normal Wi-Fi, then run "
+            "`vizaio discover` to find the device on your network.",
+            fmt=fmt,
+        )
+    )
+
+
+_HIDDEN_CHOICE = 0
+
+
+async def _prompt_for_network(
+    session: WifiSetupSession,
+) -> tuple[str, str | None, bool]:
+    """
+    Scan, show the results, and ask which network to join.
+
+    Returns ``(ssid, password, hidden)``. Re-reads the scan list on
+    request rather than polling on a timer — scans fill in over several
+    seconds and only the user knows how long is long enough.
+    """
+    while True:
+        access_points = await session.access_points()
+        if access_points:
+            break
+        if not typer.confirm("No networks found yet — scan again?", default=True):
+            raise typer.Exit(code=1)
+
+    _err.print("")
+    for index, ap in enumerate(access_points, start=1):
+        lock = "open" if ap.is_open else ap.security
+        _err.print(f"  {index}) {ap.ssid}  [{ap.band} GHz, {lock}, signal {ap.rssi}]")
+    _err.print(f"  {_HIDDEN_CHOICE}) Hidden network…\n")
+
+    choice = typer.prompt("Select network", type=int)
+    while choice < _HIDDEN_CHOICE or choice > len(access_points):
+        choice = typer.prompt("Select network", type=int)
+
+    if choice == _HIDDEN_CHOICE:
+        ssid = typer.prompt("Network name")
+        return ssid, typer.prompt("Password", hide_input=True), True
+
+    chosen = access_points[choice - 1]
+    if chosen.is_open:
+        return chosen.ssid, None, False
+    return chosen.ssid, typer.prompt("Password", hide_input=True), False
+
+
+@wifi_app.command("interactive")
+def wifi_interactive(
+    ctx: typer.Context,
+    host: HostArgument,
+    device_type: WifiDeviceTypeOption = DeviceType.SOUNDBAR,
+    output_format: FormatOption = None,
+) -> None:
+    """Scan, pick a network, and hand over credentials, step by step."""
+    fmt = _fmt(ctx, output_format)
+
+    async def _go(v: Vizio) -> str:
+        """Drive the full wizard inside one provisioning session."""
+        async with v.wifi_setup_session() as session:
+            ssid, password, hidden = await _prompt_for_network(session)
+            while True:
+                try:
+                    await session.join(ssid, password=password, hidden=hidden)
+                    return ssid
+                except VizioWifiError as err:
+                    if err.result not in (
+                        WifiResult.AUTH_REJECTED,
+                        WifiResult.MISSING_PASSWORD,
+                    ):
+                        raise
+                    _err.print(f"Device rejected the password ({err.code}).")
+                    password = typer.prompt("Password", hide_input=True)
+
+    joined = _wifi_exec(host, device_type, _go)
+    _print(
+        render_message(
+            f"Credentials sent for {joined!r}. Rejoin your normal Wi-Fi, then run "
             "`vizaio discover` to find the device on your network.",
             fmt=fmt,
         )
