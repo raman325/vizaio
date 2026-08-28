@@ -1038,6 +1038,90 @@ on every reading taken during hardware verification.
 
 ---
 
+## 32. Soundbar Wi-Fi provisioning over SoftAP (issue #40)
+
+**Confidence:** APK DERIVED — NOT HARDWARE VERIFIED
+
+**Behavior:** a factory-reset (or network-reset) Vizio soundbar
+broadcasts an open access point and serves the ordinary SmartCast REST
+API on it. The official app provisions the device by joining that AP and
+driving the `network/` subtree of the menu tree. Two code paths implement
+the same endpoints: `VizioDeviceWifiSetup` (first-time setup) and
+`AccessPointsViewModel` (changing networks on an already-configured
+device).
+
+Everything below is under `/menu_native/dynamic/{root}/network/`, where
+`{root}` is `audio_settings` for soundbars. Setup always uses the
+pre-2020 path spellings — `buildOOBEMenuTreeEndpoint()` hardcodes
+`URIYearOptions.YEAR_PRE_2020`, so the 2020 renames
+(`wireless_access_points` -> `wifi_networks`, `set_wifi_password` ->
+`wifi_password_entry`) apply only to the settings path, not to setup.
+
+| Step | Method | Leaf | Body |
+| --- | --- | --- | --- |
+| 1 | PUT | `start_ap_search` | `{"REQUEST": "ACTION", "HASHVAL": <h>}` |
+| 2 | GET | `wireless_access_points` | — |
+| 3a | PUT | `current_access_point` | `{"REQUEST": "MODIFY", "VALUE": [{"NAME": "<ssid>"}], "HASHVAL": <h>}` |
+| 3b | PUT | `set_wifi_password` | `{"REQUEST": "MODIFY", "VALUE": "<password>", "HASHVAL": <h>}` |
+| 3-hidden | PUT | `hidden_network` | `{"REQUEST": "MODIFY", "VALUE": [{"NAME": "<ssid>", "PASSWORD": "<pw>"}], "HASHVAL": <h>}` |
+| 4 | PUT | `stop_ap_search` | `{"REQUEST": "ACTION", "HASHVAL": <h>}` |
+| 5 | GET | `test_connection/test_connection_results` | — |
+
+Steps 1 and 4 are ordinary `T_ACTION_V1` fires (#29). Steps 3a/3b/3-hidden
+are ordinary `MODIFY` writes and take a hashval fetched by a preceding
+GET on the same leaf (#17) — `VizioDeviceApi.setValueFor()` injects one
+automatically when the caller's body omits it, so the GET-then-PUT is
+inherent here as everywhere else.
+
+The scan-list items (`VZAccessPointItem`) carry `NAME` (SSID), `BSSID`,
+`EM` (security suite string, matched against `WEP`/`PSK`/`EAP`/`WPA`/
+`WPA2`, with `WEP/NONE` meaning open), `BAND`, `RSSI`, `OPEN` and
+`CONNECTED`. Connection-test results (`VZTestConnectionItem`) carry
+`SSID NAME`, `CONNECTION METHOD`, `CONNECTION SPEED`, `DHCP`,
+`ERROR_CODE`, `ESTABLISHED DNS SERVERS`, `ESTABLISHED NTP SERVER`,
+`Connected To` and `Internet Connection`.
+
+**Status vocabulary** (`Constants.VZConnectionConstants`, surfaced in the
+response `RESULT` field):
+
+| `RESULT` | Meaning |
+| --- | --- |
+| `NET_WIFI_ALREADY_CONNECTED` | Device is already on that SSID — the app treats this as success and skips to step 4 |
+| `NET_WIFI_NEEDS_VALID_SSID` | No SSID selected, or selection did not stick |
+| `NET_WIFI_MISSING_PASSWORD` | Secure network, no password supplied |
+| `NET_WIFI_AUTH_REJECTED` | Wrong password |
+| `NET_WIFI_NOT_EXISTED` | SSID not in range |
+| `NET_WIFI_CONNECT_TIMEOUT` / `NET_WIFI_CONNECT_ABORTED` / `NET_WIFI_CONNECT_ERROR` / `NET_WIFI_CONNECTION_ERROR` | Association failures |
+| `NET_IP_DHCP_FAILED` / `NET_IP_MANUAL_CONFIG_ERROR` | Associated, but no address |
+| `NET_UNKNOWN_ERROR` | Catch-all |
+| `REQUIRES_SYSTEM_PIN` | Device is PIN-locked; provisioning cannot proceed unattended |
+
+**Joining the AP is out of scope for this library.** It is an OS-level
+operation, and the app delegates it to Android's `WifiManager` /
+`WifiNetworkSpecifier` — the SoftAP transport in the protocol layer
+(`SoftApClient`) is a stub that throws `NotImplementedError` with the
+comment "Use WifiManager.enable(ssid) to make connection". Two details a
+headless implementation still needs from that path:
+
+- **The device's address on its own AP is the DHCP gateway.**
+  `SoftApConnectionVerifier` polls until an address is acquired and then
+  reports `intToIp(dhcpInfo.gateway)` as the device IP. There is no
+  discovery step and no hardcoded subnet.
+- **There is no SSID naming convention to match on.** `SoftApScanner`
+  filters only empty SSIDs, secured networks and `xfinitywifi`; the user
+  picks the soundbar's AP from the remaining open networks. A headless
+  caller has to be told the SSID.
+
+**Our handling:** not implemented as a dedicated API. Steps 1, 2, 4 and 5
+are already reachable through the generic settings surface —
+`trigger_setting_action("network", "start_ap_search")` emits exactly the
+step-1 request, and `get_setting("network", "wireless_access_points")`
+the step-2 one. Step 3b works through `set_setting`. Only steps 3a and
+3-hidden are inexpressible today, because `set_setting` takes a scalar
+`int | str` and these two take a single-element list of objects.
+
+---
+
 ## Hardware verification list
 
 The following items can only be confirmed against real hardware. Capture
