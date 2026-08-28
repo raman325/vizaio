@@ -14,6 +14,7 @@ from typing import Any
 
 from .errors import VizioNotFoundError, VizioResponseError
 from .types import (
+    AccessPoint,
     AppConfig,
     InputInfo,
     PairChallenge,
@@ -563,3 +564,59 @@ def _coerce_setting_type(raw: str) -> SettingType:
         return SettingType(raw)
     except ValueError:
         return SettingType.MENU
+
+
+def _access_point(raw: Mapping[str, Any]) -> AccessPoint:
+    """
+    Build an :class:`AccessPoint` from one already-lowercased VALUE entry.
+
+    Keys are lowercase because :func:`vizaio.wire._lowercase_keys`
+    recurses into lists as well as dicts.
+    """
+    rssi_raw = raw.get("rssi")
+    try:
+        rssi = int(rssi_raw) if rssi_raw is not None else 0
+    except (TypeError, ValueError):
+        rssi = 0
+    return AccessPoint(
+        ssid=str(raw.get("name", "")),
+        bssid=str(raw.get("bssid", "")),
+        security=str(raw.get("em", "")),
+        band=str(raw.get("band", "")),
+        rssi=rssi,
+    )
+
+
+def parse_access_points(response: Response) -> tuple[AccessPoint, ...]:
+    """
+    Extract the scan list from a ``wireless_access_points`` response.
+
+    Returns an empty tuple when the item is missing or the scan has not
+    yet produced results — an empty list is a normal early-scan state,
+    not an error.
+    """
+    item = response.find_item("wireless_access_points")
+    if item is None or not isinstance(item.value, list):
+        return ()
+    return tuple(
+        _access_point(entry) for entry in item.value if isinstance(entry, Mapping)
+    )
+
+
+def parse_current_access_point(response: Response) -> AccessPoint | None:
+    """
+    Extract the joined network from a ``current_access_point`` response.
+
+    Returns ``None`` when the device is not on a network. An
+    unconfigured device reports a sentinel entry rather than an empty
+    list — empty ``NAME`` with ``BSSID`` of ``000000-000000`` (captured
+    in issue #40) — so the empty SSID is the real signal.
+    """
+    item = response.find_item("current_access_point")
+    if item is None or not isinstance(item.value, list) or not item.value:
+        return None
+    first = item.value[0]
+    if not isinstance(first, Mapping):
+        return None
+    access_point = _access_point(first)
+    return access_point if access_point.ssid else None

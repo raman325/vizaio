@@ -7,6 +7,7 @@ import pytest
 from vizaio.client import _check_status
 from vizaio.endpoints import EndpointSpec
 from vizaio.errors import VizioAuthError, VizioError, VizioWifiError
+from vizaio.parse import parse_access_points, parse_current_access_point
 from vizaio.types import (
     AccessPoint,
     AuthRequirement,
@@ -105,3 +106,105 @@ def test_requires_system_pin_maps_to_auth_error() -> None:
 
 def test_wifi_error_is_a_vizio_error() -> None:
     assert issubclass(VizioWifiError, VizioError)
+
+
+def _aps_response() -> Response:
+    """The real three-AP payload from issue #40, SSIDs redacted."""
+    return Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {
+                    "HASHVAL": 203850784,
+                    "CNAME": "wireless_access_points",
+                    "TYPE": "T_APS_V1",
+                    "NAME": "Wireless Access Points",
+                    "VALUE": [
+                        {
+                            "EM": "WPA2/PSK",
+                            "RSSI": 65,
+                            "NAME": "net-5g",
+                            "BSSID": "aa:bb:cc",
+                            "BAND": "5",
+                        },
+                        {
+                            "EM": "WPA2/PSK",
+                            "RSSI": 70,
+                            "NAME": "net-24",
+                            "BSSID": "dd:ee:ff",
+                            "BAND": "2.4",
+                        },
+                    ],
+                }
+            ],
+        }
+    )
+
+
+def test_parse_access_points_reads_the_scan_list() -> None:
+    aps = parse_access_points(_aps_response())
+    assert [a.ssid for a in aps] == ["net-5g", "net-24"]
+    assert aps[0].band == "5"
+    assert aps[0].rssi == 65
+    assert aps[0].security == "WPA2/PSK"
+    assert aps[0].bssid == "aa:bb:cc"
+    assert aps[0].is_open is False
+
+
+def test_parse_access_points_empty_when_item_absent() -> None:
+    response = Response.from_json({"STATUS": {"RESULT": "SUCCESS", "DETAIL": ""}})
+    assert parse_access_points(response) == ()
+
+
+def test_parse_current_access_point_returns_none_when_unconfigured() -> None:
+    # Real sentinel from issue #40: empty NAME, zeroed BSSID.
+    response = Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {
+                    "HASHVAL": 3250072061,
+                    "CNAME": "current_access_point",
+                    "TYPE": "T_AP_V1",
+                    "NAME": "Current Access Point",
+                    "VALUE": [
+                        {
+                            "EM": "NONE",
+                            "RSSI": 0,
+                            "NAME": "",
+                            "BSSID": "000000-000000",
+                            "BAND": "2.4",
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert parse_current_access_point(response) is None
+
+
+def test_parse_current_access_point_returns_the_joined_network() -> None:
+    response = Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {
+                    "CNAME": "current_access_point",
+                    "TYPE": "T_AP_V1",
+                    "NAME": "Current Access Point",
+                    "VALUE": [
+                        {
+                            "EM": "WPA2/PSK",
+                            "RSSI": 62,
+                            "NAME": "joined",
+                            "BSSID": "aa:bb",
+                            "BAND": "5",
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    ap = parse_current_access_point(response)
+    assert ap is not None
+    assert ap.ssid == "joined"
