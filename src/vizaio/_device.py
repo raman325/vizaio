@@ -27,7 +27,7 @@ Reliability features:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import contextlib
 from dataclasses import replace
 from datetime import datetime, timedelta
@@ -65,8 +65,10 @@ from .errors import (
     VizioUnsupportedError,
 )
 from .parse import (
+    parse_access_points,
     parse_api_version,
     parse_auth_token,
+    parse_current_access_point,
     parse_current_app_config,
     parse_current_input,
     parse_current_input_item,
@@ -85,6 +87,7 @@ from .parse import (
     parse_volume_mute,
 )
 from .types import (
+    AccessPoint,
     AppAvailability,
     AppConfig,
     AppRecord,
@@ -913,6 +916,73 @@ class Vizio:
         await self._put_settings_body(
             setting_type, name, _payloads.action_setting(hashval=hashval)
         )
+
+    # -----------------------------------------------------------------
+    # Wi-Fi provisioning — see docs/protocol-notes.md §32
+    # -----------------------------------------------------------------
+
+    async def start_ap_scan(self) -> None:
+        """
+        Ask the device to scan for nearby Wi-Fi networks.
+
+        Fire-and-forget: results accumulate in the scan list over the
+        following seconds. Poll :meth:`get_access_points` to read them.
+        Always pair with :meth:`stop_ap_scan`, or use
+        :meth:`wifi_setup_session`, which does that for you.
+        """
+        await self._put_network_leaf(Endpoint.AP_SCAN_START, _payloads.action_setting)
+
+    async def stop_ap_scan(self) -> None:
+        """Stop a scan started by :meth:`start_ap_scan`."""
+        await self._put_network_leaf(Endpoint.AP_SCAN_STOP, _payloads.action_setting)
+
+    async def get_access_points(self) -> tuple[AccessPoint, ...]:
+        """
+        Return the networks the device can currently see.
+
+        Empty until a scan started by :meth:`start_ap_scan` produces
+        results; an empty tuple is a normal early state, not an error.
+        """
+        return parse_access_points(await self._request(Endpoint.ACCESS_POINTS))
+
+    async def get_current_access_point(self) -> AccessPoint | None:
+        """Return the network the device is on, or ``None`` if unconfigured."""
+        return parse_current_access_point(
+            await self._request(Endpoint.CURRENT_ACCESS_POINT)
+        )
+
+    async def _network_hashval(self, endpoint: Endpoint) -> int:
+        """GET a network leaf and return the HASHVAL its write must echo."""
+        response = await self._request(endpoint)
+        item = response.items[0] if response.items else None
+        if item is None or item.hashval is None:
+            raise VizioResponseError(f"{endpoint.value} returned no HASHVAL to echo")
+        return item.hashval
+
+    async def _put_network_leaf(
+        self, endpoint: Endpoint, body_for: Callable[[int], dict[str, Any]]
+    ) -> None:
+        """
+        GET a network leaf for its hashval, then PUT, retrying once.
+
+        Same stale-hashval contract as :meth:`set_setting` — see
+        protocol-notes #13. ``body_for`` is called again on retry so the
+        fresh hashval lands in the rebuilt body.
+        """
+        try:
+            await self._put_network_body(
+                endpoint, body_for(await self._network_hashval(endpoint))
+            )
+        except VizioInvalidParameterError:
+            await self._put_network_body(
+                endpoint, body_for(await self._network_hashval(endpoint))
+            )
+
+    async def _put_network_body(self, endpoint: Endpoint, body: dict[str, Any]) -> None:
+        """PUT ``body`` at a network leaf whose table row is declared GET."""
+        spec = replace(resolve(endpoint, self._profile), method="PUT")
+        self._check_auth(spec.auth)
+        await self._client.request_spec(spec, body=body)
 
     async def blank_screen(self) -> None:
         """

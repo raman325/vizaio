@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Any
+from unittest.mock import AsyncMock
+
 import pytest
 
+from vizaio import DeviceType, Vizio
 from vizaio.client import _check_status
 from vizaio.endpoints import EndpointSpec
-from vizaio.errors import VizioAuthError, VizioError, VizioWifiError
+from vizaio.errors import (
+    VizioAuthError,
+    VizioError,
+    VizioResponseError,
+    VizioWifiError,
+)
 from vizaio.parse import parse_access_points, parse_current_access_point
 from vizaio.types import (
     AccessPoint,
@@ -208,3 +217,107 @@ def test_parse_current_access_point_returns_the_joined_network() -> None:
     ap = parse_current_access_point(response)
     assert ap is not None
     assert ap.ssid == "joined"
+
+
+def _soundbar(client: Any) -> Vizio:
+    """Build a Vizio bound to a stub client, bypassing HTTP entirely."""
+    device = Vizio(host="192.168.1.101:9000", device_type=DeviceType.SOUNDBAR)
+    device._client = client  # noqa: SLF001
+    return device
+
+
+def _leaf_response(cname: str, hashval: int, value: Any = "") -> Response:
+    """Build a single-item GET response for a settings leaf."""
+    return Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {
+                    "CNAME": cname,
+                    "TYPE": "T_ACTION_V1",
+                    "NAME": cname,
+                    "VALUE": value,
+                    "HASHVAL": hashval,
+                }
+            ],
+        }
+    )
+
+
+async def test_start_ap_scan_fires_an_action_with_the_fetched_hashval() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [
+        _leaf_response("start_ap_search", 300381621, "T_ACTION_V1"),
+        Response.from_json({"STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"}}),
+    ]
+    await _soundbar(client).start_ap_scan()
+
+    get_call, put_call = client.request_spec.call_args_list
+    assert get_call.args[0].method == "GET"
+    assert put_call.args[0].method == "PUT"
+    assert put_call.kwargs["body"] == {"REQUEST": "ACTION", "HASHVAL": 300381621}
+
+
+async def test_stop_ap_scan_fires_an_action() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [
+        _leaf_response("stop_ap_search", 139197155, "T_ACTION_V1"),
+        Response.from_json({"STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"}}),
+    ]
+    await _soundbar(client).stop_ap_scan()
+    assert client.request_spec.call_args_list[1].kwargs["body"] == {
+        "REQUEST": "ACTION",
+        "HASHVAL": 139197155,
+    }
+
+
+async def test_get_access_points_returns_parsed_networks() -> None:
+    client = AsyncMock()
+    client.request_spec.return_value = _aps_response()
+    aps = await _soundbar(client).get_access_points()
+    assert [a.ssid for a in aps] == ["net-5g", "net-24"]
+
+
+async def test_get_current_access_point_returns_none_when_unset() -> None:
+    client = AsyncMock()
+    client.request_spec.return_value = Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {
+                    "CNAME": "current_access_point",
+                    "TYPE": "T_AP_V1",
+                    "NAME": "Current Access Point",
+                    "VALUE": [
+                        {
+                            "EM": "NONE",
+                            "RSSI": 0,
+                            "NAME": "",
+                            "BSSID": "000000-000000",
+                            "BAND": "2.4",
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert await _soundbar(client).get_current_access_point() is None
+
+
+async def test_missing_hashval_raises_response_error() -> None:
+    client = AsyncMock()
+    client.request_spec.return_value = Response.from_json(
+        {
+            "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
+            "ITEMS": [
+                {
+                    "CNAME": "start_ap_search",
+                    "TYPE": "T_ACTION_V1",
+                    "NAME": "Start AP Search",
+                    "VALUE": "T_ACTION_V1",
+                }
+            ],
+        }
+    )
+    with pytest.raises(VizioResponseError, match="HASHVAL"):
+        await _soundbar(client).start_ap_scan()
