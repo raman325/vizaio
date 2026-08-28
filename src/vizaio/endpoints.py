@@ -95,6 +95,14 @@ class Endpoint(StrEnum):
     SETTINGS = "settings"
     SETTINGS_OPTIONS = "settings_options"
 
+    # Wi-Fi provisioning (settings-tree leaves under {root}/network/)
+    AP_SCAN_START = "ap_scan_start"
+    AP_SCAN_STOP = "ap_scan_stop"
+    ACCESS_POINTS = "access_points"
+    CURRENT_ACCESS_POINT = "current_access_point"
+    WIFI_PASSWORD = "wifi_password"
+    HIDDEN_NETWORK = "hidden_network"
+
     # Identity (multi-path firmware fallback)
     ESN = "esn"
     SERIAL_NUMBER = "serial_number"
@@ -278,6 +286,22 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     # Settings tree ———————————————————————————————————————————————————
     Endpoint.SETTINGS: row("GET", "{root}"),
     Endpoint.SETTINGS_OPTIONS: row("GET", "{root_static}"),
+    # Wi-Fi provisioning ——————————————————————————————————————————————
+    # Declared GET: every write on these leaves is preceded by a hashval
+    # fetch on the same path, and the PUT reuses the resolved spec via
+    # ``replace(spec, method="PUT")``.
+    #
+    # None of these set ``item=``. A successful PUT returns
+    # ``ITEMS: [{"HASHVAL": ..., "NAME": "Current Access Point"}]`` with
+    # no CNAME, so an item_cname would make ``_check_status`` raise
+    # VizioNotFoundError on every successful write. Verified against a
+    # real soundbar capture (issue #40).
+    Endpoint.AP_SCAN_START: row("GET", "{root}/network/start_ap_search"),
+    Endpoint.AP_SCAN_STOP: row("GET", "{root}/network/stop_ap_search"),
+    Endpoint.ACCESS_POINTS: row("GET", "{root}/network/wireless_access_points"),
+    Endpoint.CURRENT_ACCESS_POINT: row("GET", "{root}/network/current_access_point"),
+    Endpoint.WIFI_PASSWORD: row("GET", "{root}/network/set_wifi_password"),
+    Endpoint.HIDDEN_NETWORK: row("GET", "{root}/network/hidden_network"),
     # Identity (multi-path firmware fallback) ——————————————————————————
     Endpoint.ESN: row(
         "GET",
