@@ -497,3 +497,11 @@ async def test_wifi_setup_session_factory_returns_a_session() -> None:
     device = Vizio(host="h:9000", device_type=DeviceType.SOUNDBAR)
     assert isinstance(device.wifi_setup_session(), WifiSetupSession)
     await device.aclose()
+
+
+def test_wifi_api_is_publicly_exported() -> None:
+    import vizaio
+
+    for name in ("AccessPoint", "WifiResult", "VizioWifiError", "WifiSetupSession"):
+        assert name in vizaio.__all__
+        assert getattr(vizaio, name) is not None
