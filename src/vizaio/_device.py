@@ -63,6 +63,7 @@ from .errors import (
     VizioNotFoundError,
     VizioResponseError,
     VizioUnsupportedError,
+    VizioWifiError,
 )
 from .parse import (
     parse_access_points,
@@ -102,6 +103,7 @@ from .types import (
     SettingType,
     StateExtended,
     SystemVersions,
+    WifiResult,
 )
 from .wire import Response
 
@@ -950,6 +952,59 @@ class Vizio:
         return parse_current_access_point(
             await self._request(Endpoint.CURRENT_ACCESS_POINT)
         )
+
+    async def join_access_point(
+        self,
+        ssid: str,
+        *,
+        password: str | None = None,
+        hidden: bool = False,
+    ) -> None:
+        """
+        Hand the device Wi-Fi credentials.
+
+        For a visible network this is two writes — select the SSID, then
+        set the password — because the firmware tested in issue #40
+        rejected the combined form. A hidden network takes one write
+        carrying both (APK-derived, **not hardware verified**).
+
+        ``password=None`` sends an empty string, matching the official
+        app, which performs the password step even for open networks.
+
+        Returns normally on ``NET_WIFI_ALREADY_CONNECTED``: the device is
+        already on the requested network, which is the outcome the caller
+        wanted. Every other Wi-Fi failure raises :class:`VizioWifiError`.
+
+        Does not confirm the device actually joined. It leaves its setup
+        access point on success, so the calling host generally loses its
+        route to it — re-discover the device on the target network
+        instead.
+        """
+        secret = password or ""
+        try:
+            if hidden:
+                await self._put_network_leaf(
+                    Endpoint.HIDDEN_NETWORK,
+                    lambda hashval: _payloads.join_hidden_network(
+                        ssid=ssid, password=secret, hashval=hashval
+                    ),
+                )
+                return
+
+            await self._put_network_leaf(
+                Endpoint.CURRENT_ACCESS_POINT,
+                lambda hashval: _payloads.select_access_point(
+                    ssid=ssid, hashval=hashval
+                ),
+            )
+            await self._put_network_leaf(
+                Endpoint.WIFI_PASSWORD,
+                lambda hashval: _payloads.write_setting(value=secret, hashval=hashval),
+            )
+        except VizioWifiError as err:
+            if err.result is WifiResult.ALREADY_CONNECTED:
+                return
+            raise
 
     async def _network_hashval(self, endpoint: Endpoint) -> int:
         """GET a network leaf and return the HASHVAL its write must echo."""

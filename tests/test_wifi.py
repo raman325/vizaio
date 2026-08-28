@@ -321,3 +321,82 @@ async def test_missing_hashval_raises_response_error() -> None:
     )
     with pytest.raises(VizioResponseError, match="HASHVAL"):
         await _soundbar(client).start_ap_scan()
+
+
+def _ok() -> Response:
+    """A bare SUCCESS envelope, as returned by a settings PUT."""
+    return Response.from_json({"STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"}})
+
+
+async def test_join_access_point_selects_then_sets_password() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [
+        _leaf_response("current_access_point", 3250072061),
+        _ok(),
+        _leaf_response("set_wifi_password", 2698362233),
+        _ok(),
+    ]
+    await _soundbar(client).join_access_point("MinasTirith", password="s3cret")
+
+    calls = client.request_spec.call_args_list
+    assert calls[1].kwargs["body"] == {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": "MinasTirith"}],
+        "HASHVAL": 3250072061,
+    }
+    assert calls[3].kwargs["body"] == {
+        "REQUEST": "MODIFY",
+        "VALUE": "s3cret",
+        "HASHVAL": 2698362233,
+    }
+    # Ordering matters: selection must land before the password.
+    assert calls[1].args[0].paths[0].endswith("/current_access_point")
+    assert calls[3].args[0].paths[0].endswith("/set_wifi_password")
+
+
+async def test_join_access_point_sends_empty_password_when_omitted() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [
+        _leaf_response("current_access_point", 1),
+        _ok(),
+        _leaf_response("set_wifi_password", 2),
+        _ok(),
+    ]
+    await _soundbar(client).join_access_point("open-net")
+    assert client.request_spec.call_args_list[3].kwargs["body"]["VALUE"] == ""
+
+
+async def test_join_access_point_hidden_uses_one_put() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [_leaf_response("hidden_network", 99), _ok()]
+    await _soundbar(client).join_access_point("ghost", password="pw", hidden=True)
+
+    assert client.request_spec.call_count == 2
+    assert client.request_spec.call_args_list[1].kwargs["body"] == {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": "ghost", "PASSWORD": "pw"}],
+        "HASHVAL": 99,
+    }
+
+
+async def test_join_access_point_tolerates_already_connected() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [
+        _leaf_response("current_access_point", 1),
+        VizioWifiError(WifiResult.ALREADY_CONNECTED, "NET_WIFI_ALREADY_CONNECTED"),
+    ]
+    # Must not raise: the device is already where we wanted it.
+    await _soundbar(client).join_access_point("MinasTirith", password="pw")
+
+
+async def test_join_access_point_propagates_auth_rejection() -> None:
+    client = AsyncMock()
+    client.request_spec.side_effect = [
+        _leaf_response("current_access_point", 1),
+        _ok(),
+        _leaf_response("set_wifi_password", 2),
+        VizioWifiError(WifiResult.AUTH_REJECTED, "NET_WIFI_AUTH_REJECTED"),
+    ]
+    with pytest.raises(VizioWifiError) as excinfo:
+        await _soundbar(client).join_access_point("MinasTirith", password="wrong")
+    assert excinfo.value.result is WifiResult.AUTH_REJECTED
