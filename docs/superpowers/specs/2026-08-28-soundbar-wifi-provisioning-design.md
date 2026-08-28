@@ -73,11 +73,11 @@ does not fit the session.
 ```python
 @dataclass(frozen=True, slots=True)
 class AccessPoint:
-    ssid: str        # NAME
-    bssid: str       # BSSID
-    security: str    # EM, e.g. "WPA2/PSK", "NONE"
-    band: str        # BAND, "2.4" | "5"
-    rssi: int        # RSSI, 0-100 as the device scales it
+    ssid: str  # NAME
+    bssid: str  # BSSID
+    security: str  # EM, e.g. "WPA2/PSK", "NONE"
+    band: str  # BAND, "2.4" | "5"
+    rssi: int  # RSSI, 0-100 as the device scales it
 
     @property
     def is_open(self) -> bool: ...
@@ -157,6 +157,7 @@ implemented.
 ```python
 def select_access_point(*, ssid: str, hashval: int) -> dict[str, Any]:
     return {"REQUEST": "MODIFY", "VALUE": [{"NAME": ssid}], "HASHVAL": hashval}
+
 
 def join_hidden_network(*, ssid: str, password: str, hashval: int) -> dict[str, Any]:
     return {

@@ -1040,7 +1040,8 @@ on every reading taken during hardware verification.
 
 ## 32. Soundbar Wi-Fi provisioning over SoftAP (issue #40)
 
-**Confidence:** APK DERIVED — NOT HARDWARE VERIFIED
+**Confidence:** HARDWARE VERIFIED (visible-network path); APK DERIVED for the
+hidden-network path
 
 **Behavior:** a factory-reset (or network-reset) Vizio soundbar
 broadcasts an open access point and serves the ordinary SmartCast REST
@@ -1096,6 +1097,27 @@ response `RESULT` field):
 | `NET_UNKNOWN_ERROR` | Catch-all |
 | `REQUIRES_SYSTEM_PIN` | Device is PIN-locked; provisioning cannot proceed unattended |
 
+**Hardware verification (issue #40, soundbar in SoftAP setup mode).** The full
+visible-network sequence was executed successfully against a real device by the
+reporter. Three findings could not have been derived from the APK:
+
+- **The device answers on port 9000**, not 7345. `discovery.DEFAULT_PORTS`
+  already probes both.
+- **No `AUTH` header is required.** Every request succeeded unauthenticated,
+  consistent with the soundbar profile's `requires_auth=False`.
+- **`current_access_point` accepts `NAME` alone.** The `NAME` + `PASSWORD`
+  variant that `AccessPointsViewModel` sends was tried and did *not* work on
+  this firmware; `NAME` alone did.
+
+Two shapes worth noting for implementers. The scan list reports
+`EM`/`RSSI`/`NAME`/`BSSID`/`BAND` but **not** the `OPEN` or `CONNECTED` fields
+`VZAccessPointItem` declares. And a successful write returns
+`ITEMS: [{"HASHVAL": …, "NAME": "Current Access Point"}]` with **no `CNAME`** —
+which is why none of the network endpoint rows may declare an `item` cname.
+
+Still unverified: the hidden-network path, and every `NET_*` failure code (the
+run returned `SUCCESS` at every step).
+
 **Joining the AP is out of scope for this library.** It is an OS-level
 operation, and the app delegates it to Android's `WifiManager` /
 `WifiNetworkSpecifier` — the SoftAP transport in the protocol layer
@@ -1112,13 +1134,20 @@ headless implementation still needs from that path:
   picks the soundbar's AP from the remaining open networks. A headless
   caller has to be told the SSID.
 
-**Our handling:** not implemented as a dedicated API. Steps 1, 2, 4 and 5
-are already reachable through the generic settings surface —
-`trigger_setting_action("network", "start_ap_search")` emits exactly the
-step-1 request, and `get_setting("network", "wireless_access_points")`
-the step-2 one. Step 3b works through `set_setting`. Only steps 3a and
-3-hidden are inexpressible today, because `set_setting` takes a scalar
-`int | str` and these two take a single-element list of objects.
+**Our handling:** `Vizio.start_ap_scan`, `stop_ap_scan`,
+`get_access_points`, `get_current_access_point` and `join_access_point`
+expose the primitives; `Vizio.wifi_setup_session()` brackets them so the
+scan is always stopped, on the success path as well as on abort. The CLI
+offers `vizaio wifi scan` / `join` / `interactive`.
+
+`NET_*` results raise `VizioWifiError` carrying a parsed `WifiResult`,
+except `NET_WIFI_ALREADY_CONNECTED`, which `join_access_point` treats as
+success because the device is already where the caller wanted it.
+
+We deliberately diverge from the app on `NET_WIFI_NEEDS_VALID_SSID`: its
+success predicate is `isSuccessful() || isWifiNeedsValidSsid()`, which
+looks like a workaround for its own UI ordering. Swallowing it would
+report a failed provision as success, so we raise.
 
 ---
 

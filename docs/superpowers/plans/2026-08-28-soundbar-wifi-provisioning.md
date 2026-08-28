@@ -883,8 +883,13 @@ def _leaf_response(cname: str, hashval: int, value: Any = "") -> Response:
         {
             "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
             "ITEMS": [
-                {"CNAME": cname, "TYPE": "T_ACTION_V1", "NAME": cname, "VALUE": value,
-                 "HASHVAL": hashval}
+                {
+                    "CNAME": cname,
+                    "TYPE": "T_ACTION_V1",
+                    "NAME": cname,
+                    "VALUE": value,
+                    "HASHVAL": hashval,
+                }
             ],
         }
     )
@@ -934,8 +939,15 @@ async def test_get_current_access_point_returns_none_when_unset() -> None:
                     "CNAME": "current_access_point",
                     "TYPE": "T_AP_V1",
                     "NAME": "Current Access Point",
-                    "VALUE": [{"EM": "NONE", "RSSI": 0, "NAME": "",
-                               "BSSID": "000000-000000", "BAND": "2.4"}],
+                    "VALUE": [
+                        {
+                            "EM": "NONE",
+                            "RSSI": 0,
+                            "NAME": "",
+                            "BSSID": "000000-000000",
+                            "BAND": "2.4",
+                        }
+                    ],
                 }
             ],
         }
@@ -948,8 +960,14 @@ async def test_missing_hashval_raises_response_error() -> None:
     client.request_spec.return_value = Response.from_json(
         {
             "STATUS": {"RESULT": "SUCCESS", "DETAIL": "Success"},
-            "ITEMS": [{"CNAME": "start_ap_search", "TYPE": "T_ACTION_V1",
-                       "NAME": "Start AP Search", "VALUE": "T_ACTION_V1"}],
+            "ITEMS": [
+                {
+                    "CNAME": "start_ap_search",
+                    "TYPE": "T_ACTION_V1",
+                    "NAME": "Start AP Search",
+                    "VALUE": "T_ACTION_V1",
+                }
+            ],
         }
     )
     with pytest.raises(VizioResponseError, match="HASHVAL"):
@@ -969,78 +987,83 @@ from `.parse`, and `AccessPoint` from `.types`.
 Add these methods to `Vizio`, after the settings-action methods:
 
 ```python
-    # -----------------------------------------------------------------
-    # Wi-Fi provisioning — see docs/protocol-notes.md §32
-    # -----------------------------------------------------------------
+# -----------------------------------------------------------------
+# Wi-Fi provisioning — see docs/protocol-notes.md §32
+# -----------------------------------------------------------------
 
-    async def start_ap_scan(self) -> None:
-        """
-        Ask the device to scan for nearby Wi-Fi networks.
 
-        Fire-and-forget: results accumulate in the scan list over the
-        following seconds. Poll :meth:`get_access_points` to read them.
-        Always pair with :meth:`stop_ap_scan`, or use
-        :meth:`wifi_setup_session` which does that for you.
-        """
-        await self._put_network_leaf(
-            Endpoint.AP_SCAN_START, lambda hashval: _payloads.action_setting(hashval)
+async def start_ap_scan(self) -> None:
+    """
+    Ask the device to scan for nearby Wi-Fi networks.
+
+    Fire-and-forget: results accumulate in the scan list over the
+    following seconds. Poll :meth:`get_access_points` to read them.
+    Always pair with :meth:`stop_ap_scan`, or use
+    :meth:`wifi_setup_session` which does that for you.
+    """
+    await self._put_network_leaf(
+        Endpoint.AP_SCAN_START, lambda hashval: _payloads.action_setting(hashval)
+    )
+
+
+async def stop_ap_scan(self) -> None:
+    """Stop a scan started by :meth:`start_ap_scan`."""
+    await self._put_network_leaf(
+        Endpoint.AP_SCAN_STOP, lambda hashval: _payloads.action_setting(hashval)
+    )
+
+
+async def get_access_points(self) -> tuple[AccessPoint, ...]:
+    """
+    Return the networks the device can currently see.
+
+    Empty until a scan started by :meth:`start_ap_scan` produces
+    results; an empty tuple is a normal early state, not an error.
+    """
+    return parse_access_points(await self._request(Endpoint.ACCESS_POINTS))
+
+
+async def get_current_access_point(self) -> AccessPoint | None:
+    """Return the network the device is on, or ``None`` if unconfigured."""
+    return parse_current_access_point(
+        await self._request(Endpoint.CURRENT_ACCESS_POINT)
+    )
+
+
+async def _network_hashval(self, endpoint: Endpoint) -> int:
+    """GET a network leaf and return the HASHVAL its write must echo."""
+    response = await self._request(endpoint)
+    item = response.items[0] if response.items else None
+    if item is None or item.hashval is None:
+        raise VizioResponseError(f"{endpoint.value} returned no HASHVAL to echo")
+    return item.hashval
+
+
+async def _put_network_leaf(
+    self, endpoint: Endpoint, body_for: Callable[[int], dict[str, Any]]
+) -> None:
+    """
+    GET a network leaf for its hashval, then PUT, retrying once.
+
+    Same stale-hashval contract as :meth:`set_setting` — see
+    protocol-notes §13. ``body_for`` is called again on retry so the
+    fresh hashval lands in the rebuilt body.
+    """
+    try:
+        await self._put_network_body(
+            endpoint, body_for(await self._network_hashval(endpoint))
+        )
+    except VizioInvalidParameterError:
+        await self._put_network_body(
+            endpoint, body_for(await self._network_hashval(endpoint))
         )
 
-    async def stop_ap_scan(self) -> None:
-        """Stop a scan started by :meth:`start_ap_scan`."""
-        await self._put_network_leaf(
-            Endpoint.AP_SCAN_STOP, lambda hashval: _payloads.action_setting(hashval)
-        )
 
-    async def get_access_points(self) -> tuple[AccessPoint, ...]:
-        """
-        Return the networks the device can currently see.
-
-        Empty until a scan started by :meth:`start_ap_scan` produces
-        results; an empty tuple is a normal early state, not an error.
-        """
-        return parse_access_points(await self._request(Endpoint.ACCESS_POINTS))
-
-    async def get_current_access_point(self) -> AccessPoint | None:
-        """Return the network the device is on, or ``None`` if unconfigured."""
-        return parse_current_access_point(
-            await self._request(Endpoint.CURRENT_ACCESS_POINT)
-        )
-
-    async def _network_hashval(self, endpoint: Endpoint) -> int:
-        """GET a network leaf and return the HASHVAL its write must echo."""
-        response = await self._request(endpoint)
-        item = response.items[0] if response.items else None
-        if item is None or item.hashval is None:
-            raise VizioResponseError(f"{endpoint.value} returned no HASHVAL to echo")
-        return item.hashval
-
-    async def _put_network_leaf(
-        self, endpoint: Endpoint, body_for: Callable[[int], dict[str, Any]]
-    ) -> None:
-        """
-        GET a network leaf for its hashval, then PUT, retrying once.
-
-        Same stale-hashval contract as :meth:`set_setting` — see
-        protocol-notes §13. ``body_for`` is called again on retry so the
-        fresh hashval lands in the rebuilt body.
-        """
-        try:
-            await self._put_network_body(
-                endpoint, body_for(await self._network_hashval(endpoint))
-            )
-        except VizioInvalidParameterError:
-            await self._put_network_body(
-                endpoint, body_for(await self._network_hashval(endpoint))
-            )
-
-    async def _put_network_body(
-        self, endpoint: Endpoint, body: dict[str, Any]
-    ) -> None:
-        """PUT ``body`` at a network leaf whose row is declared GET."""
-        spec = replace(resolve(endpoint, self._profile), method="PUT")
-        self._check_auth(spec.auth)
-        await self._client.request_spec(spec, body=body)
+async def _put_network_body(self, endpoint: Endpoint, body: dict[str, Any]) -> None:
+    """PUT ``body`` at a network leaf whose row is declared GET."""
+    spec = replace(resolve(endpoint, self._profile), method="PUT")
+    self._check_auth(spec.auth)
+    await self._client.request_spec(spec, body=body)
 ```
 
 `Callable` needs importing from `collections.abc` if it is not already imported in `_device.py`.
@@ -1160,61 +1183,57 @@ Expected: FAIL with `AttributeError: 'Vizio' object has no attribute 'join_acces
 Add to `Vizio` in `src/vizaio/_device.py`, and import `VizioWifiError` and `WifiResult`:
 
 ```python
-    async def join_access_point(
-        self,
-        ssid: str,
-        *,
-        password: str | None = None,
-        hidden: bool = False,
-    ) -> None:
-        """
-        Hand the device Wi-Fi credentials.
+async def join_access_point(
+    self,
+    ssid: str,
+    *,
+    password: str | None = None,
+    hidden: bool = False,
+) -> None:
+    """
+    Hand the device Wi-Fi credentials.
 
-        For a visible network this is two writes — select the SSID, then
-        set the password — because the firmware tested in issue #40
-        rejected the combined form. A hidden network takes one write
-        carrying both (APK-derived, **not hardware verified**).
+    For a visible network this is two writes — select the SSID, then
+    set the password — because the firmware tested in issue #40
+    rejected the combined form. A hidden network takes one write
+    carrying both (APK-derived, **not hardware verified**).
 
-        ``password=None`` sends an empty string, matching the official
-        app, which performs the password step even for open networks.
+    ``password=None`` sends an empty string, matching the official
+    app, which performs the password step even for open networks.
 
-        Returns normally on ``NET_WIFI_ALREADY_CONNECTED``: the device is
-        already on the requested network, which is the outcome the caller
-        wanted. Every other Wi-Fi failure raises
-        :class:`VizioWifiError`.
+    Returns normally on ``NET_WIFI_ALREADY_CONNECTED``: the device is
+    already on the requested network, which is the outcome the caller
+    wanted. Every other Wi-Fi failure raises
+    :class:`VizioWifiError`.
 
-        Does not confirm the device actually joined. It leaves its setup
-        access point on success, so the calling host generally loses its
-        route to it — re-discover the device on the target network
-        instead.
-        """
-        secret = password or ""
-        try:
-            if hidden:
-                await self._put_network_leaf(
-                    Endpoint.HIDDEN_NETWORK,
-                    lambda hashval: _payloads.join_hidden_network(
-                        ssid=ssid, password=secret, hashval=hashval
-                    ),
-                )
-                return
-
+    Does not confirm the device actually joined. It leaves its setup
+    access point on success, so the calling host generally loses its
+    route to it — re-discover the device on the target network
+    instead.
+    """
+    secret = password or ""
+    try:
+        if hidden:
             await self._put_network_leaf(
-                Endpoint.CURRENT_ACCESS_POINT,
-                lambda hashval: _payloads.select_access_point(
-                    ssid=ssid, hashval=hashval
+                Endpoint.HIDDEN_NETWORK,
+                lambda hashval: _payloads.join_hidden_network(
+                    ssid=ssid, password=secret, hashval=hashval
                 ),
             )
-            await self._put_network_leaf(
-                Endpoint.WIFI_PASSWORD,
-                lambda hashval: _payloads.write_setting(
-                    value=secret, hashval=hashval
-                ),
-            )
-        except VizioWifiError as err:
-            if err.result is WifiResult.ALREADY_CONNECTED:
-                return
-            raise
+            return
+
+        await self._put_network_leaf(
+            Endpoint.CURRENT_ACCESS_POINT,
+            lambda hashval: _payloads.select_access_point(ssid=ssid, hashval=hashval),
+        )
+        await self._put_network_leaf(
+            Endpoint.WIFI_PASSWORD,
+            lambda hashval: _payloads.write_setting(value=secret, hashval=hashval),
+        )
+    except VizioWifiError as err:
+        if err.result is WifiResult.ALREADY_CONNECTED:
+            return
+        raise
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -1583,7 +1602,9 @@ def test_captured_scan_list_parses() -> None:
 
 
 def test_captured_unset_access_point_reads_as_none() -> None:
-    assert parse_current_access_point(_load("network_current_access_point_unset")) is None
+    assert (
+        parse_current_access_point(_load("network_current_access_point_unset")) is None
+    )
 
 
 def test_captured_action_leaves_expose_hashvals() -> None:
@@ -1690,7 +1711,10 @@ def test_wifi_scan_lists_networks() -> None:
 
 def test_wifi_join_passes_credentials() -> None:
     patcher, device = _patch_device()
-    with patcher, patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")):
+    with (
+        patcher,
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
         result = runner.invoke(
             app, ["wifi", "join", "1.2.3.4", "HomeNet", "--password", "pw"]
         )
@@ -1703,10 +1727,15 @@ def test_wifi_join_passes_credentials() -> None:
 def test_wifi_join_reports_a_rejected_password() -> None:
     patcher, device = _patch_device(
         join_access_point=AsyncMock(
-            side_effect=VizioWifiError(WifiResult.AUTH_REJECTED, "NET_WIFI_AUTH_REJECTED")
+            side_effect=VizioWifiError(
+                WifiResult.AUTH_REJECTED, "NET_WIFI_AUTH_REJECTED"
+            )
         )
     )
-    with patcher, patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")):
+    with (
+        patcher,
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
         result = runner.invoke(
             app, ["wifi", "join", "1.2.3.4", "HomeNet", "--password", "bad"]
         )
@@ -1872,7 +1901,10 @@ Append to `tests/test_cli_wifi.py`:
 ```python
 def test_interactive_selects_a_network_and_prompts_for_a_password() -> None:
     patcher, device = _patch_device()
-    with patcher, patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")):
+    with (
+        patcher,
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
         # "1" picks HomeNet (secured), then the password.
         result = runner.invoke(app, ["wifi", "interactive", "1.2.3.4"], input="1\npw\n")
     assert result.exit_code == 0
@@ -1884,7 +1916,10 @@ def test_interactive_selects_a_network_and_prompts_for_a_password() -> None:
 
 def test_interactive_skips_the_password_prompt_for_an_open_network() -> None:
     patcher, device = _patch_device()
-    with patcher, patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")):
+    with (
+        patcher,
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
         # "2" picks OpenNet; no password line follows.
         result = runner.invoke(app, ["wifi", "interactive", "1.2.3.4"], input="2\n")
     assert result.exit_code == 0
@@ -1895,7 +1930,10 @@ def test_interactive_skips_the_password_prompt_for_an_open_network() -> None:
 
 def test_interactive_handles_a_hidden_network() -> None:
     patcher, device = _patch_device()
-    with patcher, patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")):
+    with (
+        patcher,
+        patch("vizaio.cli.async_resolve_host", AsyncMock(return_value="h:9000")),
+    ):
         result = runner.invoke(
             app, ["wifi", "interactive", "1.2.3.4"], input="0\nghost\npw\n"
         )
