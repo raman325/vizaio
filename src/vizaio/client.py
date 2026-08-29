@@ -269,6 +269,13 @@ class SmartCastClient:
                 else:
                     payload = json.dumps(body or {})
                     headers["Content-Type"] = "application/json"
+                    # CodeQL flags this sink (py/clear-text-logging-sensitive-data)
+                    # and the alert is dismissed as a false positive. Both guards
+                    # below are runtime values — one read from the endpoint table,
+                    # one a path comparison — so dataflow analysis cannot prove
+                    # the body is sanitized even though it always is. If you
+                    # change the redaction, re-check that the caplog regression
+                    # tests in tests/test_wifi.py still fail without it.
                     _LOGGER.debug(
                         "PUT %s headers=%s body=%s",
                         url,
