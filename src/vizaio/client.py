@@ -54,6 +54,8 @@ from .wire import Response
 
 _LOGGER = logging.getLogger(__name__)
 
+REDACTED: Final = "<redacted>"
+
 # Radio/DHCP results from the Wi-Fi provisioning leaves. The prefix set
 # catches NET_* strings we don't model yet — the device's vocabulary is
 # wider than what the APK's constants file enumerates.
@@ -262,7 +264,7 @@ class SmartCastClient:
                         "PUT %s headers=%s body=%s",
                         url,
                         _redact(headers),
-                        body,
+                        _redact_body(body, sensitive=spec.sensitive),
                     )
                     async with session.put(
                         url,
@@ -311,6 +313,37 @@ def _coerce_timeout(
 def _redact(headers: Mapping[str, str]) -> dict[str, str]:
     """Return a copy of ``headers`` with the AUTH value masked for debug logs."""
     return {k: ("<redacted>" if k == HEADER_AUTH else v) for k, v in headers.items()}
+
+
+def _redact_body(body: Mapping[str, Any] | None, *, sensitive: bool) -> Any:
+    """
+    Return a log-safe rendering of a request body.
+
+    Two layers, because the password reaches the wire two different ways.
+    ``sensitive`` endpoints (``set_wifi_password``) carry the secret in
+    ``VALUE``, which is indistinguishable from any other setting write, so
+    the whole body is replaced. Independently, any ``PASSWORD`` key is
+    masked wherever it appears — that covers ``hidden_network``, whose
+    body nests the secret inside ``VALUE[0]``, and anything added later
+    that follows the same naming.
+    """
+    if body is None:
+        return None
+    if sensitive:
+        return REDACTED
+    return _mask_password_keys(body)
+
+
+def _mask_password_keys(value: Any) -> Any:
+    """Recursively replace any ``PASSWORD`` value with a placeholder."""
+    if isinstance(value, Mapping):
+        return {
+            k: (REDACTED if str(k).upper() == "PASSWORD" else _mask_password_keys(v))
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [_mask_password_keys(v) for v in value]
+    return value
 
 
 async def _read_raw_json(resp: ClientResponse) -> Mapping[str, Any]:

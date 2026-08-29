@@ -181,6 +181,7 @@ class _Row:
     auth: AuthMode = AuthMode.PROFILE
     item: str | None = None
     needs: Need = Need.NONE
+    sensitive: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,6 +203,11 @@ class EndpointSpec:
     item_cname: str | None = None
     """If set, the natural ``Response.require_item(name)`` accessor."""
 
+    sensitive: bool = False
+    """If ``True``, request bodies for this endpoint carry a user secret and
+    must never be written to logs. :class:`SmartCastClient` substitutes a
+    placeholder instead of the body when debug logging."""
+
 
 def row(
     method: Literal["GET", "PUT"],
@@ -209,6 +215,7 @@ def row(
     auth: AuthMode = AuthMode.PROFILE,
     item: str | None = None,
     needs: Need = Need.NONE,
+    sensitive: bool = False,
 ) -> _Row:
     """
     Build a table row.
@@ -216,7 +223,14 @@ def row(
     Path is positional and may repeat (firmware fallback). Used only
     inside the :data:`ENDPOINTS` literal.
     """
-    return _Row(method=method, paths=tuple(paths), auth=auth, item=item, needs=needs)
+    return _Row(
+        method=method,
+        paths=tuple(paths),
+        auth=auth,
+        item=item,
+        needs=needs,
+        sensitive=sensitive,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -300,8 +314,16 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     Endpoint.AP_SCAN_STOP: row("GET", "{root}/network/stop_ap_search"),
     Endpoint.ACCESS_POINTS: row("GET", "{root}/network/wireless_access_points"),
     Endpoint.CURRENT_ACCESS_POINT: row("GET", "{root}/network/current_access_point"),
-    Endpoint.WIFI_PASSWORD: row("GET", "{root}/network/set_wifi_password"),
-    Endpoint.HIDDEN_NETWORK: row("GET", "{root}/network/hidden_network"),
+    # ``sensitive`` on the two leaves whose write body carries the user's
+    # Wi-Fi password: set_wifi_password puts it in VALUE, hidden_network in
+    # VALUE[0].PASSWORD. Without this, ``vizaio -v`` would print a user's
+    # Wi-Fi password to the console.
+    Endpoint.WIFI_PASSWORD: row(
+        "GET", "{root}/network/set_wifi_password", sensitive=True
+    ),
+    Endpoint.HIDDEN_NETWORK: row(
+        "GET", "{root}/network/hidden_network", sensitive=True
+    ),
     # Identity (multi-path firmware fallback) ——————————————————————————
     Endpoint.ESN: row(
         "GET",
@@ -391,7 +413,13 @@ def resolve(endpoint: Endpoint, profile: DeviceProfile) -> EndpointSpec:
 
     paths = tuple(_render_path(p, profile) for p in raw.paths)
     auth = _resolve_auth(raw.auth, profile)
-    return EndpointSpec(paths=paths, method=raw.method, auth=auth, item_cname=raw.item)
+    return EndpointSpec(
+        paths=paths,
+        method=raw.method,
+        auth=auth,
+        item_cname=raw.item,
+        sensitive=raw.sensitive,
+    )
 
 
 def _check_capabilities(

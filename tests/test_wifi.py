@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from dataclasses import replace as dc_replace
+import json
+import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
+from aioresponses import aioresponses
 import pytest
 
 from vizaio import DeviceType, Vizio
 from vizaio._device import WifiSetupSession
-from vizaio.client import _check_status
-from vizaio.endpoints import EndpointSpec
+from vizaio.client import SmartCastClient, _check_status, _redact_body
+from vizaio.endpoints import Endpoint, EndpointSpec, resolve
 from vizaio.errors import (
     VizioAuthError,
     VizioError,
@@ -505,3 +509,63 @@ def test_wifi_api_is_publicly_exported() -> None:
     for name in ("AccessPoint", "WifiResult", "VizioWifiError", "WifiSetupSession"):
         assert name in vizaio.__all__
         assert getattr(vizaio, name) is not None
+
+
+def test_wifi_password_endpoint_is_marked_sensitive() -> None:
+    from vizaio.endpoints import Endpoint as _Endpoint
+
+    for endpoint in (_Endpoint.WIFI_PASSWORD, _Endpoint.HIDDEN_NETWORK):
+        assert resolve(endpoint, DeviceType.SOUNDBAR.profile).sensitive is True
+    # Selecting an SSID carries no secret, so it stays loggable.
+    assert (
+        resolve(_Endpoint.CURRENT_ACCESS_POINT, DeviceType.SOUNDBAR.profile).sensitive
+        is False
+    )
+
+
+def test_sensitive_body_is_replaced_wholesale() -> None:
+    body = {"REQUEST": "MODIFY", "VALUE": "hunter2", "HASHVAL": 1}
+    assert _redact_body(body, sensitive=True) == "<redacted>"
+
+
+def test_password_keys_are_masked_at_any_depth() -> None:
+    body = {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": "ghost", "PASSWORD": "hunter2"}],
+        "HASHVAL": 1,
+    }
+    assert _redact_body(body, sensitive=False) == {
+        "REQUEST": "MODIFY",
+        "VALUE": [{"NAME": "ghost", "PASSWORD": "<redacted>"}],
+        "HASHVAL": 1,
+    }
+
+
+def test_ordinary_bodies_pass_through_unchanged() -> None:
+    body = {"REQUEST": "MODIFY", "VALUE": [{"NAME": "MinasTirith"}], "HASHVAL": 1}
+    assert _redact_body(body, sensitive=False) == body
+
+
+async def test_no_password_reaches_the_debug_log(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """End-to-end guard: the secret must never appear in captured log output."""
+    spec = resolve(Endpoint.WIFI_PASSWORD, DeviceType.SOUNDBAR.profile)
+    url = f"https://example.test{spec.paths[0]}"
+    body = {"REQUEST": "MODIFY", "VALUE": "hunter2", "HASHVAL": 2}
+
+    client = SmartCastClient(host="example.test")
+    try:
+        with aioresponses() as mocked, caplog.at_level(logging.DEBUG, "vizaio.client"):
+            mocked.put(
+                url,
+                status=200,
+                body=json.dumps({"STATUS": {"RESULT": "SUCCESS", "DETAIL": "ok"}}),
+            )
+            await client.request_spec(dc_replace(spec, method="PUT"), body=body)
+    finally:
+        await client.aclose()
+
+    assert caplog.text, "expected the client to emit a debug line"
+    assert "hunter2" not in caplog.text
+    assert "<redacted>" in caplog.text
