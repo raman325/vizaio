@@ -152,6 +152,21 @@ enable_error_code = [
 ]
 
 # ---------------------------------------------------------------------------
+# Pyright — editor/LSP feedback only. `mypy --strict` above stays the gate.
+# ---------------------------------------------------------------------------
+[tool.pyright]
+# Without these, pyright resolves against the system interpreter and reports
+# every third-party import (aiohttp, typer, rich) as missing.
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+include = ["src/vizaio", "tests"]
+# Kept at basic deliberately: pyright's strict mode disagrees with
+# mypy --strict on style-level judgments, and two checkers arguing in the
+# editor is worse than one. CI enforces mypy; this is for fast local signal.
+typeCheckingMode = "basic"
+
+# ---------------------------------------------------------------------------
 # Pytest
 # ---------------------------------------------------------------------------
 [tool.pytest.ini_options]

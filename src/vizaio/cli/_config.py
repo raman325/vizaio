@@ -27,6 +27,7 @@ from typing import Self
 
 import platformdirs
 import tomlkit
+from tomlkit.exceptions import ParseError
 
 from ..types import DeviceType
 
@@ -77,7 +78,7 @@ class Config:
 
         try:
             doc = tomlkit.parse(path.read_text(encoding="utf-8"))
-        except (OSError, tomlkit.exceptions.ParseError) as e:
+        except (OSError, ParseError) as e:
             _LOGGER.warning("Failed to parse %s: %s — starting empty", path, e)
             return cls(path=path)
 
