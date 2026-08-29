@@ -95,6 +95,14 @@ class Endpoint(StrEnum):
     SETTINGS = "settings"
     SETTINGS_OPTIONS = "settings_options"
 
+    # Wi-Fi provisioning (settings-tree leaves under {root}/network/)
+    AP_SCAN_START = "ap_scan_start"
+    AP_SCAN_STOP = "ap_scan_stop"
+    ACCESS_POINTS = "access_points"
+    CURRENT_ACCESS_POINT = "current_access_point"
+    WIFI_PASSWORD = "wifi_password"
+    HIDDEN_NETWORK = "hidden_network"
+
     # Identity (multi-path firmware fallback)
     ESN = "esn"
     SERIAL_NUMBER = "serial_number"
@@ -173,6 +181,7 @@ class _Row:
     auth: AuthMode = AuthMode.PROFILE
     item: str | None = None
     needs: Need = Need.NONE
+    sensitive: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +203,11 @@ class EndpointSpec:
     item_cname: str | None = None
     """If set, the natural ``Response.require_item(name)`` accessor."""
 
+    sensitive: bool = False
+    """If ``True``, request bodies for this endpoint carry a user secret and
+    must never be written to logs. :class:`SmartCastClient` substitutes a
+    placeholder instead of the body when debug logging."""
+
 
 def row(
     method: Literal["GET", "PUT"],
@@ -201,6 +215,7 @@ def row(
     auth: AuthMode = AuthMode.PROFILE,
     item: str | None = None,
     needs: Need = Need.NONE,
+    sensitive: bool = False,
 ) -> _Row:
     """
     Build a table row.
@@ -208,7 +223,14 @@ def row(
     Path is positional and may repeat (firmware fallback). Used only
     inside the :data:`ENDPOINTS` literal.
     """
-    return _Row(method=method, paths=tuple(paths), auth=auth, item=item, needs=needs)
+    return _Row(
+        method=method,
+        paths=tuple(paths),
+        auth=auth,
+        item=item,
+        needs=needs,
+        sensitive=sensitive,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -278,6 +300,30 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     # Settings tree ———————————————————————————————————————————————————
     Endpoint.SETTINGS: row("GET", "{root}"),
     Endpoint.SETTINGS_OPTIONS: row("GET", "{root_static}"),
+    # Wi-Fi provisioning ——————————————————————————————————————————————
+    # Declared GET: every write on these leaves is preceded by a hashval
+    # fetch on the same path, and the PUT reuses the resolved spec via
+    # ``replace(spec, method="PUT")``.
+    #
+    # None of these set ``item=``. A successful PUT returns
+    # ``ITEMS: [{"HASHVAL": ..., "NAME": "Current Access Point"}]`` with
+    # no CNAME, so an item_cname would make ``_check_status`` raise
+    # VizioNotFoundError on every successful write. Verified against a
+    # real soundbar capture (issue #40).
+    Endpoint.AP_SCAN_START: row("GET", "{root}/network/start_ap_search"),
+    Endpoint.AP_SCAN_STOP: row("GET", "{root}/network/stop_ap_search"),
+    Endpoint.ACCESS_POINTS: row("GET", "{root}/network/wireless_access_points"),
+    Endpoint.CURRENT_ACCESS_POINT: row("GET", "{root}/network/current_access_point"),
+    # ``sensitive`` on the two leaves whose write body carries the user's
+    # Wi-Fi password: set_wifi_password puts it in VALUE, hidden_network in
+    # VALUE[0].PASSWORD. Without this, ``vizaio -v`` would print a user's
+    # Wi-Fi password to the console.
+    Endpoint.WIFI_PASSWORD: row(
+        "GET", "{root}/network/set_wifi_password", sensitive=True
+    ),
+    Endpoint.HIDDEN_NETWORK: row(
+        "GET", "{root}/network/hidden_network", sensitive=True
+    ),
     # Identity (multi-path firmware fallback) ——————————————————————————
     Endpoint.ESN: row(
         "GET",
@@ -367,7 +413,13 @@ def resolve(endpoint: Endpoint, profile: DeviceProfile) -> EndpointSpec:
 
     paths = tuple(_render_path(p, profile) for p in raw.paths)
     auth = _resolve_auth(raw.auth, profile)
-    return EndpointSpec(paths=paths, method=raw.method, auth=auth, item_cname=raw.item)
+    return EndpointSpec(
+        paths=paths,
+        method=raw.method,
+        auth=auth,
+        item_cname=raw.item,
+        sensitive=raw.sensitive,
+    )
 
 
 def _check_capabilities(

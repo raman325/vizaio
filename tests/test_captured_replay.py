@@ -2,9 +2,17 @@
 Fixture replay — assert the library produces correct typed output from the
 real-device payloads captured in ``tests/captured/``.
 
-These fixtures were captured live from a VHD24M-0810 (firmware 3.720.9.1-1)
+Most fixtures were captured live from a VHD24M-0810 (firmware 3.720.9.1-1)
 during a hardware-verification pass. They lock in the on-the-wire shapes so
 parser changes can't silently break what the device actually sends.
+
+The ``network_*`` fixtures come from a different device entirely: a soundbar
+in SoftAP setup mode, captured by a reporter on issue #40. They are the
+suite's first from a second device family and its first from a device
+mid-onboarding, which is what makes them worth keeping despite the redacted
+SSIDs — the shapes they lock in (a scan list, the unconfigured
+``current_access_point`` sentinel, and a write response carrying no CNAME)
+appear nowhere else.
 
 Why this exists separately from the unit-mocked tests:
 
@@ -27,6 +35,8 @@ from vizaio.errors import (
     VizioNotFoundError,
 )
 from vizaio.parse import (
+    parse_access_points,
+    parse_current_access_point,
     parse_current_app_config,
     parse_current_input,
     parse_inputs,
@@ -404,3 +414,35 @@ class TestFlatVolumeEndpointShapes:
         level = json.loads((CAPTURED / "audio_volume_level.json").read_text())
         mute = json.loads((CAPTURED / "audio_volume_mute.json").read_text())
         assert level["ITEM"]["VALUE"]["MUTE"] == mute["ITEM"]["VALUE"]
+
+
+class TestNetworkProvisioning:
+    """Soundbar SoftAP provisioning payloads (issue #40)."""
+
+    def test_captured_scan_list_parses(self) -> None:
+        response = Response.from_json(_load("network_wireless_access_points"))
+        aps = parse_access_points(response)
+        assert len(aps) == 3
+        assert {a.band for a in aps} == {"2.4", "5"}
+        assert all(not a.is_open for a in aps)
+        assert response.items[0].type == SettingType.ACCESS_POINTS
+
+    def test_captured_unset_access_point_reads_as_none(self) -> None:
+        response = Response.from_json(_load("network_current_access_point_unset"))
+        assert parse_current_access_point(response) is None
+
+    def test_captured_action_leaves_expose_hashvals(self) -> None:
+        for name, expected in (
+            ("network_start_ap_search", 300381621),
+            ("network_stop_ap_search", 139197155),
+            ("network_set_wifi_password", 2698362233),
+        ):
+            assert Response.from_json(_load(name)).items[0].hashval == expected
+
+    def test_captured_write_response_has_no_cname(self) -> None:
+        # This is why none of the network endpoint rows may set ``item=``:
+        # a successful write returns an ITEM the client could never match.
+        response = Response.from_json(_load("network_current_access_point_put"))
+        assert response.status is ResponseStatus.SUCCESS
+        assert response.items[0].cname == ""
+        assert response.items[0].hashval == 964400715

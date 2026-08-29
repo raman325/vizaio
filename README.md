@@ -315,6 +315,33 @@ sent during pairing.
 `pair begin` prints the `pair complete` command with all flags filled in
 except `--pin`, making it trivially scriptable.
 
+### `vizaio wifi`
+
+Hands Wi-Fi credentials to a device sitting on its own setup access point —
+what the SmartCast app's onboarding does. Join the device's hotspot first;
+its address is your default gateway on that network.
+
+```bash
+# See what the device can see
+vizaio wifi scan 192.168.1.1
+
+# Hand over credentials directly
+vizaio wifi join 192.168.1.1 MyNetwork --password hunter2
+vizaio wifi join 192.168.1.1 GhostNet --password hunter2 --hidden
+
+# Guided: scan, pick from a numbered list, prompt for the password
+vizaio wifi interactive 192.168.1.1
+```
+
+Like `vizaio pair`, the host is positional rather than a saved alias — a
+device in setup mode has none. A bare IP probes ports 7345 and 9000, so you
+do not need to know that soundbars answer on 9000. `--device-type` defaults
+to `soundbar`.
+
+None of these confirm the device joined: on success it leaves its hotspot,
+so your host loses its route to it. Rejoin your normal network and run
+`vizaio discover`.
+
 ### `vizaio power`
 
 ```bash
@@ -700,6 +727,35 @@ async with Vizio(host="192.168.1.50", device_type=DeviceType.TV) as v:
 
 These are the same primitives the CLI's `pair begin` / `pair complete` /
 `pair cancel` subcommands use internally.
+
+### Provisioning a soundbar's Wi-Fi
+
+A factory-fresh soundbar broadcasts an open setup hotspot. Join it first —
+that is an OS-level step this library does not perform — then point `vizaio`
+at your default gateway, which is the device's address on its own network.
+
+```python
+from vizaio import DeviceType, Vizio
+
+async with Vizio(host="192.168.1.1:9000", device_type=DeviceType.SOUNDBAR) as v:
+    async with v.wifi_setup_session() as session:
+        for ap in await session.access_points():
+            print(ap.ssid, ap.band, "open" if ap.is_open else ap.security)
+        await session.join("MyNetwork", password="hunter2")
+```
+
+The session starts a scan on entry and always stops it on exit. Call
+`access_points()` again to refresh — scans fill in over several seconds.
+
+Or interactively:
+
+```console
+vizaio wifi interactive 192.168.1.1
+```
+
+Neither confirms the device joined: it leaves its hotspot on success, so the
+host loses its route to it. Rejoin your normal network and run
+`vizaio discover`.
 
 ### Power
 

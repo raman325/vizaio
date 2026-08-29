@@ -27,10 +27,11 @@ Reliability features:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import contextlib
 from dataclasses import replace
 from datetime import datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any, Final, Self
 
 from . import _payloads, apispec
@@ -63,10 +64,13 @@ from .errors import (
     VizioNotFoundError,
     VizioResponseError,
     VizioUnsupportedError,
+    VizioWifiError,
 )
 from .parse import (
+    parse_access_points,
     parse_api_version,
     parse_auth_token,
+    parse_current_access_point,
     parse_current_app_config,
     parse_current_input,
     parse_current_input_item,
@@ -85,6 +89,7 @@ from .parse import (
     parse_volume_mute,
 )
 from .types import (
+    AccessPoint,
     AppAvailability,
     AppConfig,
     AppRecord,
@@ -99,6 +104,7 @@ from .types import (
     SettingType,
     StateExtended,
     SystemVersions,
+    WifiResult,
 )
 from .wire import Response
 
@@ -106,6 +112,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from aiohttp import ClientSession, ClientTimeout
+
+_LOGGER = logging.getLogger(__name__)
 
 # Per APK findings (protocol-notes #19): the official app sends
 # arbitrary-length KEYLISTs in one PUT. We chunk above this defensive
@@ -913,6 +921,144 @@ class Vizio:
         await self._put_settings_body(
             setting_type, name, _payloads.action_setting(hashval=hashval)
         )
+
+    # -----------------------------------------------------------------
+    # Wi-Fi provisioning — see docs/protocol-notes.md §32
+    # -----------------------------------------------------------------
+
+    async def start_ap_scan(self) -> None:
+        """
+        Ask the device to scan for nearby Wi-Fi networks.
+
+        Fire-and-forget: results accumulate in the scan list over the
+        following seconds. Poll :meth:`get_access_points` to read them.
+        Always pair with :meth:`stop_ap_scan`, or use
+        :meth:`wifi_setup_session`, which does that for you.
+        """
+        await self._put_network_leaf(Endpoint.AP_SCAN_START, _payloads.action_setting)
+
+    async def stop_ap_scan(self) -> None:
+        """Stop a scan started by :meth:`start_ap_scan`."""
+        await self._put_network_leaf(Endpoint.AP_SCAN_STOP, _payloads.action_setting)
+
+    async def get_access_points(self) -> tuple[AccessPoint, ...]:
+        """
+        Return the networks the device can currently see.
+
+        Empty until a scan started by :meth:`start_ap_scan` produces
+        results; an empty tuple is a normal early state, not an error.
+        """
+        return parse_access_points(await self._request(Endpoint.ACCESS_POINTS))
+
+    async def get_current_access_point(self) -> AccessPoint | None:
+        """Return the network the device is on, or ``None`` if unconfigured."""
+        return parse_current_access_point(
+            await self._request(Endpoint.CURRENT_ACCESS_POINT)
+        )
+
+    async def join_access_point(
+        self,
+        ssid: str,
+        *,
+        password: str | None = None,
+        hidden: bool = False,
+    ) -> None:
+        """
+        Hand the device Wi-Fi credentials.
+
+        For a visible network this is two writes — select the SSID, then
+        set the password — because the firmware tested in issue #40
+        rejected the combined form. A hidden network takes one write
+        carrying both (APK-derived, **not hardware verified**).
+
+        ``password=None`` sends an empty string, matching the official
+        app, which performs the password step even for open networks.
+
+        Returns normally on ``NET_WIFI_ALREADY_CONNECTED``: the device is
+        already on the requested network, which is the outcome the caller
+        wanted. Every other Wi-Fi failure raises :class:`VizioWifiError`.
+
+        Does not confirm the device actually joined. It leaves its setup
+        access point on success, so the calling host generally loses its
+        route to it — re-discover the device on the target network
+        instead.
+        """
+        secret = password or ""
+        try:
+            if hidden:
+                await self._put_network_leaf(
+                    Endpoint.HIDDEN_NETWORK,
+                    lambda hashval: _payloads.join_hidden_network(
+                        ssid=ssid, password=secret, hashval=hashval
+                    ),
+                )
+                return
+
+            await self._put_network_leaf(
+                Endpoint.CURRENT_ACCESS_POINT,
+                lambda hashval: _payloads.select_access_point(
+                    ssid=ssid, hashval=hashval
+                ),
+            )
+            await self._put_network_leaf(
+                Endpoint.WIFI_PASSWORD,
+                lambda hashval: _payloads.write_setting(value=secret, hashval=hashval),
+            )
+        except VizioWifiError as err:
+            if err.result is WifiResult.ALREADY_CONNECTED:
+                return
+            raise
+
+    def wifi_setup_session(self) -> WifiSetupSession:
+        """
+        Open a Wi-Fi provisioning session.
+
+        Starts a scan on entry and always stops it on exit::
+
+            async with vizio.wifi_setup_session() as session:
+                for ap in await session.access_points():
+                    print(ap.ssid)
+                await session.join("MyNetwork", password="hunter2")
+
+        The host must already be joined to the device's setup access
+        point; that is an OS-level operation this library does not
+        perform. The device's address is the DHCP gateway of that
+        network.
+        """
+        return WifiSetupSession(self)
+
+    async def _network_hashval(self, endpoint: Endpoint) -> int:
+        """GET a network leaf and return the HASHVAL its write must echo."""
+        response = await self._request(endpoint)
+        item = response.items[0] if response.items else None
+        if item is None or item.hashval is None:
+            raise VizioResponseError(f"{endpoint.value} returned no HASHVAL to echo")
+        return item.hashval
+
+    async def _put_network_leaf(
+        self, endpoint: Endpoint, body_for: Callable[[int], dict[str, Any]]
+    ) -> None:
+        """
+        GET a network leaf for its hashval, then PUT, retrying once.
+
+        Same stale-hashval contract as :meth:`set_setting` — see
+        protocol-notes #13. ``body_for`` is called again on retry so the
+        fresh hashval lands in the rebuilt body.
+        """
+        try:
+            await self._put_network_body(
+                endpoint, body_for(await self._network_hashval(endpoint))
+            )
+        except VizioInvalidParameterError:
+            await self._put_network_body(
+                endpoint, body_for(await self._network_hashval(endpoint))
+            )
+
+    async def _put_network_body(self, endpoint: Endpoint, body: dict[str, Any]) -> None:
+        """PUT ``body`` at a network leaf whose table row is declared GET."""
+        spec = replace(resolve(endpoint, self._profile), method="PUT")
+        self._check_auth(spec.auth)
+        await self._client.request_spec(spec, body=body)
 
     async def blank_screen(self) -> None:
         """
@@ -1745,6 +1891,70 @@ def _resolve_input_target(name: str, inputs: Sequence[InputInfo]) -> str:
         | {i.meta_name for i in inputs if i.meta_name}
     )
     raise VizioInvalidInputError(f"input {name!r} not found. Valid: {valid}")
+
+
+class WifiSetupSession:
+    """
+    Async context manager that brackets a Wi-Fi provisioning flow.
+
+    Starts an access-point scan on entry, always stops it on exit —
+    including when the body raises, and including on the success path,
+    which is what the official app does too. The stop is best-effort: a
+    failure there is swallowed so it can never mask the caller's own
+    exception.
+
+    Unlike :class:`PairSession` there is no completion flag. Pairing must
+    not cancel after a successful complete; stopping a scan after a
+    successful join is correct, so the cleanup is unconditional.
+    """
+
+    def __init__(self, vizio: Vizio) -> None:
+        """Bind the session to the device it will provision."""
+        self._vizio = vizio
+
+    async def __aenter__(self) -> Self:
+        """Start the scan; best-effort stop if the start itself fails."""
+        try:
+            await self._vizio.start_ap_scan()
+        except BaseException:
+            await self._stop()
+            raise
+        return self
+
+    async def __aexit__(self, *exc: Any) -> None:
+        """Stop the scan unconditionally, swallowing cleanup failures."""
+        await self._stop()
+
+    async def _stop(self) -> None:
+        """Stop the scan, ignoring device errors."""
+        try:
+            await self._vizio.stop_ap_scan()
+        except VizioError:
+            _LOGGER.debug("stop_ap_scan failed during session cleanup", exc_info=True)
+
+    async def access_points(self) -> tuple[AccessPoint, ...]:
+        """
+        Read the current scan results.
+
+        Performs one GET per call. Scans fill in over several seconds, so
+        call this again to refresh rather than expecting the first read
+        to be complete.
+        """
+        return await self._vizio.get_access_points()
+
+    async def join(
+        self,
+        ssid: str,
+        *,
+        password: str | None = None,
+        hidden: bool = False,
+    ) -> None:
+        """
+        Hand the device credentials.
+
+        Re-callable — retry a bad password without leaving the session.
+        """
+        await self._vizio.join_access_point(ssid, password=password, hidden=hidden)
 
 
 class PairSession:

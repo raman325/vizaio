@@ -1038,6 +1038,119 @@ on every reading taken during hardware verification.
 
 ---
 
+## 32. Soundbar Wi-Fi provisioning over SoftAP (issue #40)
+
+**Confidence:** HARDWARE VERIFIED (visible-network path); APK DERIVED for the
+hidden-network path
+
+**Behavior:** a factory-reset (or network-reset) Vizio soundbar
+broadcasts an open access point and serves the ordinary SmartCast REST
+API on it. The official app provisions the device by joining that AP and
+driving the `network/` subtree of the menu tree. Two code paths implement
+the same endpoints: `VizioDeviceWifiSetup` (first-time setup) and
+`AccessPointsViewModel` (changing networks on an already-configured
+device).
+
+Everything below is under `/menu_native/dynamic/{root}/network/`, where
+`{root}` is `audio_settings` for soundbars. Setup always uses the
+pre-2020 path spellings — `buildOOBEMenuTreeEndpoint()` hardcodes
+`URIYearOptions.YEAR_PRE_2020`, so the 2020 renames
+(`wireless_access_points` -> `wifi_networks`, `set_wifi_password` ->
+`wifi_password_entry`) apply only to the settings path, not to setup.
+
+| Step | Method | Leaf | Body |
+| --- | --- | --- | --- |
+| 1 | PUT | `start_ap_search` | `{"REQUEST": "ACTION", "HASHVAL": <h>}` |
+| 2 | GET | `wireless_access_points` | — |
+| 3a | PUT | `current_access_point` | `{"REQUEST": "MODIFY", "VALUE": [{"NAME": "<ssid>"}], "HASHVAL": <h>}` |
+| 3b | PUT | `set_wifi_password` | `{"REQUEST": "MODIFY", "VALUE": "<password>", "HASHVAL": <h>}` |
+| 3-hidden | PUT | `hidden_network` | `{"REQUEST": "MODIFY", "VALUE": [{"NAME": "<ssid>", "PASSWORD": "<pw>"}], "HASHVAL": <h>}` |
+| 4 | PUT | `stop_ap_search` | `{"REQUEST": "ACTION", "HASHVAL": <h>}` |
+| 5 | GET | `test_connection/test_connection_results` | — |
+
+Steps 1 and 4 are ordinary `T_ACTION_V1` fires (#29). Steps 3a/3b/3-hidden
+are ordinary `MODIFY` writes and take a hashval fetched by a preceding
+GET on the same leaf (#17) — `VizioDeviceApi.setValueFor()` injects one
+automatically when the caller's body omits it, so the GET-then-PUT is
+inherent here as everywhere else.
+
+The scan-list items (`VZAccessPointItem`) carry `NAME` (SSID), `BSSID`,
+`EM` (security suite string, matched against `WEP`/`PSK`/`EAP`/`WPA`/
+`WPA2`, with `WEP/NONE` meaning open), `BAND`, `RSSI`, `OPEN` and
+`CONNECTED`. Connection-test results (`VZTestConnectionItem`) carry
+`SSID NAME`, `CONNECTION METHOD`, `CONNECTION SPEED`, `DHCP`,
+`ERROR_CODE`, `ESTABLISHED DNS SERVERS`, `ESTABLISHED NTP SERVER`,
+`Connected To` and `Internet Connection`.
+
+**Status vocabulary** (`Constants.VZConnectionConstants`, surfaced in the
+response `RESULT` field):
+
+| `RESULT` | Meaning |
+| --- | --- |
+| `NET_WIFI_ALREADY_CONNECTED` | Device is already on that SSID — the app treats this as success and skips to step 4 |
+| `NET_WIFI_NEEDS_VALID_SSID` | No SSID selected, or selection did not stick |
+| `NET_WIFI_MISSING_PASSWORD` | Secure network, no password supplied |
+| `NET_WIFI_AUTH_REJECTED` | Wrong password |
+| `NET_WIFI_NOT_EXISTED` | SSID not in range |
+| `NET_WIFI_CONNECT_TIMEOUT` / `NET_WIFI_CONNECT_ABORTED` / `NET_WIFI_CONNECT_ERROR` / `NET_WIFI_CONNECTION_ERROR` | Association failures |
+| `NET_IP_DHCP_FAILED` / `NET_IP_MANUAL_CONFIG_ERROR` | Associated, but no address |
+| `NET_UNKNOWN_ERROR` | Catch-all |
+| `REQUIRES_SYSTEM_PIN` | Device is PIN-locked; provisioning cannot proceed unattended |
+
+**Hardware verification (issue #40, soundbar in SoftAP setup mode).** The full
+visible-network sequence was executed successfully against a real device by the
+reporter. Three findings could not have been derived from the APK:
+
+- **The device answers on port 9000**, not 7345. `discovery.DEFAULT_PORTS`
+  already probes both.
+- **No `AUTH` header is required.** Every request succeeded unauthenticated,
+  consistent with the soundbar profile's `requires_auth=False`.
+- **`current_access_point` accepts `NAME` alone.** The `NAME` + `PASSWORD`
+  variant that `AccessPointsViewModel` sends was tried and did *not* work on
+  this firmware; `NAME` alone did.
+
+Two shapes worth noting for implementers. The scan list reports
+`EM`/`RSSI`/`NAME`/`BSSID`/`BAND` but **not** the `OPEN` or `CONNECTED` fields
+`VZAccessPointItem` declares. And a successful write returns
+`ITEMS: [{"HASHVAL": …, "NAME": "Current Access Point"}]` with **no `CNAME`** —
+which is why none of the network endpoint rows may declare an `item` cname.
+
+Still unverified: the hidden-network path, and every `NET_*` failure code (the
+run returned `SUCCESS` at every step).
+
+**Joining the AP is out of scope for this library.** It is an OS-level
+operation, and the app delegates it to Android's `WifiManager` /
+`WifiNetworkSpecifier` — the SoftAP transport in the protocol layer
+(`SoftApClient`) is a stub that throws `NotImplementedError` with the
+comment "Use WifiManager.enable(ssid) to make connection". Two details a
+headless implementation still needs from that path:
+
+- **The device's address on its own AP is the DHCP gateway.**
+  `SoftApConnectionVerifier` polls until an address is acquired and then
+  reports `intToIp(dhcpInfo.gateway)` as the device IP. There is no
+  discovery step and no hardcoded subnet.
+- **There is no SSID naming convention to match on.** `SoftApScanner`
+  filters only empty SSIDs, secured networks and `xfinitywifi`; the user
+  picks the soundbar's AP from the remaining open networks. A headless
+  caller has to be told the SSID.
+
+**Our handling:** `Vizio.start_ap_scan`, `stop_ap_scan`,
+`get_access_points`, `get_current_access_point` and `join_access_point`
+expose the primitives; `Vizio.wifi_setup_session()` brackets them so the
+scan is always stopped, on the success path as well as on abort. The CLI
+offers `vizaio wifi scan` / `join` / `interactive`.
+
+`NET_*` results raise `VizioWifiError` carrying a parsed `WifiResult`,
+except `NET_WIFI_ALREADY_CONNECTED`, which `join_access_point` treats as
+success because the device is already where the caller wanted it.
+
+We deliberately diverge from the app on `NET_WIFI_NEEDS_VALID_SSID`: its
+success predicate is `isSuccessful() || isWifiNeedsValidSsid()`, which
+looks like a workaround for its own UI ordering. Swallowing it would
+report a failed provision as success, so we raise.
+
+---
+
 ## Hardware verification list
 
 The following items can only be confirmed against real hardware. Capture

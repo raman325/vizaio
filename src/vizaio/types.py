@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 if TYPE_CHECKING:
     from .endpoints import SettingsRoot
@@ -106,6 +106,22 @@ class SettingType(StrEnum):
     the device reports the literal string ``"T_ACTION_V1"`` as VALUE.
     Trigger with :meth:`vizaio.Vizio.trigger_setting_action`."""
 
+    STRING = "T_STRING_V1"
+    """A free-text setting (e.g. ``network/set_wifi_password``)."""
+
+    ACCESS_POINTS = "T_APS_V1"
+    """A Wi-Fi scan list. VALUE is a list of access-point objects, not a
+    scalar — read it with :func:`vizaio.parse.parse_access_points`."""
+
+    ACCESS_POINT = "T_AP_V1"
+    """A single Wi-Fi network (``network/current_access_point``). VALUE is
+    a one-element list."""
+
+    TEST_CONNECTION = "T_TEST_CONNECTION_V1"
+    """Connection-test results. Documented in protocol-notes §32 but
+    deliberately not surfaced through the API — the device drops off its
+    setup network on success, so the check is unreliable by construction."""
+
 
 class AuthRequirement(StrEnum):
     """Whether an endpoint needs an auth token."""
@@ -139,11 +155,50 @@ class ResponseStatus(StrEnum):
 
     REQUIRES_PAIRING = "requires_pairing"
     PAIRING_DENIED = "pairing_denied"
+    REQUIRES_SYSTEM_PIN = "requires_system_pin"
+    """Device is PIN-locked and refuses the write until the PIN is
+    supplied. Mapped to :class:`VizioAuthError`. Seen on the Wi-Fi
+    provisioning leaves; the app's constant is
+    ``RESPONSE_REQUIRES_SYSTEM_PIN``, i.e. it belongs to the same family
+    as ``REQUIRES_PAIRING`` rather than to the ``NET_*`` radio codes."""
+
     BLOCKED = "blocked"
     FAILURE = "failure"
     UNKNOWN = "unknown"
     """Used when the device returns a status string we don't recognize.
     The original string is preserved on the response object."""
+
+
+class WifiResult(StrEnum):
+    """
+    Radio and DHCP outcomes from the Wi-Fi provisioning leaves.
+
+    Reported in ``STATUS.RESULT``, and distinct from
+    :class:`ResponseStatus`, which covers protocol outcomes. Sourced from
+    ``Constants.VZConnectionConstants`` in the official app; none were
+    observed on the wire during hardware verification, which returned
+    ``SUCCESS`` at every step.
+    """
+
+    ALREADY_CONNECTED = "net_wifi_already_connected"
+    """Device is already on the requested SSID. Not an error — the
+    official app treats it as success."""
+
+    NEEDS_VALID_SSID = "net_wifi_needs_valid_ssid"
+    MISSING_PASSWORD = "net_wifi_missing_password"
+    AUTH_REJECTED = "net_wifi_auth_rejected"
+    NOT_FOUND = "net_wifi_not_existed"
+    CONNECT_TIMEOUT = "net_wifi_connect_timeout"
+    CONNECT_ABORTED = "net_wifi_connect_aborted"
+    CONNECT_ERROR = "net_wifi_connect_error"
+    CONNECTION_ERROR = "net_wifi_connection_error"
+    DHCP_FAILED = "net_ip_dhcp_failed"
+    MANUAL_CONFIG_ERROR = "net_ip_manual_config_error"
+    UNKNOWN_ERROR = "net_unknown_error"
+
+    UNKNOWN = "unknown"
+    """Device said something in the ``NET_*`` family we don't model. The
+    raw string is preserved on :attr:`vizaio.VizioWifiError.code`."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +223,45 @@ class InputInfo:
     accepts in a ``current_input`` PUT body — display name and
     meta_name are rejected. ``set_input`` accepts any of the three
     forms and translates to ``cname`` automatically."""
+
+
+_SECURITY_MODES: Final[tuple[str, ...]] = ("WEP", "PSK", "EAP", "WPA", "WPA2")
+
+
+@dataclass(frozen=True, slots=True)
+class AccessPoint:
+    """
+    One Wi-Fi network as seen by the device.
+
+    Returned by a ``wireless_access_points`` scan and by
+    ``current_access_point``.
+    Field names map to the device's keys: ``ssid`` is ``NAME``,
+    ``security`` is ``EM``. ``rssi`` is the device's own 0-100 scale, not
+    dBm — captured values run 45-70.
+    """
+
+    ssid: str
+    bssid: str
+    security: str
+    band: str
+    """``"2.4"`` or ``"5"``, as a string — the device sends it that way."""
+
+    rssi: int
+
+    @property
+    def is_open(self) -> bool:
+        """
+        ``True`` when the network needs no password.
+
+        Ports ``VZAccessPointItem.isSecure()`` from the official app: the
+        network counts as secured only if ``EM`` names one of the known
+        suites *and* is not the literal ``WEP/NONE`` sentinel, which the
+        app treats as open despite naming WEP.
+        """
+        em = self.security.upper()
+        if any(mode in em for mode in _SECURITY_MODES):
+            return "WEP/NONE" in em
+        return True
 
 
 @dataclass(frozen=True, slots=True)

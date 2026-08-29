@@ -47,11 +47,29 @@ from .errors import (
     VizioInvalidParameterError,
     VizioNotFoundError,
     VizioResponseError,
+    VizioWifiError,
 )
-from .types import AuthRequirement, ResponseStatus
+from .types import AuthRequirement, ResponseStatus, WifiResult
 from .wire import Response
 
 _LOGGER = logging.getLogger(__name__)
+
+REDACTED: Final = "<redacted>"
+
+# Settings leaves whose write body carries a user secret. Checked against the
+# request path as well as the endpoint's ``sensitive`` flag, because the same
+# leaves are reachable through the generic settings API — ``set_setting(
+# "network", "set_wifi_password", ...)`` and ``vizaio settings set`` resolve
+# ``Endpoint.SETTINGS``, which cannot know what leaf it is being pointed at.
+_SENSITIVE_LEAVES: Final[frozenset[str]] = frozenset(
+    {"set_wifi_password", "wifi_password_entry", "hidden_network"}
+)
+
+# Radio/DHCP results from the Wi-Fi provisioning leaves. The prefix set
+# catches NET_* strings we don't model yet — the device's vocabulary is
+# wider than what the APK's constants file enumerates.
+_WIFI_RESULT_VALUES: Final[set[str]] = {r.value for r in WifiResult}
+_WIFI_RESULT_PREFIXES: Final[tuple[str, ...]] = ("net_wifi_", "net_ip_", "net_unknown")
 
 DEFAULT_CONNECT_TIMEOUT: Final = 2.0
 DEFAULT_WRITE_TIMEOUT: Final = 3.0
@@ -251,11 +269,21 @@ class SmartCastClient:
                 else:
                     payload = json.dumps(body or {})
                     headers["Content-Type"] = "application/json"
+                    # CodeQL flags this sink (py/clear-text-logging-sensitive-data)
+                    # and the alert is dismissed as a false positive. Both guards
+                    # below are runtime values — one read from the endpoint table,
+                    # one a path comparison — so dataflow analysis cannot prove
+                    # the body is sanitized even though it always is. If you
+                    # change the redaction, re-check that the caplog regression
+                    # tests in tests/test_wifi.py still fail without it.
                     _LOGGER.debug(
                         "PUT %s headers=%s body=%s",
                         url,
                         _redact(headers),
-                        body,
+                        _redact_body(
+                            body,
+                            sensitive=spec.sensitive or _path_is_sensitive(path),
+                        ),
                     )
                     async with session.put(
                         url,
@@ -304,6 +332,42 @@ def _coerce_timeout(
 def _redact(headers: Mapping[str, str]) -> dict[str, str]:
     """Return a copy of ``headers`` with the AUTH value masked for debug logs."""
     return {k: ("<redacted>" if k == HEADER_AUTH else v) for k, v in headers.items()}
+
+
+def _path_is_sensitive(path: str) -> bool:
+    """Return ``True`` when ``path`` targets a secret-bearing settings leaf."""
+    return path.rsplit("/", 1)[-1].lower() in _SENSITIVE_LEAVES
+
+
+def _redact_body(body: Mapping[str, Any] | None, *, sensitive: bool) -> Any:
+    """
+    Return a log-safe rendering of a request body.
+
+    Two layers, because the password reaches the wire two different ways.
+    ``sensitive`` endpoints (``set_wifi_password``) carry the secret in
+    ``VALUE``, which is indistinguishable from any other setting write, so
+    the whole body is replaced. Independently, any ``PASSWORD`` key is
+    masked wherever it appears — that covers ``hidden_network``, whose
+    body nests the secret inside ``VALUE[0]``, and anything added later
+    that follows the same naming.
+    """
+    if body is None:
+        return None
+    if sensitive:
+        return REDACTED
+    return _mask_password_keys(body)
+
+
+def _mask_password_keys(value: Any) -> Any:
+    """Recursively replace any ``PASSWORD`` value with a placeholder."""
+    if isinstance(value, Mapping):
+        return {
+            k: (REDACTED if str(k).upper() == "PASSWORD" else _mask_password_keys(v))
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [_mask_password_keys(v) for v in value]
+    return value
 
 
 async def _read_raw_json(resp: ClientResponse) -> Mapping[str, Any]:
@@ -388,6 +452,19 @@ def _check_status(response: Response, spec: EndpointSpec) -> None:
         ResponseStatus.PAIRING_DENIED,
     ):
         raise VizioAuthError(response.detail or status.value)
+    if status is ResponseStatus.REQUIRES_SYSTEM_PIN:
+        raise VizioAuthError(response.detail or status.value)
+    lowered = response.result_raw.lower()
+    if lowered in _WIFI_RESULT_VALUES or lowered.startswith(_WIFI_RESULT_PREFIXES):
+        raise VizioWifiError(
+            result=(
+                WifiResult(lowered)
+                if lowered in _WIFI_RESULT_VALUES
+                else WifiResult.UNKNOWN
+            ),
+            code=response.result_raw,
+            detail=response.detail,
+        )
     # FAILURE, UNKNOWN, anything else.
     raise VizioResponseError(
         f"unexpected status {response.result_raw!r}: {response.detail}"

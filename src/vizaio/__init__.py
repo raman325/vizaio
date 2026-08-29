@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version as _pkg_version
 
-from ._device import PairSession, Vizio
+from ._device import PairSession, Vizio, WifiSetupSession
 from ._keys import RemoteKey
 from .apispec import ApiSpec
 from .apps import (
@@ -30,6 +30,7 @@ from .errors import (
     VizioNotFoundError,
     VizioResponseError,
     VizioUnsupportedError,
+    VizioWifiError,
 )
 from .profiles import (
     CRAVE360_PROFILE,
@@ -39,6 +40,7 @@ from .profiles import (
     TV_PROFILE,
 )
 from .types import (
+    AccessPoint,
     AppAvailability,
     AppConfig,
     AppRecord,
@@ -56,6 +58,7 @@ from .types import (
     SettingType,
     StateExtended,
     SystemVersions,
+    WifiResult,
 )
 
 # Derived from the installed distribution metadata so it always matches the
@@ -74,6 +77,7 @@ __all__ = [
     "CRAVE_PRO_PROFILE",
     "SOUNDBAR_PROFILE",
     "TV_PROFILE",
+    "AccessPoint",
     "ApiSpec",
     "AppAvailability",
     "AppConfig",
@@ -104,6 +108,9 @@ __all__ = [
     "VizioNotFoundError",
     "VizioResponseError",
     "VizioUnsupportedError",
+    "VizioWifiError",
+    "WifiResult",
+    "WifiSetupSession",
     "async_classify_device",
     "async_is_tv",
     "async_resolve_host",

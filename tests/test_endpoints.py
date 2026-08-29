@@ -28,6 +28,7 @@ from vizaio.endpoints import (
     EndpointSpec,
     SettingsRoot,
     pairing_path,
+    resolve,
     settings_options_path,
     settings_path,
     state_path,
@@ -296,3 +297,47 @@ class TestResolveVolumeV2:
         spec = _resolve(Endpoint.VOLUME_INCREASE, DeviceType.TV)
         assert "STEP" not in spec.paths[0]
         assert "?" not in spec.paths[0]
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "leaf"),
+    [
+        (Endpoint.AP_SCAN_START, "start_ap_search"),
+        (Endpoint.AP_SCAN_STOP, "stop_ap_search"),
+        (Endpoint.ACCESS_POINTS, "wireless_access_points"),
+        (Endpoint.CURRENT_ACCESS_POINT, "current_access_point"),
+        (Endpoint.WIFI_PASSWORD, "set_wifi_password"),
+        (Endpoint.HIDDEN_NETWORK, "hidden_network"),
+    ],
+)
+def test_network_endpoints_resolve_under_the_audio_root(
+    endpoint: Endpoint, leaf: str
+) -> None:
+    spec = resolve(endpoint, DeviceType.SOUNDBAR.profile)
+    assert spec.paths == (f"/menu_native/dynamic/audio_settings/network/{leaf}",)
+    assert spec.method == "GET"
+
+
+def test_network_endpoints_never_declare_an_item_cname() -> None:
+    # A successful PUT returns ITEMS without a CNAME, so an item_cname
+    # would make _check_status raise VizioNotFoundError on every write.
+    for endpoint in (
+        Endpoint.AP_SCAN_START,
+        Endpoint.AP_SCAN_STOP,
+        Endpoint.ACCESS_POINTS,
+        Endpoint.CURRENT_ACCESS_POINT,
+        Endpoint.WIFI_PASSWORD,
+        Endpoint.HIDDEN_NETWORK,
+    ):
+        assert resolve(endpoint, DeviceType.SOUNDBAR.profile).item_cname is None
+
+
+def test_network_endpoints_follow_the_profile_auth_model() -> None:
+    assert (
+        resolve(Endpoint.ACCESS_POINTS, DeviceType.SOUNDBAR.profile).auth
+        is AuthRequirement.NONE
+    )
+    assert (
+        resolve(Endpoint.ACCESS_POINTS, DeviceType.TV.profile).auth
+        is AuthRequirement.REQUIRED
+    )
