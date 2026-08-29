@@ -13,7 +13,12 @@ import pytest
 
 from vizaio import DeviceType, Vizio
 from vizaio._device import WifiSetupSession
-from vizaio.client import SmartCastClient, _check_status, _redact_body
+from vizaio.client import (
+    SmartCastClient,
+    _check_status,
+    _path_is_sensitive,
+    _redact_body,
+)
 from vizaio.endpoints import Endpoint, EndpointSpec, resolve
 from vizaio.errors import (
     VizioAuthError,
@@ -569,3 +574,51 @@ async def test_no_password_reaches_the_debug_log(
     assert caplog.text, "expected the client to emit a debug line"
     assert "hunter2" not in caplog.text
     assert "<redacted>" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("/menu_native/dynamic/audio_settings/network/set_wifi_password", True),
+        ("/menu_native/dynamic/audio_settings/network/wifi_password_entry", True),
+        ("/menu_native/dynamic/audio_settings/network/hidden_network", True),
+        ("/menu_native/dynamic/audio_settings/network/current_access_point", False),
+        ("/menu_native/dynamic/audio_settings/audio/volume", False),
+    ],
+)
+def test_path_sensitivity(path: str, expected: bool) -> None:
+    assert _path_is_sensitive(path) is expected
+
+
+async def test_generic_settings_write_to_the_password_leaf_is_redacted(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """
+    The password leaf is reachable through the generic settings API.
+
+    ``set_setting("network", "set_wifi_password", ...)`` resolves
+    ``Endpoint.SETTINGS``, which has no ``sensitive`` flag — the path
+    check is what keeps the secret out of the log on that route.
+    """
+    spec = resolve(Endpoint.SETTINGS, DeviceType.SOUNDBAR.profile)
+    suffix = "/network/set_wifi_password"
+    url = f"https://example.test{spec.paths[0]}{suffix}"
+
+    client = SmartCastClient(host="example.test")
+    try:
+        with aioresponses() as mocked, caplog.at_level(logging.DEBUG, "vizaio.client"):
+            mocked.put(
+                url,
+                status=200,
+                body=json.dumps({"STATUS": {"RESULT": "SUCCESS", "DETAIL": "ok"}}),
+            )
+            await client.request_spec(
+                dc_replace(spec, method="PUT"),
+                body={"REQUEST": "MODIFY", "VALUE": "hunter2", "HASHVAL": 2},
+                path_suffix=suffix,
+            )
+    finally:
+        await client.aclose()
+
+    assert caplog.text
+    assert "hunter2" not in caplog.text

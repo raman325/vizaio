@@ -56,6 +56,15 @@ _LOGGER = logging.getLogger(__name__)
 
 REDACTED: Final = "<redacted>"
 
+# Settings leaves whose write body carries a user secret. Checked against the
+# request path as well as the endpoint's ``sensitive`` flag, because the same
+# leaves are reachable through the generic settings API — ``set_setting(
+# "network", "set_wifi_password", ...)`` and ``vizaio settings set`` resolve
+# ``Endpoint.SETTINGS``, which cannot know what leaf it is being pointed at.
+_SENSITIVE_LEAVES: Final[frozenset[str]] = frozenset(
+    {"set_wifi_password", "wifi_password_entry", "hidden_network"}
+)
+
 # Radio/DHCP results from the Wi-Fi provisioning leaves. The prefix set
 # catches NET_* strings we don't model yet — the device's vocabulary is
 # wider than what the APK's constants file enumerates.
@@ -264,7 +273,10 @@ class SmartCastClient:
                         "PUT %s headers=%s body=%s",
                         url,
                         _redact(headers),
-                        _redact_body(body, sensitive=spec.sensitive),
+                        _redact_body(
+                            body,
+                            sensitive=spec.sensitive or _path_is_sensitive(path),
+                        ),
                     )
                     async with session.put(
                         url,
@@ -313,6 +325,11 @@ def _coerce_timeout(
 def _redact(headers: Mapping[str, str]) -> dict[str, str]:
     """Return a copy of ``headers`` with the AUTH value masked for debug logs."""
     return {k: ("<redacted>" if k == HEADER_AUTH else v) for k, v in headers.items()}
+
+
+def _path_is_sensitive(path: str) -> bool:
+    """Return ``True`` when ``path`` targets a secret-bearing settings leaf."""
+    return path.rsplit("/", 1)[-1].lower() in _SENSITIVE_LEAVES
 
 
 def _redact_body(body: Mapping[str, Any] | None, *, sensitive: bool) -> Any:
