@@ -371,7 +371,20 @@ def _mask_password_keys(value: Any) -> Any:
 
 
 async def _read_raw_json(resp: ClientResponse) -> Mapping[str, Any]:
-    """Return parsed JSON from ``resp`` without envelope validation."""
+    """
+    Return parsed JSON from ``resp`` without envelope validation.
+
+    Endpoints on this path (``/state_extended``, ``/system/versions``)
+    are optional — some firmware doesn't implement them at all. Missing
+    support shows up two ways: a 200 response wrapping the usual
+    ``STATUS.RESULT == URI_NOT_FOUND`` envelope, or (some older
+    firmware, see issue #181128) a literal HTTP 404 before the body is
+    ever produced. Both are surfaced as :class:`VizioNotFoundError` so
+    callers can fall back exactly as they would for a standard
+    multi-path endpoint.
+    """
+    if resp.status == 404:
+        raise VizioNotFoundError(f"device has no endpoint at {resp.url}")
     _check_http_status(resp)
     try:
         text = await resp.text()
@@ -380,6 +393,17 @@ async def _read_raw_json(resp: ClientResponse) -> Mapping[str, Any]:
         raise VizioResponseError(f"failed to parse JSON: {e}") from e
     if not isinstance(data, Mapping):
         raise VizioResponseError(f"expected a JSON object, got {type(data).__name__}")
+    try:
+        envelope = Response.from_json(data)
+    except VizioResponseError:
+        # No STATUS field (or a malformed one) — this is the normal flat
+        # success shape for these endpoints, not an error envelope.
+        return data
+    if envelope.status is ResponseStatus.URI_NOT_FOUND:
+        raise VizioNotFoundError(
+            envelope.detail
+            or f"device has no endpoint at {envelope.uri or '<unknown>'}"
+        )
     return data
 
 

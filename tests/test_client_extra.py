@@ -152,6 +152,35 @@ class TestRequestRawJsonErrors:
             finally:
                 await client.aclose()
 
+    async def test_http_404_maps_to_not_found(self) -> None:
+        """Older firmware answers an unsupported raw-json endpoint with a
+        plain 404 instead of the usual 200 + URI_NOT_FOUND envelope
+        (issue #181128)."""
+        with aioresponses() as m:
+            m.get(URL, status=404, body="")
+            client = SmartCastClient(host=HOST)
+            try:
+                with pytest.raises(VizioNotFoundError, match=PATH):
+                    await client.request_raw_json(_spec_get())
+            finally:
+                await client.aclose()
+
+    async def test_uri_not_found_envelope_maps_to_not_found(self) -> None:
+        """Modern firmware answers with 200 + the standard SCPL
+        URI_NOT_FOUND envelope instead of a literal 404."""
+        with aioresponses() as m:
+            m.get(
+                URL,
+                status=200,
+                payload=_envelope(result="URI_NOT_FOUND", detail="no such uri"),
+            )
+            client = SmartCastClient(host=HOST)
+            try:
+                with pytest.raises(VizioNotFoundError, match="no such uri"):
+                    await client.request_raw_json(_spec_get())
+            finally:
+                await client.aclose()
+
     async def test_invalid_json_payload(self) -> None:
         with aioresponses() as m:
             m.get(URL, status=200, body="not json {{{")
