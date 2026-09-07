@@ -27,6 +27,7 @@ from vizaio.parse import (
     parse_model_name,
     parse_pair_challenge,
     parse_setting_types,
+    parse_state_extended_capability,
     parse_system_info_model_name,
 )
 from vizaio.types import SettingType
@@ -242,6 +243,44 @@ class TestParseDeviceInfo:
             }
         )
         assert parse_device_info(resp) == {}
+
+
+class TestParseStateExtendedCapability:
+    def test_advertised(self) -> None:
+        resp = _resp(
+            {
+                "STATUS": {"RESULT": "SUCCESS"},
+                "ITEMS": [
+                    {
+                        "CNAME": "deviceinfo",
+                        "VALUE": {"SCPL_CAPABILITIES": {"state_extended": "1.0.0"}},
+                    }
+                ],
+            }
+        )
+        assert parse_state_extended_capability(resp) is True
+
+    def test_explicitly_absent(self) -> None:
+        resp = _resp(
+            {
+                "STATUS": {"RESULT": "SUCCESS"},
+                "ITEMS": [{"CNAME": "deviceinfo", "VALUE": {"SCPL_CAPABILITIES": {}}}],
+            }
+        )
+        assert parse_state_extended_capability(resp) is False
+
+    def test_capability_map_absent(self) -> None:
+        resp = _resp(
+            {
+                "STATUS": {"RESULT": "SUCCESS"},
+                "ITEMS": [{"CNAME": "deviceinfo", "VALUE": {}}],
+            }
+        )
+        assert parse_state_extended_capability(resp) is None
+
+    def test_items_absent(self) -> None:
+        resp = _resp({"STATUS": {"RESULT": "SUCCESS"}, "ITEMS": []})
+        assert parse_state_extended_capability(resp) is None
 
 
 class TestParseModelName:

@@ -349,8 +349,14 @@ VizioError
 │   └── VizioInvalidInputError    ← raised by set_input("nonexistent")
 ├── VizioNotFoundError
 ├── VizioBusyError                ← maps from STATUS.RESULT == BLOCKED
-└── VizioUnsupportedError         ← raised by capability gating BEFORE HTTP
+└── VizioUnsupportedError         ← raised when capability gating rejects a call
 ```
+
+Firmware-specific capabilities can also come from the cached unauthenticated
+deviceinfo payload. `supports_state_extended()` returns a tri-state result:
+advertised, explicitly absent, or unknown when the capability map is missing.
+The unknown case is probed once by `get_state_extended()` for compatibility
+with older firmware, and successful or not-found outcomes are cached.
 
 `VizioInvalidInputError` is a subclass of `VizioInvalidParameterError`
 on purpose — code that catches "device said no" can stay broad, code

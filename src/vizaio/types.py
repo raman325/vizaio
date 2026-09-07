@@ -426,10 +426,9 @@ class StateExtended:
     individual GETs for HA-style polling integrations.
 
     Capability is advertised by the device under
-    ``deviceinfo.scpl_capabilities.state_extended``. Older firmware
-    that doesn't advertise the capability will raise
-    :class:`VizioUnsupportedError` from :meth:`Vizio.get_state_extended`
-    before any HTTP work.
+    ``deviceinfo.scpl_capabilities.state_extended``. When the capability
+    map is absent, :meth:`Vizio.get_state_extended` probes the endpoint
+    for compatibility with older firmware.
 
     The on-the-wire envelope is **distinct** from the regular SCPL
     response shape — it has flat top-level keys and no ``STATUS`` /

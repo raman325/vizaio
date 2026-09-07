@@ -247,9 +247,12 @@ class TestStateExtended:
         assert spec.method == "GET"
 
     def test_state_extended_authed(self) -> None:
-        # Per APK findings, /state_extended requires AUTH.
         spec = _resolve(Endpoint.STATE_EXTENDED, DeviceType.TV)
         assert spec.auth is AuthRequirement.REQUIRED
+
+    def test_state_extended_unauthed_for_soundbar(self) -> None:
+        spec = _resolve(Endpoint.STATE_EXTENDED, DeviceType.SOUNDBAR)
+        assert spec.auth is AuthRequirement.NONE
 
 
 class TestEndpointSpecImmutability:
