@@ -1451,8 +1451,9 @@ class Vizio:
            auth token** and skip the auth-gated ``menu_native`` round
            trip entirely. ESN has no deviceinfo equivalent, so it never
            takes this path.
-        2. The aggregate ``.../tv_information`` envelope (auth-gated on
-           TVs), which modern firmware (verified VHD24M-0810 fw
+        2. The aggregate ``.../tv_information`` or ``.../speaker_information``
+           envelope, selected by device profile. Modern TV firmware (verified
+           on VHD24M-0810 fw
            3.720.9.1-1) returns in one shot — the per-field child paths
            like ``.../tv_information/esn`` return ``URI_NOT_FOUND``.
         3. The per-field endpoints, for older firmware that doesn't
@@ -1491,8 +1492,8 @@ class Vizio:
         """
         Return ``cname → value`` mapping for the aggregate identity endpoint.
 
-        Fetches ``Endpoint.TV_INFORMATION`` and caches the result on the
-        instance — identity is immutable for the device lifetime.
+        Fetches the profile-specific information endpoint and caches the
+        result on the instance — identity is immutable for the device lifetime.
 
         Returns ``None`` (and caches that decision) when the aggregate
         is not available on this firmware, so subsequent calls don't

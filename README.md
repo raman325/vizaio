@@ -959,7 +959,8 @@ info: DeviceInfo = await v.get_device_info()
 `get_device_info()` aggregates four-or-five GETs and degrades each field to
 `""` / `()` on individual failure — useful when one field is unsupported on
 older firmware. Each individual getter still raises on failure if you call
-it directly.
+it directly. Identity fallback paths use `tv_information` for TV profiles and
+`speaker_information` for audio profiles.
 
 ```python
 versions: SystemVersions = await v.get_versions()  # GET /system/versions

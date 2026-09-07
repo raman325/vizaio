@@ -178,6 +178,22 @@ class TestResolveFirmwareFallbacks:
         spec = _resolve(Endpoint.ESN, DeviceType.TV)
         assert len(set(spec.paths)) == len(spec.paths)
 
+    @pytest.mark.parametrize(
+        "endpoint",
+        [Endpoint.SERIAL_NUMBER, Endpoint.VERSION, Endpoint.TV_INFORMATION],
+    )
+    def test_tv_uses_tv_information(self, endpoint: Endpoint) -> None:
+        spec = _resolve(endpoint, DeviceType.TV)
+        assert all("/tv_information" in path for path in spec.paths)
+
+    @pytest.mark.parametrize(
+        "endpoint",
+        [Endpoint.SERIAL_NUMBER, Endpoint.VERSION, Endpoint.TV_INFORMATION],
+    )
+    def test_soundbar_uses_speaker_information(self, endpoint: Endpoint) -> None:
+        spec = _resolve(endpoint, DeviceType.SOUNDBAR)
+        assert all("/speaker_information" in path for path in spec.paths)
+
 
 class TestResolveUnsupported:
     """Unsupported endpoint+profile combinations raise VizioUnsupportedError
