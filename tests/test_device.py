@@ -59,6 +59,7 @@ from vizaio import (
     VizioConnectionError,
     VizioInvalidInputError,
     VizioInvalidParameterError,
+    VizioNotFoundError,
     VizioResponseError,
     VizioUnsupportedError,
 )
@@ -1338,6 +1339,41 @@ class TestDeviceInfo:
         # Served from the deviceinfo + aggregate caches — no new call.
         assert await vizio_tv.get_version() == "3.720.9.1-1"
         assert mock_client.call_count == 2
+
+    async def test_soundbar_identity_via_speaker_information(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Soundbar identity falls back through the speaker information tree."""
+        mock_client.side_effect = [
+            _resp(make_device_info_response({})),
+            VizioNotFoundError("aggregate unavailable"),
+            _resp(make_success_response(items=[make_item("serial_number", "SN123")])),
+            _resp(make_success_response(items=[make_item("version", "V3.1.3.1")])),
+        ]
+
+        assert await vizio_soundbar.get_serial_number() == "SN123"
+        assert await vizio_soundbar.get_version() == "V3.1.3.1"
+        assert _all_call_paths(mock_client) == [
+            ("/state/device/deviceinfo",),
+            (
+                "/menu_native/dynamic/audio_settings/admin_and_privacy/"
+                "system_information/speaker_information",
+                "/menu_native/dynamic/audio_settings/system/system_information/"
+                "speaker_information",
+            ),
+            (
+                "/menu_native/dynamic/audio_settings/admin_and_privacy/"
+                "system_information/speaker_information/serial_number",
+                "/menu_native/dynamic/audio_settings/system/system_information/"
+                "speaker_information/serial_number",
+            ),
+            (
+                "/menu_native/dynamic/audio_settings/admin_and_privacy/"
+                "system_information/speaker_information/version",
+                "/menu_native/dynamic/audio_settings/system/system_information/"
+                "speaker_information/version",
+            ),
+        ]
 
     async def test_serial_and_version_from_deviceinfo_unauthenticated(
         self, mock_client: AsyncMock

@@ -241,8 +241,8 @@ def row(
 NONE = AuthMode.NONE
 REQ = AuthMode.REQUIRED
 PROF = AuthMode.PROFILE
-_TV_INFO = "{root}/admin_and_privacy/system_information/tv_information"
-_TV_INFO_LEGACY = "{root}/system/system_information/tv_information"
+_DEVICE_INFO = "{root}/admin_and_privacy/system_information/{information}"
+_DEVICE_INFO_LEGACY = "{root}/system/system_information/{information}"
 # ESN lives under a *different* subtree than serial/version — it's at
 # ``uli_information/esn``, not ``tv_information/esn``. Verified live on
 # VHD24M-0810 fw 3.720.9.1-1: pyvizio's path returns the ESN; the
@@ -334,20 +334,23 @@ ENDPOINTS: dict[Endpoint, _Row] = {
         # returns URI_NOT_FOUND on every modern firmware revision.
         # Keep the wrong paths as last-resort fallbacks in case some
         # firmware revision genuinely puts ESN there.
-        f"{_TV_INFO}/esn",
-        f"{_TV_INFO_LEGACY}/esn",
+        f"{_DEVICE_INFO}/esn",
+        f"{_DEVICE_INFO_LEGACY}/esn",
         item="esn",
     ),
     Endpoint.SERIAL_NUMBER: row(
         "GET",
-        f"{_TV_INFO}/serial_number",
-        f"{_TV_INFO_LEGACY}/serial_number",
+        f"{_DEVICE_INFO}/serial_number",
+        f"{_DEVICE_INFO_LEGACY}/serial_number",
         item="serial_number",
     ),
     Endpoint.VERSION: row(
-        "GET", f"{_TV_INFO}/version", f"{_TV_INFO_LEGACY}/version", item="version"
+        "GET",
+        f"{_DEVICE_INFO}/version",
+        f"{_DEVICE_INFO_LEGACY}/version",
+        item="version",
     ),
-    Endpoint.TV_INFORMATION: row("GET", _TV_INFO, _TV_INFO_LEGACY),
+    Endpoint.TV_INFORMATION: row("GET", _DEVICE_INFO, _DEVICE_INFO_LEGACY),
     Endpoint.PIN_IS_DEFAULT: row("GET", "/pin/is_pin_default", auth=REQ),
     # Pairing —————————————————————————————————————————————————————————
     Endpoint.BEGIN_PAIR: row("PUT", "/pairing/start", auth=NONE),
@@ -443,12 +446,17 @@ def _check_capabilities(
 
 
 def _render_path(template: str, profile: DeviceProfile) -> str:
-    """Substitute ``{root}`` / ``{root_static}`` in a template."""
+    """Substitute profile-dependent segments in a path template."""
     if "{" not in template:
         return template
     return template.format(
         root=f"/menu_native/dynamic/{profile.settings_root.value}",
         root_static=f"/menu_native/static/{profile.settings_root.value}",
+        information=(
+            "speaker_information"
+            if profile.settings_root is SettingsRoot.AUDIO
+            else "tv_information"
+        ),
     )
 
 

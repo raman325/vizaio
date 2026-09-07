@@ -101,6 +101,9 @@ on different firmware generations:
 
 - Newer firmware: `/menu_native/dynamic/tv_settings/admin_and_privacy/system_information/tv_information/{esn,serial_number,version}`
 - Older firmware: `/menu_native/dynamic/tv_settings/system/system_information/tv_information/{esn,serial_number,version}`
+- Soundbars use the corresponding `audio_settings` tree with
+  `speaker_information`, not `tv_information`. An SB3651 on firmware V3.1.3.1
+  exposes serial number and version under the legacy path.
 
 **Evidence:**
 
@@ -110,6 +113,8 @@ on different firmware generations:
   API path changes across firmware versions.
 - pyvizio open issue #135 ("Some sources no longer work with Home Assistant"
   after firmware update) is exactly this category.
+- vizaio issue #50 includes direct SB3651 responses from
+  `audio_settings/system/system_information/speaker_information`.
 
 **Our handling:** `EndpointSpec.paths` is a tuple. The client tries each
 path in order, falling through to the next on `VizioNotFoundError`. The
