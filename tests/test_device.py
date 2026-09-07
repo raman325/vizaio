@@ -48,6 +48,7 @@ from tests._fixtures import (
 )
 from vizaio import (
     AppConfig,
+    AuthRequirement,
     ChargingStatus,
     DeviceType,
     InputInfo,
@@ -59,6 +60,7 @@ from vizaio import (
     VizioConnectionError,
     VizioInvalidInputError,
     VizioInvalidParameterError,
+    VizioNotFoundError,
     VizioResponseError,
     VizioUnsupportedError,
 )
@@ -1578,6 +1580,11 @@ class TestDeviceInfo:
         # payload.
         from unittest.mock import AsyncMock
 
+        vizio_tv._cached_deviceinfo = _resp(
+            make_device_info_response(
+                {"SCPL_CAPABILITIES": {"state_extended": "1.0.0"}}
+            )
+        )
         # Replace the bound method on this Vizio's client instance.
         vizio_tv._client.request_raw_json = AsyncMock(return_value=raw)  # type: ignore[method-assign]
         s = await vizio_tv.get_state_extended()
@@ -1605,6 +1612,11 @@ class TestDeviceInfo:
         """
         from unittest.mock import AsyncMock
 
+        vizio_tv._cached_deviceinfo = _resp(
+            make_device_info_response(
+                {"SCPL_CAPABILITIES": {"state_extended": "1.0.0"}}
+            )
+        )
         # Minimal payload — most fields missing.
         vizio_tv._client.request_raw_json = AsyncMock(  # type: ignore[method-assign]
             return_value={"URI": "/state_extended", "POWER_STATUS": {"VALUE": 0}}
@@ -1618,6 +1630,63 @@ class TestDeviceInfo:
         assert s.current_app is None
         assert s.screen_mode == ""
         assert s.media_state == ""
+
+    async def test_state_extended_not_advertised(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """An explicit capability map without the key disables the endpoint."""
+        mock_client.return_value = _resp(
+            make_device_info_response({"SCPL_CAPABILITIES": {}})
+        )
+        raw_request = AsyncMock()
+        vizio_tv._client.request_raw_json = raw_request  # type: ignore[method-assign]
+
+        with pytest.raises(VizioUnsupportedError, match="state_extended"):
+            await vizio_tv.get_state_extended()
+
+        raw_request.assert_not_called()
+
+    async def test_state_extended_unknown_capability_is_probed(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """Firmware without SCPL metadata is probed for compatibility."""
+        mock_client.return_value = _resp(make_device_info_response({}))
+        vizio_tv._client.request_raw_json = AsyncMock(  # type: ignore[method-assign]
+            return_value={"POWER_STATUS": {"VALUE": 1}}
+        )
+
+        assert (await vizio_tv.get_state_extended()).power_on is True
+        assert await vizio_tv.supports_state_extended() is True
+
+    async def test_state_extended_not_found_is_cached(
+        self, vizio_tv: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """A failed compatibility probe is not repeated."""
+        mock_client.return_value = _resp(make_device_info_response({}))
+        raw_request = AsyncMock(side_effect=VizioNotFoundError("not found"))
+        vizio_tv._client.request_raw_json = raw_request  # type: ignore[method-assign]
+
+        with pytest.raises(VizioNotFoundError):
+            await vizio_tv.get_state_extended()
+        with pytest.raises(VizioUnsupportedError):
+            await vizio_tv.get_state_extended()
+
+        raw_request.assert_awaited_once()
+
+    async def test_soundbar_state_extended_is_unauthed(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """An audio device can use an advertised endpoint without a token."""
+        mock_client.return_value = _resp(
+            make_device_info_response(
+                {"SCPL_CAPABILITIES": {"state_extended": "1.0.0"}}
+            )
+        )
+        raw_request = AsyncMock(return_value={"POWER_STATUS": {"VALUE": 1}})
+        vizio_soundbar._client.request_raw_json = raw_request  # type: ignore[method-assign]
+
+        assert (await vizio_soundbar.get_state_extended()).power_on is True
+        assert raw_request.call_args.args[0].auth is AuthRequirement.NONE
 
     async def test_get_device_info_aggregate(
         self, vizio_tv: Vizio, mock_client: AsyncMock

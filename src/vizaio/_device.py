@@ -82,6 +82,7 @@ from .parse import (
     parse_setting_types,
     parse_settings,
     parse_state_extended,
+    parse_state_extended_capability,
     parse_system_info,
     parse_system_versions,
     parse_vizios_binary,
@@ -250,6 +251,9 @@ class Vizio:
         # negative-caches for the session and would otherwise strand a
         # briefly-unreachable device on the legacy paths permanently.
         self._cached_volume_v2: bool | None = None
+        # Runtime endpoint verdict. Deviceinfo capability metadata may be
+        # absent on older firmware, in which case the endpoint is probed.
+        self._state_extended_supported: bool | None = None
         self._closed = False
 
     # ------------------------------------------------------------------
@@ -1132,13 +1136,37 @@ class Vizio:
         "unhandled exception") — we let that propagate as
         :class:`VizioConnectionError`.
         """
+        if await self.supports_state_extended() is False:
+            raise VizioUnsupportedError(
+                f"{self._profile.name} does not support state_extended"
+            )
         spec = resolve(Endpoint.STATE_EXTENDED, self._profile)
-        payload = await self._client.request_raw_json(spec)
+        try:
+            payload = await self._client.request_raw_json(spec)
+        except VizioNotFoundError:
+            self._state_extended_supported = False
+            raise
+        self._state_extended_supported = True
         # The endpoint reports its own ``ERRORS`` array — usually empty,
         # but if the device populates it we still hand back a typed
         # snapshot (errors live on ``StateExtended.errors`` for caller
         # inspection).
         return parse_state_extended(payload)
+
+    async def supports_state_extended(self) -> bool | None:
+        """
+        Return whether the device supports the aggregate state endpoint.
+
+        ``None`` means deviceinfo does not expose the SCPL capability map.
+        In that case :meth:`get_state_extended` probes the endpoint and
+        remembers a successful or not-found result for the session.
+        """
+        if self._state_extended_supported is not None:
+            return self._state_extended_supported
+        supported = parse_state_extended_capability(await self._get_deviceinfo())
+        if supported is not None:
+            self._state_extended_supported = supported
+        return supported
 
     async def get_versions(self) -> SystemVersions:
         """

@@ -451,6 +451,22 @@ def parse_api_version(response: Response) -> str:
     return str(version) if version else ""
 
 
+def parse_state_extended_capability(response: Response) -> bool | None:
+    """
+    Return whether deviceinfo advertises the aggregate state endpoint.
+
+    ``None`` means the device did not expose an SCPL capability map, so
+    callers may probe the endpoint for compatibility with older firmware.
+    """
+    capabilities = _deviceinfo_value(response).get("scpl_capabilities")
+    if not isinstance(capabilities, Mapping):
+        return None
+    value = capabilities.get("state_extended")
+    if isinstance(value, str):
+        return value.lower() not in ("", "0", "false")
+    return bool(value)
+
+
 def parse_system_info(response: Response) -> dict[str, Any]:
     """
     Extract the ``SYSTEM_INFO`` block from a deviceinfo response.

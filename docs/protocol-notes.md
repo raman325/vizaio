@@ -1298,7 +1298,11 @@ endpoint (advertised under `deviceinfo.scpl_capabilities.state_extended`),
 which returns power / current input / current app / screen mode /
 media state in a single round trip with a flat-keyed envelope. See
 `Vizio.get_state_extended()` and `StateExtended` for the typed
-wrapper.
+wrapper. Some older firmware may omit the entire `SCPL_CAPABILITIES` map,
+so the library treats that shape as unknown and probes once. An explicit
+map without `state_extended` is treated as unsupported. Authentication is
+profile-based so an audio device that advertises the endpoint can be tested
+without inventing a token requirement.
 
 ### V5 — Discovery: TXT record keys
 

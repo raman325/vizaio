@@ -255,7 +255,7 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     # State —————————————————————————————————————————————————————————————
     Endpoint.DEVICE_INFO: row("GET", "/state/device/deviceinfo", auth=NONE),
     Endpoint.POWER_MODE: row("GET", "/state/device/power_mode", item="power_mode"),
-    Endpoint.STATE_EXTENDED: row("GET", "/state_extended", auth=REQ),
+    Endpoint.STATE_EXTENDED: row("GET", "/state_extended", auth=PROF),
     Endpoint.SYSTEM_VERSIONS: row("GET", "/system/versions", auth=REQ),
     Endpoint.BATTERY_LEVEL: row(
         "GET", "/state/device/battery_level", item="battery_level", needs=Need.BATTERY

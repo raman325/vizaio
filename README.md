@@ -1060,8 +1060,14 @@ s = await v.get_state_extended()
 #               device_name='Test TV', errors=())
 ```
 
-Older firmware that doesn't expose the endpoint raises
-`VizioNotFoundError` (URI_NOT_FOUND); fall back to individual getters.
+`supports_state_extended()` returns `True` or `False` when deviceinfo exposes
+the `SCPL_CAPABILITIES` map. It returns `None` when that map is unavailable;
+`get_state_extended()` then probes the endpoint for compatibility with older
+firmware. A missing capability raises `VizioUnsupportedError`; a failed probe
+raises `VizioNotFoundError`. Both mean callers should use individual getters.
+
+Authentication follows the device profile: TVs send their token, while audio
+devices can use the endpoint without a token when their firmware advertises it.
 
 > **Note on push events:** vizaio is a REST control-plane client and does
 > not implement WebSocket/push state updates. On real hardware the SmartCast
