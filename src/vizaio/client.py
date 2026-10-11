@@ -189,12 +189,18 @@ class SmartCastClient:
         try:
             async with self._semaphore:
                 if spec.method == "GET":
-                    async with session.get(url, headers=headers, ssl=False) as resp:
+                    async with session.get(
+                        url, headers=headers, ssl=False, timeout=self._timeout
+                    ) as resp:
                         return await _read_raw_json(resp)
                 payload = json.dumps(body or {})
                 headers["Content-Type"] = "application/json"
                 async with session.put(
-                    url, data=payload, headers=headers, ssl=False
+                    url,
+                    data=payload,
+                    headers=headers,
+                    ssl=False,
+                    timeout=self._command_timeout,
                 ) as resp:
                     return await _read_raw_json(resp)
         except (TimeoutError, ClientConnectionError) as e:
@@ -264,7 +270,9 @@ class SmartCastClient:
             async with self._semaphore:
                 if method == "GET":
                     _LOGGER.debug("GET %s headers=%s", url, _redact(headers))
-                    async with session.get(url, headers=headers, ssl=False) as resp:
+                    async with session.get(
+                        url, headers=headers, ssl=False, timeout=self._timeout
+                    ) as resp:
                         return await _parse_response(resp, spec)
                 else:
                     payload = json.dumps(body or {})
