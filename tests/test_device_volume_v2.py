@@ -352,8 +352,9 @@ class TestSetVolumeGating:
         """The app adds an HTTP volume rung only for TVs; audio devices get
         key command + Cast. So the flat endpoint is pure speculation here."""
         mock_client.side_effect = [
-            _captured("settings_audio_volume.json"),
-            _captured("static_audio.json"),
+            *_soundbar_unmuted(),
+            _captured("soundbar_settings_audio_volume.json"),
+            _captured("soundbar_static_audio_volume.json"),
             _resp(make_success_response(items=[])),
         ]
         await vizio_soundbar.set_volume(12)
@@ -369,6 +370,124 @@ class TestSetVolumeGating:
         with pytest.raises(VizioInvalidInputError, match="0-100"):
             await vizio_tv.set_volume(101)
         mock_client.assert_not_called()
+
+
+def _soundbar_unmuted() -> list[Any]:
+    """Mute leaf reading "Off", with no static counterpart."""
+    from vizaio import VizioNotFoundError
+
+    return [
+        _resp(make_success_response(items=[make_item("mute", "Off")])),
+        VizioNotFoundError("no static leaf"),
+    ]
+
+
+def _keylist(mock: AsyncMock) -> list[tuple[int, int]]:
+    """``(codeset, code)`` pairs of every keypress the device was sent."""
+    return [
+        (key["CODESET"], key["CODE"])
+        for c in mock.call_args_list
+        if c.args[0].paths == ("/key_command/",)
+        for key in c.kwargs["body"]["KEYLIST"]
+    ]
+
+
+class TestSoundbarSetVolumeByKeys:
+    """Audio devices reach a level with keypresses, never a settings write.
+
+    The captures are a P514a soundbar sitting at 15 whose ``volume`` leaf
+    declares -10..10. That device answers a ``menu_native`` MODIFY with
+    ``SUCCESS`` and doesn't move for -10..10, and with
+    ``VALUE_OUT_OF_RANGE`` above 10 (protocol-notes #33). Keys work.
+    """
+
+    def _at_15(self) -> list[Any]:
+        return [
+            _captured("soundbar_settings_audio_volume.json"),
+            _captured("soundbar_static_audio_volume.json"),
+        ]
+
+    async def test_steps_up_by_the_difference(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            *_soundbar_unmuted(),
+            *self._at_15(),
+            _resp(make_success_response(items=[])),
+        ]
+        await vizio_soundbar.set_volume(18)
+        up = vizio_soundbar.profile.keymap["VOL_UP"]
+        assert _keylist(mock_client) == [up] * 3
+
+    async def test_steps_down_by_the_difference(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            *_soundbar_unmuted(),
+            *self._at_15(),
+            _resp(make_success_response(items=[])),
+        ]
+        await vizio_soundbar.set_volume(11)
+        down = vizio_soundbar.profile.keymap["VOL_DOWN"]
+        assert _keylist(mock_client) == [down] * 4
+
+    async def test_level_above_the_declared_maximum_is_reachable(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """The leaf claims MAXIMUM 10; the device runs to 31. The declared
+        bound must not reject a level the hardware can reach."""
+        mock_client.side_effect = [
+            *_soundbar_unmuted(),
+            *self._at_15(),
+            *[_resp(make_success_response(items=[]))] * 4,
+        ]
+        await vizio_soundbar.set_volume(31)
+        assert len(_keylist(mock_client)) == 16
+
+    async def test_never_writes_the_setting(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [
+            *_soundbar_unmuted(),
+            *self._at_15(),
+            *[_resp(make_success_response(items=[]))] * 3,
+        ]
+        await vizio_soundbar.set_volume(5)
+        bodies = [c.kwargs.get("body") or {} for c in mock_client.call_args_list]
+        assert not any(b.get("REQUEST") == "MODIFY" for b in bodies)
+
+    async def test_unmutes_before_stepping(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """While muted, the first VOL_UP only unmutes, so stepping from a
+        muted state would land one short."""
+        from vizaio import VizioNotFoundError
+
+        mock_client.side_effect = [
+            _resp(make_success_response(items=[make_item("mute", "On")])),
+            VizioNotFoundError("no static leaf"),
+            _resp(make_success_response(items=[])),  # MUTE_TOGGLE
+            *self._at_15(),
+            _resp(make_success_response(items=[])),
+        ]
+        await vizio_soundbar.set_volume(16)
+        keymap = vizio_soundbar.profile.keymap
+        assert _keylist(mock_client) == [keymap["MUTE_TOGGLE"], keymap["VOL_UP"]]
+
+    async def test_already_at_level_sends_no_keys(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        mock_client.side_effect = [*_soundbar_unmuted(), *self._at_15()]
+        await vizio_soundbar.set_volume(15)
+        assert _keylist(mock_client) == []
+
+    async def test_max_volume_ignores_the_declared_range(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """-10..10 is not the 0-31 scale the device reads in, so
+        ``get_max_volume`` must not report 10."""
+        mock_client.side_effect = self._at_15()
+        assert await vizio_soundbar.get_max_volume() == 31
 
 
 class TestV2FallbackOnUnsupportedEndpoint:

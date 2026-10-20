@@ -116,11 +116,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-# Per APK findings (protocol-notes #19): the official app sends
-# arbitrary-length KEYLISTs in one PUT. We chunk above this defensive
-# cap purely to handle worst-case device buffers.
-_KEYLIST_CHUNK_SIZE: Final = 50
-
 # App catalog refresh policy.
 _APP_CATALOG_TTL: Final = timedelta(hours=24)
 
@@ -440,7 +435,10 @@ class Vizio:
             info = await self.get_setting("audio", "volume")
         except VizioError:
             return None
-        if info.max is None:
+        # A negative MINIMUM means the leaf isn't describing the absolute
+        # scale: a P514a soundbar declares -10..10 while reading 0-31
+        # (protocol-notes #33). Trust the profile instead.
+        if info.max is None or (info.min is not None and info.min < 0):
             return self._profile.max_volume
         return min(info.max, self._profile.max_volume)
 
@@ -450,8 +448,16 @@ class Vizio:
 
         On volume-V2 firmware this is the flat ``PUT /audio/volume/level``
         with body ``{"LEVEL": n}`` — one round trip, no HASHVAL.
-        Everywhere else it falls back to the ``menu_native``
-        GET-then-PUT that :meth:`set_setting` performs.
+        Other TVs fall back to the ``menu_native`` GET-then-PUT that
+        :meth:`set_setting` performs.
+
+        Audio devices (soundbars, Crave) get neither: they unmute, read
+        :meth:`get_volume`, and send the difference as ``VOL_UP`` /
+        ``VOL_DOWN`` keypresses. The official
+        app only has an HTTP volume rung for the TV settings root
+        (android-app-findings #10), and a P514a soundbar answers the
+        ``menu_native`` write with ``SUCCESS`` without moving, or with
+        ``VALUE_OUT_OF_RANGE`` above 10 (protocol-notes #33).
 
         The gate is not an optimization: the flat endpoint is TV-only and
         absent on older firmware, so sending it unconditionally would
@@ -463,6 +469,16 @@ class Vizio:
         max_volume = self._profile.max_volume
         if not 0 <= level <= max_volume:
             raise VizioInvalidInputError(f"volume {level} out of range 0-{max_volume}")
+        if self._profile.settings_root is SettingsRoot.AUDIO:
+            # Unmute first: while muted, a P514a spends the first VOL_UP on
+            # unmuting and doesn't move, which would land one short.
+            await self.unmute()
+            delta = level - await self.get_volume()
+            if delta > 0:
+                await self._send_repeated_key("VOL_UP", delta)
+            elif delta < 0:
+                await self._send_repeated_key("VOL_DOWN", -delta)
+            return
         if await self.supports_volume_v2():
             try:
                 await self._client.request_spec(
@@ -486,8 +502,9 @@ class Vizio:
 
         Deliberately does not use the flat ``PUT /audio/volume/increase``
         endpoint even where it is available: a keypress batch is already
-        one request for any step count up to :data:`_KEYLIST_CHUNK_SIZE`
-        and works on every device family, so there is nothing to gain.
+        one request for any step count up to
+        ``profile.max_keys_per_request`` and works on every device family,
+        so there is nothing to gain.
         """
         await self._send_repeated_key("VOL_UP", steps)
 
@@ -713,7 +730,7 @@ class Vizio:
         the character's ASCII code point — the same encoding the official
         app's ``KeyCommandItem.ASCII_*`` keys use (``'A'`` → code 65,
         ``'5'`` → code 53, space → 32). The whole string goes out as one
-        batched ``KEYLIST`` (chunked above :data:`_KEYLIST_CHUNK_SIZE`),
+        batched ``KEYLIST`` (chunked above ``profile.max_keys_per_request``),
         so it lands in keystroke order.
 
         Raises :class:`VizioInvalidInputError` if any character is outside
@@ -734,8 +751,9 @@ class Vizio:
                     "has no key code"
                 )
             codes.append((0, cp))
-        for start in range(0, len(codes), _KEYLIST_CHUNK_SIZE):
-            await self._send_key_codes(codes[start : start + _KEYLIST_CHUNK_SIZE])
+        chunk = self._profile.max_keys_per_request
+        for start in range(0, len(codes), chunk):
+            await self._send_key_codes(codes[start : start + chunk])
 
     # ------------------------------------------------------------------
     # Settings
@@ -1680,9 +1698,9 @@ class Vizio:
         """
         Send a single key repeated N times.
 
-        Per protocol-notes #19, the official app sends arbitrary-length
-        KEYLISTs in one PUT. We chunk only above ``_KEYLIST_CHUNK_SIZE``
-        as defensive insurance against worst-case device buffers.
+        Batched into one PUT per ``profile.max_keys_per_request`` keys:
+        the official app sends arbitrary-length KEYLISTs (protocol-notes
+        #19), but some soundbars drop keys past a small limit (#33).
         """
         if steps < 1:
             return
@@ -1693,7 +1711,7 @@ class Vizio:
             )
         remaining = steps
         while remaining > 0:
-            chunk_size = min(remaining, _KEYLIST_CHUNK_SIZE)
+            chunk_size = min(remaining, self._profile.max_keys_per_request)
             await self._send_key_codes([code] * chunk_size)
             remaining -= chunk_size
 

@@ -384,6 +384,16 @@ class TestVolume:
         # 120 / 50 = 3 PUTs (50+50+20).
         assert mock_client.call_count == 3
 
+    async def test_soundbar_batches_at_most_four_keys(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """A P514a acts on the first 4 keys of a KEYLIST and drops the
+        rest, so 6 steps must go out as 4 + 2 (protocol-notes #33)."""
+        mock_client.return_value = _resp(make_key_press_response())
+        await vizio_soundbar.volume_down(steps=6)
+        sizes = [len(c.kwargs["body"]["KEYLIST"]) for c in mock_client.call_args_list]
+        assert sizes == [4, 2]
+
     async def test_volume_down(self, vizio_tv: Vizio, mock_client: AsyncMock) -> None:
         mock_client.return_value = _resp(make_key_press_response())
         await vizio_tv.volume_down()

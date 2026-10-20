@@ -83,6 +83,11 @@ class DeviceProfile:
     """Remote key name → ``(codeset, code)``. Names not present in this
     map raise :class:`VizioUnsupportedError` from ``send_key``."""
 
+    max_keys_per_request: int = 50
+    """Most keypresses to batch into one ``KEYLIST`` PUT; longer runs are
+    split across sequential PUTs. Lower it for a device that drops keys
+    past some count (protocol-notes #19, #33)."""
+
 
 class ChargingStatus(IntEnum):
     """Battery charging state for portable speakers."""
