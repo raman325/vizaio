@@ -88,6 +88,18 @@ class DeviceProfile:
     split across sequential PUTs. Lower it for a device that drops keys
     past some count (protocol-notes #19, #33)."""
 
+    def __post_init__(self) -> None:
+        """
+        Reject a key batch size below 1.
+
+        Key sends would loop forever on empty KEYLISTs, and ``send_text``
+        would fail on a zero ``range()`` step.
+        """
+        if self.max_keys_per_request < 1:
+            raise ValueError(
+                f"max_keys_per_request must be >= 1, got {self.max_keys_per_request}"
+            )
+
 
 class ChargingStatus(IntEnum):
     """Battery charging state for portable speakers."""

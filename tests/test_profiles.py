@@ -15,6 +15,8 @@ additional capabilities to expose. Add them here first.
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from vizaio import (
@@ -214,6 +216,12 @@ class TestCustomProfile:
         assert custom.name == "Hypothetical Vizio Cinema"
         assert custom.max_volume == 50
         assert RemoteKey.POW_ON in custom.keymap
+
+    @pytest.mark.parametrize("size", [0, -1])
+    def test_rejects_non_positive_key_batch_size(self, size: int) -> None:
+        """A batch size below 1 would loop forever sending empty KEYLISTs."""
+        with pytest.raises(ValueError, match="max_keys_per_request"):
+            dataclasses.replace(TV_PROFILE, max_keys_per_request=size)
 
     def test_custom_profile_keymap_is_sealed(self) -> None:
         """frozen=True on DeviceProfile prevents accidental mutation that

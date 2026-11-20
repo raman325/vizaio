@@ -216,10 +216,11 @@ class TestRelativeVolumeAlwaysUsesKeypresses:
     """Relative volume has no caller knob — the library picks.
 
     The V2 ``increase``/``decrease`` endpoints work, but never beat the
-    keypress path: a keypress batch is already a single PUT for any step
-    count up to ``_KEYLIST_CHUNK_SIZE`` (50), which covers every
-    realistic input on a 0-100 scale, and it works on every device
-    family regardless of firmware.
+    keypress path: on a TV (the only family with the flat endpoints) a
+    keypress batch is already a single PUT for any step count up to
+    ``profile.max_keys_per_request`` (50), which covers every realistic
+    input on a 0-100 scale, and it works on every device family
+    regardless of firmware.
 
     Exposing a flag would push a choice onto the caller that the library
     can already answer — and whose "on" position is never the better one.
