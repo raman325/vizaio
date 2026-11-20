@@ -497,8 +497,8 @@ class TestCommandTimeout:
         assert client._timeout is read_budget
         assert client._command_timeout is write_budget
 
-    async def test_put_uses_command_timeout_and_get_does_not(self) -> None:
-        """The PUT carries an explicit per-request timeout; the GET doesn't."""
+    async def test_put_uses_command_timeout_and_get_uses_read_timeout(self) -> None:
+        """Each request carries its own budget: reads the read timeout, PUTs the command one."""
         captured: dict[str, Any] = {}
 
         class _FakeSession:
@@ -520,5 +520,43 @@ class TestCommandTimeout:
         with contextlib.suppress(VizioError):
             await client.request_spec(spec, body={"KEYLIST": []})
 
-        assert "timeout" not in captured["get"]
+        assert captured["get"]["timeout"].sock_read == DEFAULT_READ_TIMEOUT
         assert captured["put"]["timeout"].sock_read == DEFAULT_COMMAND_TIMEOUT
+
+    async def test_borrowed_session_gets_the_client_timeouts(self) -> None:
+        """A caller-supplied session (e.g. Home Assistant's shared one) has its
+        own default timeout (aiohttp: 300s total). The client's read and command
+        budgets must still apply, or an unresponsive device hangs every read for
+        that long. Covers both request_spec and request_raw_json.
+        """
+        captured: list[tuple[str, dict[str, Any]]] = []
+
+        class _FakeSession:
+            def get(self, url: str, **kwargs: Any) -> Any:
+                captured.append(("get", kwargs))
+                raise VizioConnectionError("stop here")
+
+            def put(self, url: str, **kwargs: Any) -> Any:
+                captured.append(("put", kwargs))
+                raise VizioConnectionError("stop here")
+
+        client = SmartCastClient(
+            host="1.2.3.4",
+            auth_token="tok",
+            session=_FakeSession(),  # type: ignore[arg-type]
+            timeout=8,
+        )
+        get_spec = resolve(Endpoint.POWER_MODE, DeviceType.TV.profile)
+        put_spec = resolve(Endpoint.KEY_PRESS, DeviceType.TV.profile)
+        with contextlib.suppress(VizioError):
+            await client.request_spec(get_spec)
+        with contextlib.suppress(VizioError):
+            await client.request_raw_json(get_spec)
+        with contextlib.suppress(VizioError):
+            await client.request_raw_json(put_spec, body={"KEYLIST": []})
+
+        assert [(m, kw["timeout"].sock_read) for m, kw in captured] == [
+            ("get", 8),
+            ("get", 8),
+            ("put", DEFAULT_COMMAND_TIMEOUT),
+        ]
