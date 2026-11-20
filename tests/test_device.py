@@ -26,6 +26,7 @@ from tests._fixtures import (
     CRAVE_HOST_PORT,
     DEFAULT_AUDIO_OPTIONS,
     DEFAULT_AUDIO_SETTINGS,
+    DEFAULT_SOUNDBAR_INPUTS,
     DEFAULT_TV_INPUTS,
     SOUNDBAR_HOST_PORT,
     TV_HOST_PORT,
@@ -745,14 +746,109 @@ class TestInputs:
         # Check codeset is 7 (input keyset).
         assert body["KEYLIST"][0]["CODESET"] == 7
 
-    async def test_inputs_unsupported_on_soundbar(
-        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    async def test_inputs_unsupported_on_crave(
+        self, vizio_crave: Vizio, mock_client: AsyncMock
     ) -> None:
-        """Profile gating: soundbars don't have inputs."""
+        """Profile gating: Crave speakers don't list inputs (unverified)."""
         with pytest.raises(VizioUnsupportedError):
-            await vizio_soundbar.get_inputs()
+            await vizio_crave.get_inputs()
         # No HTTP call made.
         mock_client.assert_not_called()
+
+    @pytest.mark.parametrize("include_synthetic", [True, False])
+    async def test_soundbar_get_inputs(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock, include_synthetic: bool
+    ) -> None:
+        """Soundbars list inputs from audio_settings/input (#34).
+
+        ``current_input`` is a child of the listed node there, so the list
+        may carry it; either way it must not appear as an input.
+        """
+        mock_client.side_effect = [
+            _resp(
+                make_inputs_list_response(
+                    DEFAULT_SOUNDBAR_INPUTS,
+                    include_synthetic_current=include_synthetic,
+                    current_input_meta_name="AUX",
+                )
+            ),
+            _resp(make_current_input_response("current_input", "AUX", 1693304733)),
+        ]
+        inputs = await vizio_soundbar.get_inputs()
+        assert [i.name for i in inputs] == [
+            "AUX",
+            "Digital",
+            "Optical",
+            "HDMI",
+            "HDMI-ARC",
+            "Bluetooth",
+            "USB",
+        ]
+        assert [i.name for i in inputs if i.is_current] == ["AUX"]
+        assert _all_call_paths(mock_client) == [
+            ("/menu_native/dynamic/audio_settings/input",),
+            ("/menu_native/dynamic/audio_settings/input/current_input",),
+        ]
+
+    async def test_soundbar_set_input(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """
+        The switch is a HASHVAL PUT on the audio current_input leaf.
+
+        Soundbars take the display NAME, not the cname: SB3651 and
+        SB3831-D0 both reject ``hdmiarc`` and accept ``HDMI-ARC``
+        (protocol-notes #34).
+        """
+        mock_client.side_effect = [
+            _resp(
+                make_inputs_list_response(
+                    DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
+                )
+            ),
+            _resp(make_current_input_response("current_input", "AUX", 1693304733)),
+            _resp(make_success_response()),
+        ]
+        await vizio_soundbar.set_input("HDMI-ARC")
+        spec = mock_client.call_args.args[0]
+        assert spec.method == "PUT"
+        assert spec.paths == (
+            "/menu_native/dynamic/audio_settings/input/current_input",
+        )
+        body = _last_call_body(mock_client)
+        assert body["VALUE"] == "HDMI-ARC"
+        assert body["HASHVAL"] == 1693304733
+
+    async def test_soundbar_set_input_by_cname_sends_name(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """A caller passing the cname still gets the NAME on the wire."""
+        mock_client.side_effect = [
+            _resp(
+                make_inputs_list_response(
+                    DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
+                )
+            ),
+            _resp(make_current_input_response("current_input", "AUX", 1693304733)),
+            _resp(make_success_response()),
+        ]
+        await vizio_soundbar.set_input("hdmiarc")
+        assert _last_call_body(mock_client)["VALUE"] == "HDMI-ARC"
+
+    async def test_current_input_match_ignores_case(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """is_current matches like set_input's already-on check: any casing."""
+        mock_client.side_effect = [
+            _resp(
+                make_inputs_list_response(
+                    DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
+                )
+            ),
+            _resp(make_current_input_response("current_input", "hdmi-arc", 1693304733)),
+        ]
+        inputs = await vizio_soundbar.get_inputs()
+        assert [i.name for i in inputs if i.is_current] == ["HDMI-ARC"]
 
 
 # ===========================================================================

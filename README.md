@@ -379,7 +379,7 @@ vizaio volume up --steps 3
 vizaio volume down
 ```
 
-### `vizaio input` (TV-only)
+### `vizaio input` (TV and soundbar)
 
 ```bash
 vizaio input list                         # name, meta_name, current
@@ -594,7 +594,7 @@ always guard with `is_crave_model` first.
 | --- | --- | --- | --- |
 | Auth required | yes | no | no |
 | `max_volume` | 100 | 31 | 24 |
-| `vizaio input list` / `set` | yes | no | no |
+| `vizaio input list` / `set` | yes | yes | no |
 | `vizaio app ...` | yes | no | no |
 | `vizaio battery ...` | no | no | yes |
 | Remote keymap | full (channels, nav, numerics, …) | power, volume, mute, play/pause, input-next | same as soundbar |
@@ -866,8 +866,9 @@ await v.set_input("smartcast")  # works for the cast input too
 await v.next_input()
 ```
 
-`set_input` validates against the current input list and resolves to the
-canonical cname before issuing the PUT. Unknown inputs raise
+`set_input` validates against the current input list and resolves the
+input before issuing the PUT, then sends the form the device accepts: the
+cname on a TV, the display name on a soundbar. Unknown inputs raise
 `VizioInvalidInputError` with the valid names listed; ambiguous matches
 (e.g., the user renamed two HDMIs to `"Living Room"`) raise with the
 candidates listed. If the target is already current, `set_input` is a
@@ -1102,7 +1103,7 @@ custom = DeviceProfile(
     max_volume=50,
     requires_auth=False,
     has_battery=False,
-    has_inputs=False,
+    has_inputs=True,
     has_apps=False,
     keymap=SOUNDBAR_KEYS,
 )

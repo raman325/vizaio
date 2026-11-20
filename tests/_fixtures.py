@@ -434,6 +434,20 @@ DEFAULT_TV_INPUTS = [
 """Five-input TV layout used by most behavior tests."""
 
 
+DEFAULT_SOUNDBAR_INPUTS = [
+    ("aux", "AUX", "", 435593459),
+    ("digital", "Digital", "", 194982353),
+    ("optical4", "Optical", "", 1059450823),
+    ("hdmi", "HDMI", "", 4094907397),
+    ("hdmiarc", "HDMI-ARC", "", 3415275507),
+    ("bluetooth", "Bluetooth", "", 2377711135),
+    ("usb", "USB", "", 766422523),
+]
+"""SB3651 (fw V3.1.3.1) inputs, from ``captured/soundbar_sb3651_inputs.json``
+(home-assistant/core#193490). Soundbars leave ``VALUE.NAME`` empty, so
+``meta_name`` is ``""`` for every input."""
+
+
 DEFAULT_AUDIO_SETTINGS = [
     ("volume", 25, "T_VALUE_ABS_V1", 100),
     ("mute", "Off", "T_LIST_V1", 101),

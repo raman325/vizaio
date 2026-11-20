@@ -30,6 +30,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from vizaio.errors import (
     VizioInvalidParameterError,
     VizioNotFoundError,
@@ -89,6 +91,10 @@ class TestEnvelopeStatusParsing:
             "settings_audio_lip_sync",
             "static_audio",
             "tv_information_modern",
+            "soundbar_sb3831_inputs",
+            "soundbar_sb3831_current_input",
+            "soundbar_sb3651_inputs",
+            "soundbar_sb3651_current_input",
         ]:
             response = Response.from_json(_load(name))
             assert response.status is ResponseStatus.SUCCESS, (
@@ -139,6 +145,59 @@ class TestCapturedInputs:
         currents = [i for i in inputs if i.is_current]
         assert len(currents) == 1
         assert currents[0].cname == "cast"
+
+
+class TestCapturedSoundbarInputs:
+    """Two soundbars from home-assistant/core#193490 (protocol-notes #34).
+
+    The audio input list carries the ``current_input`` child (VALUE is the
+    display name), leaves ``VALUE.NAME`` empty, and uses CNAMEs that
+    differ between models for the same input.
+    """
+
+    @pytest.mark.parametrize(
+        ("model", "cnames"),
+        [
+            (
+                "sb3831",
+                [
+                    "aux",
+                    "digital3",
+                    "optical",
+                    "hdmi5",
+                    "hdmiarc6",
+                    "bluetooth",
+                    "usb7",
+                    "cast",
+                ],
+            ),
+            (
+                "sb3651",
+                [
+                    "aux",
+                    "digital",
+                    "optical4",
+                    "hdmi",
+                    "hdmiarc",
+                    "bluetooth",
+                    "usb",
+                ],
+            ),
+        ],
+    )
+    def test_inputs_parse(self, model: str, cnames: list[str]) -> None:
+        response = Response.from_json(_load(f"soundbar_{model}_inputs"))
+        inputs = parse_inputs(response)
+        # The current_input child is dropped, not listed as an input.
+        assert [i.cname for i in inputs] == cnames
+        assert all(i.meta_name == "" for i in inputs)
+        # The inline current_input child alone marks AUX current.
+        assert [i.name for i in inputs if i.is_current] == ["AUX"]
+
+    @pytest.mark.parametrize("model", ["sb3831", "sb3651"])
+    def test_current_input_is_display_name(self, model: str) -> None:
+        response = Response.from_json(_load(f"soundbar_{model}_current_input"))
+        assert parse_current_input(response) == "AUX"
 
 
 # ---------------------------------------------------------------------------

@@ -287,13 +287,15 @@ ENDPOINTS: dict[Endpoint, _Row] = {
     Endpoint.LAUNCH_APP: row("PUT", "/app/launch", auth=REQ, needs=Need.APPS),
     Endpoint.CURRENT_APP: row("GET", "/app/current", auth=REQ, needs=Need.APPS),
     # Inputs ——————————————————————————————————————————————————————————
-    Endpoint.INPUTS: row(
-        "GET", "{root}/devices/name_input", auth=REQ, needs=Need.INPUTS
-    ),
+    # Paths differ by settings root: TVs nest inputs under ``devices/``,
+    # audio devices under ``input`` (app ``GET_CURRENT_INPUTS_AUDIO`` /
+    # ``CURRENT_INPUT_AUDIO``). Auth follows the profile, since
+    # soundbars pair without a token.
+    Endpoint.INPUTS: row("GET", "{input_list}", auth=PROF, needs=Need.INPUTS),
     Endpoint.CURRENT_INPUT: row(
         "GET",
-        "{root}/devices/current_input",
-        auth=REQ,
+        "{current_input}",
+        auth=PROF,
         item="current_input",
         needs=Need.INPUTS,
     ),
@@ -449,13 +451,21 @@ def _render_path(template: str, profile: DeviceProfile) -> str:
     """Substitute profile-dependent segments in a path template."""
     if "{" not in template:
         return template
+    root = profile.settings_root
+    audio = root is SettingsRoot.AUDIO
     return template.format(
-        root=f"/menu_native/dynamic/{profile.settings_root.value}",
-        root_static=f"/menu_native/static/{profile.settings_root.value}",
-        information=(
-            "speaker_information"
-            if profile.settings_root is SettingsRoot.AUDIO
-            else "tv_information"
+        root=settings_path(root),
+        root_static=settings_options_path(root),
+        information="speaker_information" if audio else "tv_information",
+        input_list=(
+            settings_path(root, "input")
+            if audio
+            else settings_path(root, "devices", "name_input")
+        ),
+        current_input=(
+            settings_path(root, "input", "current_input")
+            if audio
+            else settings_path(root, "devices", "current_input")
         ),
     )
 

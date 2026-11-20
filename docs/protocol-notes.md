@@ -1196,6 +1196,61 @@ Before this, Home Assistant 2026.9+ (which calls `set_volume()`) could not
 set a soundbar's volume above 10 of 31 and silently did nothing below it;
 HA 2026.8 and earlier stepped with `volume_up`/`volume_down` and worked.
 
+The same declared-vs-real mismatch was later reported on an SB3831-D0
+(fw 1039) and an SB3651 (fw V3.1.3.1): both declare `-12..12`, return
+`VALUE_OUT_OF_RANGE` above 12 and read 0-31 (home-assistant/core#193490).
+
+---
+
+## 34. Soundbar inputs live under `audio_settings/input`
+
+**Sources:** official app constants `GET_CURRENT_INPUTS_AUDIO` and
+`CURRENT_INPUT_AUDIO` (android-app-findings, endpoint table); pyvizio's
+speaker endpoint map; home-assistant/core#193490.
+
+**Behavior:** TVs list inputs at `{root}/devices/name_input` and read or
+set the active one at `{root}/devices/current_input`. Audio devices use a
+different tree:
+
+| | TV (`tv_settings`) | Audio (`audio_settings`) |
+|---|---|---|
+| List | `devices/name_input` | `input` |
+| Current / set | `devices/current_input` | `input/current_input` |
+
+Soundbars answer these without a token. The SB3831-D0 and SB3651 in the
+report list AUX, Digital, Optical, HDMI, HDMI-ARC, Bluetooth and USB (plus
+CAST on the SB3831-D0), and pyvizio switches them with the same HASHVAL
+`MODIFY` it sends to a TV.
+
+**Our handling:** the `INPUTS` / `CURRENT_INPUT` rows use `{input_list}` /
+`{current_input}` placeholders that `_render_path` fills per settings root,
+with profile-based auth. `SOUNDBAR_PROFILE.has_inputs` is now `True`.
+Crave profiles stay `False` until a device confirms the tree.
+
+**Captures** (`tests/captured/soundbar_sb{3831,3651}_*.json`, from the
+reporter): the list uses the TV item shape (`T_DEVICE_V1`, `CNAME`,
+`NAME`, `VALUE: {"NAME": "", "METADATA": ""}`) and also carries the
+`current_input` child, whose `VALUE` is the display `NAME` (`"AUX"`), the
+same string the standalone `current_input` leaf returns. `VALUE.NAME` is
+empty on every input, so there is no user rename. CNAMEs are not stable
+across models for the same input (`hdmi5` / `hdmi`, `digital3` /
+`digital`, `usb7` / `usb`), which is harmless because `set_input` resolves
+the CNAME from the device's own list on each call.
+
+**Switching takes the display `NAME`, not the CNAME** — the opposite of a
+TV. Verified by the reporter on both models with the HASHVAL `MODIFY`:
+
+| | CNAME as `VALUE` | `NAME` as `VALUE` |
+|---|---|---|
+| SB3651 (FW V3.1.3.1) | `"hdmiarc"` → `FAILURE` | `"HDMI-ARC"` → `SUCCESS` |
+| SB3831-D0 (FW 1039) | `"hdmiarc6"` → `INVALID_PARAMETER` | `"HDMI-ARC"` → `SUCCESS` |
+
+`set_input` therefore sends `InputInfo.name` on the `audio_settings` root
+and the CNAME on `tv_settings`; callers may still pass any of the three
+forms. The PUT acknowledgement carries only `NAME` and the new `HASHVAL`
+(as on TVs), and the `current_input` HASHVAL tracks the value rather than
+the device: AUX was `1693304733` and HDMI-ARC `192537106` on both models.
+
 ---
 
 ## Hardware verification list

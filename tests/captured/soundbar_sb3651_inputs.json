@@ -1,0 +1,99 @@
+{
+  "CNAME": "input",
+  "GROUP": "G_DEVICES",
+  "HASHLIST": [
+    2829554163,
+    4074764559
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "aux",
+      "HASHVAL": 435593459,
+      "NAME": "AUX",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "digital",
+      "HASHVAL": 194982353,
+      "NAME": "Digital",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "optical4",
+      "HASHVAL": 1059450823,
+      "NAME": "Optical",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "hdmi",
+      "HASHVAL": 4094907397,
+      "NAME": "HDMI",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "hdmiarc",
+      "HASHVAL": 3415275507,
+      "NAME": "HDMI-ARC",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "bluetooth",
+      "HASHVAL": 2377711135,
+      "NAME": "Bluetooth",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "usb",
+      "HASHVAL": 766422523,
+      "NAME": "USB",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "current_input",
+      "HASHVAL": 1693304733,
+      "NAME": "Current Input",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "AUX"
+    }
+  ],
+  "NAME": "Inputs",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/audio_settings/input"
+}

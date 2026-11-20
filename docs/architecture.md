@@ -332,7 +332,7 @@ async def safe(vizio):
         print(f"Auth problem: {e}")
     except VizioUnsupportedError as e:
         # Tried something the device doesn't support
-        # (e.g., set_input on a soundbar).
+        # (e.g., launch_app on a soundbar).
         print(f"Not supported on this device: {e}")
     except VizioError as e:
         # Catch-all parent — any other VizioError subclass.
