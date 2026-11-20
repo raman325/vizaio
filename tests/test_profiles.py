@@ -100,11 +100,11 @@ class TestCapabilityFlags:
         assert TV_PROFILE.has_battery is False
         assert SOUNDBAR_PROFILE.has_battery is False
 
-    def test_only_tv_has_inputs(self) -> None:
-        # Soundbars and Crave devices don't expose individual inputs
-        # through this API.
+    def test_tv_and_soundbar_have_inputs(self) -> None:
+        # Soundbars list inputs under audio_settings/input
+        # (protocol-notes #34). Crave stays off until verified.
         assert TV_PROFILE.has_inputs is True
-        assert SOUNDBAR_PROFILE.has_inputs is False
+        assert SOUNDBAR_PROFILE.has_inputs is True
         for profile in CRAVE_PROFILES:
             assert profile.has_inputs is False
 

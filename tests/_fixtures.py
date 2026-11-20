@@ -434,6 +434,22 @@ DEFAULT_TV_INPUTS = [
 """Five-input TV layout used by most behavior tests."""
 
 
+DEFAULT_SOUNDBAR_INPUTS = [
+    ("aux", "AUX", "AUX", 11),
+    ("digital", "Digital", "Digital", 12),
+    ("optical", "Optical", "Optical", 13),
+    ("hdmi", "HDMI", "HDMI", 14),
+    ("hdmi_arc", "HDMI-ARC", "HDMI-ARC", 15),
+    ("bluetooth", "Bluetooth", "Bluetooth", 16),
+    ("usb", "USB", "USB", 17),
+]
+"""Soundbar input names reported for an SB3651 (home-assistant/core#193490).
+
+Not a wire capture: the item shape is assumed to match the TV list, as
+pyvizio parses both with the same code. Replace with a real capture
+when one is available."""
+
+
 DEFAULT_AUDIO_SETTINGS = [
     ("volume", 25, "T_VALUE_ABS_V1", 100),
     ("mute", "Off", "T_LIST_V1", 101),

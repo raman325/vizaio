@@ -37,7 +37,9 @@ SOUNDBAR_PROFILE = DeviceProfile(
     max_volume=31,
     requires_auth=False,
     has_battery=False,
-    has_inputs=False,
+    # Inputs live under audio_settings/input (app constants, and pyvizio's
+    # speaker endpoints); see protocol-notes #34.
+    has_inputs=True,
     has_apps=False,
     keymap=SOUNDBAR_KEYS,
     # A P514a acts on 4 keys per KEYLIST and drops the rest (protocol-notes #33).

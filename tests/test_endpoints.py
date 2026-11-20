@@ -231,9 +231,36 @@ class TestResolveUnsupported:
         with pytest.raises(VizioUnsupportedError):
             _resolve(Endpoint.CURRENT_APP, DeviceType.CRAVE360)
 
-    def test_inputs_on_soundbar_unsupported(self) -> None:
+    def test_inputs_on_crave_unsupported(self) -> None:
         with pytest.raises(VizioUnsupportedError):
-            _resolve(Endpoint.INPUTS, DeviceType.SOUNDBAR)
+            _resolve(Endpoint.INPUTS, DeviceType.CRAVE360)
+
+
+class TestInputPaths:
+    """TVs nest inputs under ``devices/``; audio devices under ``input``
+    (protocol-notes #34). Auth follows the profile so a token-less
+    soundbar can read them."""
+
+    def test_tv_paths(self) -> None:
+        assert _resolve(Endpoint.INPUTS, DeviceType.TV).paths == (
+            "/menu_native/dynamic/tv_settings/devices/name_input",
+        )
+        assert _resolve(Endpoint.CURRENT_INPUT, DeviceType.TV).paths == (
+            "/menu_native/dynamic/tv_settings/devices/current_input",
+        )
+
+    def test_soundbar_paths(self) -> None:
+        assert _resolve(Endpoint.INPUTS, DeviceType.SOUNDBAR).paths == (
+            "/menu_native/dynamic/audio_settings/input",
+        )
+        assert _resolve(Endpoint.CURRENT_INPUT, DeviceType.SOUNDBAR).paths == (
+            "/menu_native/dynamic/audio_settings/input/current_input",
+        )
+
+    @pytest.mark.parametrize("endpoint", [Endpoint.INPUTS, Endpoint.CURRENT_INPUT])
+    def test_auth_follows_profile(self, endpoint: Endpoint) -> None:
+        assert _resolve(endpoint, DeviceType.TV).auth is AuthRequirement.REQUIRED
+        assert _resolve(endpoint, DeviceType.SOUNDBAR).auth is AuthRequirement.NONE
 
 
 class TestStateExtended:

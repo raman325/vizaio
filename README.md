@@ -379,7 +379,7 @@ vizaio volume up --steps 3
 vizaio volume down
 ```
 
-### `vizaio input` (TV-only)
+### `vizaio input` (TV and soundbar)
 
 ```bash
 vizaio input list                         # name, meta_name, current
@@ -594,7 +594,7 @@ always guard with `is_crave_model` first.
 | --- | --- | --- | --- |
 | Auth required | yes | no | no |
 | `max_volume` | 100 | 31 | 24 |
-| `vizaio input list` / `set` | yes | no | no |
+| `vizaio input list` / `set` | yes | yes | no |
 | `vizaio app ...` | yes | no | no |
 | `vizaio battery ...` | no | no | yes |
 | Remote keymap | full (channels, nav, numerics, …) | power, volume, mute, play/pause, input-next | same as soundbar |
@@ -1102,7 +1102,7 @@ custom = DeviceProfile(
     max_volume=50,
     requires_auth=False,
     has_battery=False,
-    has_inputs=False,
+    has_inputs=True,
     has_apps=False,
     keymap=SOUNDBAR_KEYS,
 )

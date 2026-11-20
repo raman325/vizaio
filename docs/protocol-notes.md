@@ -1196,6 +1196,42 @@ Before this, Home Assistant 2026.9+ (which calls `set_volume()`) could not
 set a soundbar's volume above 10 of 31 and silently did nothing below it;
 HA 2026.8 and earlier stepped with `volume_up`/`volume_down` and worked.
 
+The same declared-vs-real mismatch was later reported on an SB3831-D0
+(fw 1039) and an SB3651 (fw V3.1.3.1): both declare `-12..12`, return
+`VALUE_OUT_OF_RANGE` above 12 and read 0-31 (home-assistant/core#193490).
+
+---
+
+## 34. Soundbar inputs live under `audio_settings/input`
+
+**Sources:** official app constants `GET_CURRENT_INPUTS_AUDIO` and
+`CURRENT_INPUT_AUDIO` (android-app-findings, endpoint table); pyvizio's
+speaker endpoint map; home-assistant/core#193490.
+
+**Behavior:** TVs list inputs at `{root}/devices/name_input` and read or
+set the active one at `{root}/devices/current_input`. Audio devices use a
+different tree:
+
+| | TV (`tv_settings`) | Audio (`audio_settings`) |
+|---|---|---|
+| List | `devices/name_input` | `input` |
+| Current / set | `devices/current_input` | `input/current_input` |
+
+Soundbars answer these without a token. The SB3831-D0 and SB3651 in the
+report list AUX, Digital, Optical, HDMI, HDMI-ARC, Bluetooth and USB (plus
+CAST on the SB3831-D0), and pyvizio switches them with the same HASHVAL
+`MODIFY` it sends to a TV.
+
+**Our handling:** the `INPUTS` / `CURRENT_INPUT` rows use `{input_list}` /
+`{current_input}` placeholders that `_render_path` fills per settings root,
+with profile-based auth. `SOUNDBAR_PROFILE.has_inputs` is now `True`.
+Crave profiles stay `False` until a device confirms the tree.
+
+**Unverified:** no wire capture of the audio input responses yet. Parsing
+assumes the TV item shape, which pyvizio also assumes for both. The test
+fixture `DEFAULT_SOUNDBAR_INPUTS` is built from the reported names, not
+captured.
+
 ---
 
 ## Hardware verification list
