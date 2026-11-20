@@ -435,19 +435,17 @@ DEFAULT_TV_INPUTS = [
 
 
 DEFAULT_SOUNDBAR_INPUTS = [
-    ("aux", "AUX", "AUX", 11),
-    ("digital", "Digital", "Digital", 12),
-    ("optical", "Optical", "Optical", 13),
-    ("hdmi", "HDMI", "HDMI", 14),
-    ("hdmi_arc", "HDMI-ARC", "HDMI-ARC", 15),
-    ("bluetooth", "Bluetooth", "Bluetooth", 16),
-    ("usb", "USB", "USB", 17),
+    ("aux", "AUX", "", 435593459),
+    ("digital", "Digital", "", 194982353),
+    ("optical4", "Optical", "", 1059450823),
+    ("hdmi", "HDMI", "", 4094907397),
+    ("hdmiarc", "HDMI-ARC", "", 3415275507),
+    ("bluetooth", "Bluetooth", "", 2377711135),
+    ("usb", "USB", "", 766422523),
 ]
-"""Soundbar input names reported for an SB3651 (home-assistant/core#193490).
-
-Not a wire capture: the item shape is assumed to match the TV list, as
-pyvizio parses both with the same code. Replace with a real capture
-when one is available."""
+"""SB3651 (fw V3.1.3.1) inputs, from ``captured/soundbar_sb3651_inputs.json``
+(home-assistant/core#193490). Soundbars leave ``VALUE.NAME`` empty, so
+``meta_name`` is ``""`` for every input."""
 
 
 DEFAULT_AUDIO_SETTINGS = [

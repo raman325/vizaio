@@ -48,8 +48,11 @@ def parse_inputs(
             if isinstance(value, str):
                 current_meta_name = value
             elif isinstance(value, Mapping):
-                # Some firmware nests it as {"name": ...}
-                current_meta_name = str(value.get("name", current_meta_name))
+                # Some firmware nests it as {"name": ...}. Ignore a dict
+                # without a string name rather than storing "None".
+                name = value.get("name")
+                if isinstance(name, str):
+                    current_meta_name = name
             continue
         real_inputs.append(item)
 

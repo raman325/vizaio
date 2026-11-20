@@ -772,7 +772,7 @@ class TestInputs:
                     current_input_meta_name="AUX",
                 )
             ),
-            _resp(make_current_input_response("current_input", "AUX", 21)),
+            _resp(make_current_input_response("current_input", "AUX", 1693304733)),
         ]
         inputs = await vizio_soundbar.get_inputs()
         assert [i.name for i in inputs] == [
@@ -800,7 +800,7 @@ class TestInputs:
                     DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
                 )
             ),
-            _resp(make_current_input_response("current_input", "AUX", 21)),
+            _resp(make_current_input_response("current_input", "AUX", 1693304733)),
             _resp(make_success_response()),
         ]
         await vizio_soundbar.set_input("HDMI")
@@ -811,7 +811,7 @@ class TestInputs:
         )
         body = _last_call_body(mock_client)
         assert body["VALUE"] == "hdmi"
-        assert body["HASHVAL"] == 21
+        assert body["HASHVAL"] == 1693304733
 
     async def test_current_input_match_ignores_case(
         self, vizio_soundbar: Vizio, mock_client: AsyncMock
@@ -823,7 +823,7 @@ class TestInputs:
                     DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
                 )
             ),
-            _resp(make_current_input_response("current_input", "hdmi-arc", 21)),
+            _resp(make_current_input_response("current_input", "hdmi-arc", 1693304733)),
         ]
         inputs = await vizio_soundbar.get_inputs()
         assert [i.name for i in inputs if i.is_current] == ["HDMI-ARC"]

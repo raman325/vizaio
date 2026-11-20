@@ -1,0 +1,109 @@
+{
+  "CNAME": "input",
+  "GROUP": "G_DEVICES",
+  "HASHLIST": [
+    2480081680,
+    1517625451
+  ],
+  "ITEMS": [
+    {
+      "CNAME": "aux",
+      "HASHVAL": 435593459,
+      "NAME": "AUX",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "digital3",
+      "HASHVAL": 2994471530,
+      "NAME": "Digital",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "optical",
+      "HASHVAL": 1946332961,
+      "NAME": "Optical",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "hdmi5",
+      "HASHVAL": 2335782284,
+      "NAME": "HDMI",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "hdmiarc6",
+      "HASHVAL": 3014812431,
+      "NAME": "HDMI-ARC",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "bluetooth",
+      "HASHVAL": 2377711135,
+      "NAME": "Bluetooth",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "usb7",
+      "HASHVAL": 4282846264,
+      "NAME": "USB",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "cast",
+      "HASHVAL": 2555084004,
+      "NAME": "CAST",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": ""
+      }
+    },
+    {
+      "CNAME": "current_input",
+      "HASHVAL": 1693304733,
+      "NAME": "Current Input",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "AUX"
+    }
+  ],
+  "NAME": "Inputs",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/audio_settings/input"
+}

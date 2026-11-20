@@ -95,6 +95,41 @@ class TestParseInputsCurrentItemShape:
         assert len(inputs) == 1
         assert inputs[0].is_current is False
 
+    def test_current_input_mapping_without_name_keeps_hint(self) -> None:
+        """A nested value with no ``name`` must not become the string "None"
+        (which would mark an input named "none" current) or drop the hint."""
+        resp = _resp(
+            {
+                "STATUS": {"RESULT": "SUCCESS"},
+                "ITEMS": [
+                    {
+                        "CNAME": "none",
+                        "TYPE": "T_DEVICE_V1",
+                        "NAME": "None",
+                        "VALUE": {"NAME": "", "METADATA": ""},
+                        "HASHVAL": 1,
+                    },
+                    {
+                        "CNAME": "aux",
+                        "TYPE": "T_DEVICE_V1",
+                        "NAME": "AUX",
+                        "VALUE": {"NAME": "", "METADATA": ""},
+                        "HASHVAL": 2,
+                    },
+                    {
+                        "CNAME": "current_input",
+                        "TYPE": "T_VALUE_V1",
+                        "NAME": "Current Input",
+                        "VALUE": {"METADATA": ""},
+                    },
+                ],
+            }
+        )
+        assert [i.name for i in parse_inputs(resp) if i.is_current] == []
+        assert [
+            i.name for i in parse_inputs(resp, current_input_name="AUX") if i.is_current
+        ] == ["AUX"]
+
 
 # ---------------------------------------------------------------------------
 # parse_current_input

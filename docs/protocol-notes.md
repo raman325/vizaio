@@ -1227,10 +1227,19 @@ CAST on the SB3831-D0), and pyvizio switches them with the same HASHVAL
 with profile-based auth. `SOUNDBAR_PROFILE.has_inputs` is now `True`.
 Crave profiles stay `False` until a device confirms the tree.
 
-**Unverified:** no wire capture of the audio input responses yet. Parsing
-assumes the TV item shape, which pyvizio also assumes for both. The test
-fixture `DEFAULT_SOUNDBAR_INPUTS` is built from the reported names, not
-captured.
+**Captures** (`tests/captured/soundbar_sb{3831,3651}_*.json`, from the
+reporter): the list uses the TV item shape (`T_DEVICE_V1`, `CNAME`,
+`NAME`, `VALUE: {"NAME": "", "METADATA": ""}`) and also carries the
+`current_input` child, whose `VALUE` is the display `NAME` (`"AUX"`), the
+same string the standalone `current_input` leaf returns. `VALUE.NAME` is
+empty on every input, so there is no user rename. CNAMEs are not stable
+across models for the same input (`hdmi5` / `hdmi`, `digital3` /
+`digital`, `usb7` / `usb`), which is harmless because `set_input` resolves
+the CNAME from the device's own list on each call.
+
+**Still unverified:** whether a soundbar accepts the CNAME in the
+`MODIFY` `VALUE`. TVs require it; pyvizio 0.1.64 switched these soundbars
+by display name. Asked on home-assistant/core#193490.
 
 ---
 
@@ -1241,11 +1250,9 @@ in #29:
 
 - **Quirk 6:** Does `get_inputs()` actually return a synthetic
   `current_input` item, or is the filter unnecessary?
-- **Quirk 34:** On a soundbar, capture `audio_settings/input` and
-  `audio_settings/input/current_input`. Does the list match the TV item
-  shape, does it include the `current_input` child, what casing does its
-  `VALUE` use, and does the HASHVAL `MODIFY` switch inputs? Replace the
-  `DEFAULT_SOUNDBAR_INPUTS` fixture with the capture.
+- **Quirk 34:** Does a soundbar's `audio_settings/input/current_input`
+  `MODIFY` accept the CNAME (as TVs require), or only the display name?
+  The read shapes are captured; the write is not.
 - **Quirk 7:** What does `get_setting_types()` return on a real TV? Are
   `cast`, `input`, `devices`, `network` legitimate setting categories or
   navigation menus?
