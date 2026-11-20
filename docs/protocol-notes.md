@@ -1241,6 +1241,11 @@ in #29:
 
 - **Quirk 6:** Does `get_inputs()` actually return a synthetic
   `current_input` item, or is the filter unnecessary?
+- **Quirk 34:** On a soundbar, capture `audio_settings/input` and
+  `audio_settings/input/current_input`. Does the list match the TV item
+  shape, does it include the `current_input` child, what casing does its
+  `VALUE` use, and does the HASHVAL `MODIFY` switch inputs? Replace the
+  `DEFAULT_SOUNDBAR_INPUTS` fixture with the capture.
 - **Quirk 7:** What does `get_setting_types()` return on a real TV? Are
   `cast`, `input`, `devices`, `network` legitimate setting categories or
   navigation menus?

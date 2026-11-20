@@ -755,14 +755,21 @@ class TestInputs:
         # No HTTP call made.
         mock_client.assert_not_called()
 
+    @pytest.mark.parametrize("include_synthetic", [True, False])
     async def test_soundbar_get_inputs(
-        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock, include_synthetic: bool
     ) -> None:
-        """Soundbars list inputs from audio_settings/input (#34)."""
+        """Soundbars list inputs from audio_settings/input (#34).
+
+        ``current_input`` is a child of the listed node there, so the list
+        may carry it; either way it must not appear as an input.
+        """
         mock_client.side_effect = [
             _resp(
                 make_inputs_list_response(
-                    DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
+                    DEFAULT_SOUNDBAR_INPUTS,
+                    include_synthetic_current=include_synthetic,
+                    current_input_meta_name="AUX",
                 )
             ),
             _resp(make_current_input_response("current_input", "AUX", 21)),
@@ -805,6 +812,21 @@ class TestInputs:
         body = _last_call_body(mock_client)
         assert body["VALUE"] == "hdmi"
         assert body["HASHVAL"] == 21
+
+    async def test_current_input_match_ignores_case(
+        self, vizio_soundbar: Vizio, mock_client: AsyncMock
+    ) -> None:
+        """is_current matches like set_input's already-on check: any casing."""
+        mock_client.side_effect = [
+            _resp(
+                make_inputs_list_response(
+                    DEFAULT_SOUNDBAR_INPUTS, include_synthetic_current=False
+                )
+            ),
+            _resp(make_current_input_response("current_input", "hdmi-arc", 21)),
+        ]
+        inputs = await vizio_soundbar.get_inputs()
+        assert [i.name for i in inputs if i.is_current] == ["HDMI-ARC"]
 
 
 # ===========================================================================

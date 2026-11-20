@@ -36,8 +36,9 @@ def parse_inputs(
     ``enabled OR visible`` flags, not by cname. The synthetic
     ``current_input`` entry — if present — is used to mark the matching
     real input as ``is_current``; if not present, the caller should pass
-    ``current_input_name`` from the separate ``devices/current_input``
-    fetch.
+    ``current_input_name`` from the separate current-input fetch
+    (``devices/current_input`` on TVs, ``input/current_input`` on audio
+    devices).
     """
     current_meta_name: str | None = current_input_name
     real_inputs: list[Item] = []
@@ -65,10 +66,12 @@ def parse_inputs(
         # meta_name has been renamed (e.g., 'Mac'). Match against
         # either form to populate is_current correctly across firmware
         # quirks. Verified live on VHD24M-0810 fw 3.720.9.1-1.
-        is_current = current_meta_name is not None and current_meta_name in (
-            meta_name,
-            display_name,
-            item.cname,
+        # Case-insensitive, like set_input's already-on check: soundbar
+        # casing of the value is unverified (protocol-notes #34).
+        is_current = current_meta_name is not None and current_meta_name.lower() in (
+            meta_name.lower(),
+            display_name.lower(),
+            item.cname.lower(),
         )
         result.append(
             InputInfo(

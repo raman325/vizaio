@@ -72,8 +72,9 @@ class DeviceProfile:
     supported. Otherwise they raise :class:`VizioUnsupportedError`."""
 
     has_inputs: bool
-    """If ``True``, the input-list endpoints exist. Soundbars typically
-    don't expose individual inputs through this API."""
+    """If ``True``, the input-list endpoints exist. TVs and soundbars list
+    inputs (under different settings trees, protocol-notes #34); Crave
+    speakers are not known to."""
 
     has_apps: bool
     """If ``True``, the SmartCast app endpoints exist (TV-only on current

@@ -451,15 +451,21 @@ def _render_path(template: str, profile: DeviceProfile) -> str:
     """Substitute profile-dependent segments in a path template."""
     if "{" not in template:
         return template
-    root = f"/menu_native/dynamic/{profile.settings_root.value}"
-    audio = profile.settings_root is SettingsRoot.AUDIO
+    root = profile.settings_root
+    audio = root is SettingsRoot.AUDIO
     return template.format(
-        root=root,
-        root_static=f"/menu_native/static/{profile.settings_root.value}",
+        root=settings_path(root),
+        root_static=settings_options_path(root),
         information="speaker_information" if audio else "tv_information",
-        input_list=f"{root}/input" if audio else f"{root}/devices/name_input",
+        input_list=(
+            settings_path(root, "input")
+            if audio
+            else settings_path(root, "devices", "name_input")
+        ),
         current_input=(
-            f"{root}/input/current_input" if audio else f"{root}/devices/current_input"
+            settings_path(root, "input", "current_input")
+            if audio
+            else settings_path(root, "devices", "current_input")
         ),
     )
 
