@@ -83,6 +83,23 @@ class DeviceProfile:
     """Remote key name → ``(codeset, code)``. Names not present in this
     map raise :class:`VizioUnsupportedError` from ``send_key``."""
 
+    max_keys_per_request: int = 50
+    """Most keypresses to batch into one ``KEYLIST`` PUT; longer runs are
+    split across sequential PUTs. Lower it for a device that drops keys
+    past some count (protocol-notes #19, #33)."""
+
+    def __post_init__(self) -> None:
+        """
+        Reject a key batch size below 1.
+
+        Key sends would loop forever on empty KEYLISTs, and ``send_text``
+        would fail on a zero ``range()`` step.
+        """
+        if self.max_keys_per_request < 1:
+            raise ValueError(
+                f"max_keys_per_request must be >= 1, got {self.max_keys_per_request}"
+            )
+
 
 class ChargingStatus(IntEnum):
     """Battery charging state for portable speakers."""

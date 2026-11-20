@@ -1,0 +1,24 @@
+{
+  "HASHVAL": 1234567890,
+  "ITEMS": [
+    {
+      "CNAME": "volume",
+      "GROUP": "G_AUDIO",
+      "INCREMENT": 1,
+      "MAXIMUM": 10,
+      "MINIMUM": -10,
+      "NAME": "Volume",
+      "TYPE": "T_VALUE_V1"
+    }
+  ],
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/menu_native/static/audio_settings/audio/volume"
+}

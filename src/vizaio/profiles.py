@@ -40,6 +40,8 @@ SOUNDBAR_PROFILE = DeviceProfile(
     has_inputs=False,
     has_apps=False,
     keymap=SOUNDBAR_KEYS,
+    # A P514a acts on 4 keys per KEYLIST and drops the rest (protocol-notes #33).
+    max_keys_per_request=4,
 )
 
 

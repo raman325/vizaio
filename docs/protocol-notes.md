@@ -493,6 +493,7 @@ Asserted at the payload level — no possibility of a sign inversion.
 | 29 | T_ACTION_V1 → `REQUEST: ACTION` | HARDWARE VERIFIED | `trigger_setting_action` / `blank_screen` | yes |
 | 30 | `volume` may be absent from the `audio` collection | FIELD REPORTED | Always read the leaf; no predictor exists | yes |
 | 31 | Volume API V2 (`/audio/volume/*`) | HARDWARE VERIFIED | Gated on `API_VERSION` ≥ 2.0.0-2031.0014; STEP goes in the body | yes |
+| 33 | Soundbar ignores the `menu_native` volume write; acts on 4 keys per KEYLIST | HARDWARE VERIFIED | Audio devices set volume with keypresses; soundbar chunks at 4 | yes |
 
 ---
 
@@ -598,9 +599,10 @@ test).
 
 **Implications for vizaio:**
 
-- `volume_up(steps=N)` sends a single PUT for any N up to a defensive
-  cap of **50**. Above that, chunk into multiple PUTs through the
-  instance semaphore.
+- `volume_up(steps=N)` sends a single PUT for any N up to
+  `DeviceProfile.max_keys_per_request` (**50** by default). Above that,
+  chunk into multiple PUTs through the instance semaphore. The soundbar
+  profile uses **4**: a P514a drops every key past the fourth (#33).
 - Defensive cap exists only to handle worst-case device buffers — not
   required by protocol.
 - No held-key support — protocol limitation, not a bug.
@@ -1153,6 +1155,46 @@ We deliberately diverge from the app on `NET_WIFI_NEEDS_VALID_SSID`: its
 success predicate is `isSuccessful() || isWifiNeedsValidSsid()`, which
 looks like a workaround for its own UI ordering. Swallowing it would
 report a failed provision as success, so we raise.
+
+---
+
+## 33. Soundbar ignores the `menu_native` volume write
+
+**Confidence:** HARDWARE VERIFIED (one device: P514a soundbar, `API_VERSION`
+`1.0.12_1.0.12.1`, firmware V1.11.07.1)
+
+**Behavior:** the soundbar reads its volume on the 0-31 scale (#10), but
+everything it says about the range claims `-10..10`: the static leaf
+`/menu_native/static/audio_settings/audio/volume` has `MINIMUM: -10`,
+`MAXIMUM: 10`, and deviceinfo `CAPABILITIES` has `vmin: -10, vmax: 10,
+vdef: 0`. With the device at 15, a `MODIFY` of the dynamic leaf with a
+fresh `HASHVAL`:
+
+- `VALUE` 15 or 16 → `RESULT: VALUE_OUT_OF_RANGE`
+- `VALUE` 10, 5, 0 or -5 → `RESULT: SUCCESS`, and the leaf still reads 15
+
+The same result in standby and awake. `VOL_UP`/`VOL_DOWN` keypresses move it
+one step each in both states. While muted, the first `VOL_UP` only unmutes.
+
+The same device also caps `KEYLIST`s: a list of 4, 5, 6, 8 or 10
+`VOL_DOWN`/`VOL_UP` keys moves it exactly 4 steps every time, while 6
+separate one-key PUTs move it 6, and 4 + 4 + 2 sent back to back moves it 10.
+So #19's "arbitrary length" does not hold for this soundbar.
+
+This matches the app: `SetVolumeCommand` adds its HTTP rung only for the TV
+settings root, so audio devices get key command + Cast (see section 10 of
+android-app-findings). The settings write was never a soundbar volume path.
+
+**Our handling:** on an `AUDIO` settings root, `set_volume()` unmutes, reads
+`get_volume()` and sends the difference as `VOL_UP`/`VOL_DOWN` keypresses.
+`get_max_volume()` ignores a declared range with a negative `MINIMUM`.
+`DeviceProfile.max_keys_per_request` (default 50, soundbar 4) sets the
+`KEYLIST` chunk size for every multi-key send.
+Captures: `tests/captured/soundbar_{settings,static}_audio_volume.json`.
+
+Before this, Home Assistant 2026.9+ (which calls `set_volume()`) could not
+set a soundbar's volume above 10 of 31 and silently did nothing below it;
+HA 2026.8 and earlier stepped with `volume_up`/`volume_down` and worked.
 
 ---
 

@@ -93,7 +93,8 @@ returns a typed `Item`, and the caller pulls `item.value`.
 ### Capability profiles instead of a device-type enum tree
 
 - **`DeviceProfile`** carries `settings_root`, `max_volume`,
-  `requires_auth`, `has_battery`, `has_inputs`, `has_apps`, `keymap`.
+  `requires_auth`, `has_battery`, `has_inputs`, `has_apps`, `keymap`,
+  `max_keys_per_request`.
 - **`DeviceType`** is a convenience selector that resolves to a built-in
   profile preset. Users can construct custom profiles for unusual or
   future devices (e.g., when Vizio ships a new soundbar variant) without

@@ -798,9 +798,17 @@ fraction = await v.get_volume() / max_volume
 ```
 
 `get_max_volume()` reads `MAXIMUM` from the device's static settings tree and
-falls back to `v.profile.max_volume` when the device doesn't expose it.
-`set_volume()`'s range check deliberately stays on the profile constant so a
-setter never hides a round trip in argument validation.
+falls back to `v.profile.max_volume` when the device doesn't expose it, or when
+the declared range starts below zero (some soundbars declare `-10..10` while
+reading 0-31). `set_volume()`'s range check deliberately stays on the profile
+constant so a setter never hides a round trip in argument validation.
+
+On audio devices (soundbars, Crave) `set_volume()` reads the current level and
+sends the difference as one batch of `VOL_UP`/`VOL_DOWN` keypresses, unmuting
+first. That is the only volume path Vizio's app has for them, and at least one
+soundbar ignores the settings write the TV fallback uses. Soundbars get key
+batches of at most 4 per request (`profile.max_keys_per_request`), because the
+same soundbar drops every key past the fourth.
 
 #### Volume API V2
 
