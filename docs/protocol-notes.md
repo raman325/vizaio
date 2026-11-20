@@ -1237,9 +1237,19 @@ across models for the same input (`hdmi5` / `hdmi`, `digital3` /
 `digital`, `usb7` / `usb`), which is harmless because `set_input` resolves
 the CNAME from the device's own list on each call.
 
-**Still unverified:** whether a soundbar accepts the CNAME in the
-`MODIFY` `VALUE`. TVs require it; pyvizio 0.1.64 switched these soundbars
-by display name. Asked on home-assistant/core#193490.
+**Switching takes the display `NAME`, not the CNAME** — the opposite of a
+TV. Verified by the reporter on both models with the HASHVAL `MODIFY`:
+
+| | CNAME as `VALUE` | `NAME` as `VALUE` |
+|---|---|---|
+| SB3651 (FW V3.1.3.1) | `"hdmiarc"` → `FAILURE` | `"HDMI-ARC"` → `SUCCESS` |
+| SB3831-D0 (FW 1039) | `"hdmiarc6"` → `INVALID_PARAMETER` | `"HDMI-ARC"` → `SUCCESS` |
+
+`set_input` therefore sends `InputInfo.name` on the `audio_settings` root
+and the CNAME on `tv_settings`; callers may still pass any of the three
+forms. The PUT acknowledgement carries only `NAME` and the new `HASHVAL`
+(as on TVs), and the `current_input` HASHVAL tracks the value rather than
+the device: AUX was `1693304733` and HDMI-ARC `192537106` on both models.
 
 ---
 
@@ -1250,9 +1260,6 @@ in #29:
 
 - **Quirk 6:** Does `get_inputs()` actually return a synthetic
   `current_input` item, or is the filter unnecessary?
-- **Quirk 34:** Does a soundbar's `audio_settings/input/current_input`
-  `MODIFY` accept the CNAME (as TVs require), or only the display name?
-  The read shapes are captured; the write is not.
 - **Quirk 7:** What does `get_setting_types()` return on a real TV? Are
   `cast`, `input`, `devices`, `network` legitimate setting categories or
   navigation menus?

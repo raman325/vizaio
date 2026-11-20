@@ -866,8 +866,9 @@ await v.set_input("smartcast")  # works for the cast input too
 await v.next_input()
 ```
 
-`set_input` validates against the current input list and resolves to the
-canonical cname before issuing the PUT. Unknown inputs raise
+`set_input` validates against the current input list and resolves the
+input before issuing the PUT, then sends the form the device accepts: the
+cname on a TV, the display name on a soundbar. Unknown inputs raise
 `VizioInvalidInputError` with the valid names listed; ambiguous matches
 (e.g., the user renamed two HDMIs to `"Living Room"`) raise with the
 candidates listed. If the target is already current, `set_input` is a

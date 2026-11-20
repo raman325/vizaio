@@ -699,10 +699,17 @@ class Vizio:
         # ``_check_status`` raise VizioNotFoundError on the PUT's own
         # success response.
         spec_with_put = replace(spec, method="PUT", item_cname=None)
-        # Device wants the lowercase cname in the PUT body — verified
-        # live; display name returns FAILURE, meta_name returns
-        # HASHVAL_ERROR. cname is the only stable identifier.
-        body = _payloads.set_input(name=target_cname, hashval=hashval)
+        # The VALUE the device accepts differs by family, and each
+        # rejects the other's form (protocol-notes #34):
+        # - TVs want the lowercase cname. Verified live: display name
+        #   returns FAILURE, meta_name returns HASHVAL_ERROR.
+        # - Soundbars want the display NAME. Verified on SB3651 and
+        #   SB3831-D0: a cname returns FAILURE / INVALID_PARAMETER.
+        if self._profile.settings_root is SettingsRoot.AUDIO:
+            value = target.name
+        else:
+            value = target_cname
+        body = _payloads.set_input(name=value, hashval=hashval)
         await self._client.request_spec(spec_with_put, body=body)
 
     async def next_input(self) -> None:
@@ -1899,12 +1906,12 @@ def _resolve_input_target(name: str, inputs: Sequence[InputInfo]) -> str:
     """
     Resolve a user-supplied input identifier to its canonical **cname**.
 
-    Verified live: the device's ``current_input`` PUT body carries the
-    lowercase ``cname`` (e.g., ``"hdmi2"``), **not** the display name
-    (``"HDMI-2"``) or the meta_name (``"Mac"``). Sending the wrong form
-    returns ``FAILURE`` (display name) or ``HASHVAL_ERROR`` (meta_name).
-    To accept all three forms transparently we map them back to the
-    cname here.
+    The cname is the one key that is unique within the device's list,
+    so callers may pass any of the three forms and :meth:`Vizio.set_input`
+    picks the wire form from the resolved input: a TV's PUT body wants
+    the lowercase ``cname`` (``"hdmi2"``; display name returns
+    ``FAILURE``, meta_name ``HASHVAL_ERROR``), while a soundbar's wants
+    the display ``NAME`` (protocol-notes #34).
 
     Resolution order, all case-insensitive:
 
